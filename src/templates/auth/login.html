@@ -5,5 +5,17 @@
 {% endblock %}
 
 {% block body %}
-    
+<br>
+<br>
+<br>
+<br>    
+<center><h1>RoboRegistry</h1></center>
+    <form action="/login" method="post" class="text-center py-5">
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" id="email" name="email" placeholder="Email" type="email">
+            <!-- TODO: Figure out a good way to adjust a gap size, it's probably really easy, but I'm stupid :P -->
+            <input class="form-control mx-auto w-auto" id="password" name="password" placeholder="Password" type="password">
+        </div>
+        <button class="btn btn-primary" type="submit">Enable editing</button>
+    </form>
 {% endblock %}

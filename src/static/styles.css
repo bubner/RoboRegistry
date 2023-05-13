@@ -1,0 +1,11 @@
+/* Lucas Bubner, Lachlan Paul, 2023 */
+
+/* Styles for the footer visible on all pages. This mainly ensures that it remains on the bottom of the page at all times */
+footer{
+    background-color: lightskyblue; 
+    position:fixed; 
+    left:0px; 
+    bottom:0px; 
+    height:70px; 
+    width:100%;
+}
