@@ -4,8 +4,8 @@
 """
 
 from os import getenv
-from dotenv import load_dotenv
 from functools import wraps
+from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, make_response
 
 import firebase
@@ -37,9 +37,11 @@ db = fb.database()
 
 
 def login_required(f):
+    """
+        Ensures all routes that require a user to be logged in are protected.
+    """
     @wraps(f)
     def check(*args, **kwargs):
-        # Ensure that all routes that require login are protected
         if not session.get("user"):
             return redirect("/")
         return f(*args, **kwargs)
@@ -134,4 +136,7 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
+    """
+        Primary landing page for logged in users, including a list of their own events.
+    """
     return render_template("dash/dash.html", user=session.get("user"))
