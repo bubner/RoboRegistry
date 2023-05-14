@@ -5,17 +5,38 @@
 {% endblock %}
 
 {% block body %}
-<br>
-<br>
-<br>
-<br>    
-<center><h1>RoboRegistry</h1></center>
+<div class="centercontainer">
+    <img src="{{ url_for('static', filename='assets/rr.png') }}" id="logoimg" />
     <form action="/login" method="post" class="text-center py-5">
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" id="email" name="email" placeholder="Email" type="email">
-            <!-- TODO: Figure out a good way to adjust a gap size, it's probably really easy, but I'm stupid :P -->
-            <input class="form-control mx-auto w-auto" id="password" name="password" placeholder="Password" type="password">
+        <div class="alert alert-info mb-2" role="alert">
+            At an event? <a href="/ci">Check in here</a>
         </div>
-        <button class="btn btn-primary" type="submit">Enable editing</button>
+    <br />
+        <h6>Log into RoboRegistry</h6>
+        {% if error %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+        {% endif %}
+        <div class="mb-2">
+            <input class="form-control mx-auto w-auto" id="email" name="email" placeholder="Email" type="email" />
+        </div>
+        <div class="mb-3">
+            <input
+                class="form-control mx-auto w-auto"
+                id="password"
+                name="password"
+                placeholder="Password"
+                type="password"
+            />
+        </div>
+        <div class="mb-3">
+            <a href="/forgotpassword">Forgot password?</a>
+        </div>
+        <button class="btn btn-success" type="submit">Log in</button>
+        <p class="mt-3">
+            Don't have an account? <a href="/register">Register</a>
+        </p>
     </form>
+</div>
 {% endblock %}

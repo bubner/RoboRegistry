@@ -9,3 +9,5 @@ dist/
 build/
 *.egg-info/
 .vercel
+src/.env
+.idea
