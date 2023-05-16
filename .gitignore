@@ -11,3 +11,4 @@ build/
 .vercel
 src/.env
 .idea
+.vscode

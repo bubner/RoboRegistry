@@ -3,7 +3,7 @@
     @author: Lucas Bubner, 2023
 """
 
-from os import getenv
+from os import getenv, urandom
 from functools import wraps
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, make_response
@@ -12,27 +12,35 @@ import firebase
 
 load_dotenv()
 
-if not getenv("FIREBASE_API_KEY"):
-    raise RuntimeError("FIREBASE_API_KEY is not currently set.")
-if not getenv("SECRET_KEY"):
-    raise RuntimeError("SECRET_KEY is not currently set.")
-
 app = Flask(__name__)
-app.secret_key = getenv("SECRET_KEY")
+app.secret_key = getenv("SECRET_KEY") or urandom(32)
 
 config = {
     # Firebase API key is stored in the environment variables for security reasons
     "apiKey": getenv("FIREBASE_API_KEY"),
     "authDomain": "roboregistry.firebaseapp.com",
-    "databaseURL": "https://roboregistry-default-rtdb.firebaseio.com/",
+    "databaseURL": "https://roboregistry-default-rtdb.firebaseio.com",
     "projectId": "roboregistry",
     "storageBucket": "roboregistry.appspot.com",
     "messagingSenderId": "908229856176",
-    "appId": "1:908229856176:web:1168d0be1562eb8ca5a475"
+    "appId": "1:908229856176:web:555ddb9cf48289d0a5a475"
+}
+
+oauth_config = {
+    "web": {
+        "client_id": "908229856176-9add6ckcvb0aljsur31to46i1batg28h.apps.googleusercontent.com",
+        "project_id": "roboregistry",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_secret": getenv("OAUTH_TOKEN"),
+        "redirect_uris": ["https://roboregistry.vercel.app/oauth2callback"] if getenv("FLASK_ENV") == "production" else ["http://localhost:5000/oauth2callback"],
+        "javascript_origins": ["https://roboregistry.vercel.app"] if getenv("FLASK_ENV") == "production" else ["http://localhost:5000"]
+    }
 }
 
 fb = firebase.initialize_app(config)
-auth = fb.auth()
+auth = fb.auth(client_secret=oauth_config)
 db = fb.database()
 
 
@@ -115,12 +123,34 @@ def register():
             auth.create_user_with_email_and_password(email, password)
             res = make_response(redirect("/"))
             # Sign in on registration
-            res.set_cookie("user_token", auth.sign_in_with_email_and_password(email, password)["idToken"])
+            res.set_cookie(
+                "user_token",
+                auth.sign_in_with_email_and_password(email, password)["idToken"]
+            )
             return res
         except Exception:
             return render_template("auth/register.html", error="Something went wrong, please try again.")
     else:
         return render_template("auth/register.html")
+    
+
+@app.route("/googleauth")
+def googleauth():
+    """
+        Redirects the user to the Google OAuth page.
+    """
+    return redirect(auth.authenticate_login_with_google())
+
+
+@app.route("/oauth2callback")
+def callback():
+    """
+        Handles the callback from Google OAuth.
+    """
+    user = auth.sign_in_with_oauth_credential(request.url)
+    res = make_response(redirect("/"))
+    res.set_cookie("user_token", user["idToken"])
+    return res
 
 
 @app.route("/logout")
