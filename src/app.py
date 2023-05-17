@@ -8,6 +8,7 @@ from functools import wraps
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, make_response
 from datetime import timedelta
+from db import Database
 
 import firebase
 
@@ -49,7 +50,7 @@ oauth_config = {
 
 fb = firebase.initialize_app(config)
 auth = fb.auth(client_secret=oauth_config)
-db = fb.database()
+db = Database(fb.database(), None)
 
 
 def login_required(f):
@@ -58,7 +59,7 @@ def login_required(f):
     """
     @wraps(f)
     def check(*args, **kwargs):
-        if not session.get("user"):
+        if not session.get("token"):
             return redirect("/")
         return f(*args, **kwargs)
     return check
@@ -80,7 +81,8 @@ def index():
             response = make_response(redirect("/"))
             response.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
             # Store user token in session
-            session["user"] = user["idToken"]
+            session["token"] = user["idToken"]
+            db.set_uid(auth.get_account_info(session.get("token"))["users"][0]["localId"])
             return redirect(url_for("dashboard"))
         except Exception:
             # If the token is invalid, redirect to the login page
@@ -98,7 +100,7 @@ def login():
         Stores token into cookies.
     """
     # If we're already logged in then redirect to the dashboard
-    if session.get("user") or request.cookies.get("user_token"):
+    if session.get("token") or request.cookies.get("refresh_token"):
         return redirect("/")
     if request.method == "POST":
         # Get the email and password from the form
@@ -124,7 +126,7 @@ def register():
         Registers the user with the provided email and password through Firebase.
     """
     # Redirect to dashboard if already logged in
-    if session.get("user") or request.cookies.get("user_token"):
+    if session.get("token") or request.cookies.get("refresh_token"):
         return redirect("/")
     if request.method == "POST":
         email = request.form["email"]
@@ -158,7 +160,7 @@ def callback():
     """
     user = auth.sign_in_with_oauth_credential(request.url)
     res = make_response(redirect("/"))
-    res.set_cookie("refresh_token", user["refresh_token"])
+    res.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
     return res
 
 
@@ -168,7 +170,7 @@ def logout():
         Logs out the user by removing the user token from the cookies.
     """
     res = make_response(redirect(url_for("login")))
-    res.set_cookie("user_token", "", expires=0)
+    res.set_cookie("refresh_token", "", expires=0)
     return res
 
 
@@ -177,5 +179,29 @@ def logout():
 def dashboard():
     """
         Primary landing page for logged in users, including a list of their own events.
+        For users that haven't completed the profile creation process, they will be redirected.
     """
-    return render_template("dash/dash.html", user=session.get("user"))
+    # Get information from Firebase about the user
+    data = db.get_user_info()
+    if not data:
+        # If the user doesn't have a profile, redirect them to the profile creation page
+        return redirect(url_for("create_profile"))
+    return render_template("dash/dash.html", user=auth.get_account_info(session.get("token")))
+
+
+@app.route("/create_profile", methods=["GET", "POST"])
+@login_required
+def create_profile():
+    """
+        Creates a profile for the user, including name, affiliation, and contact details.
+    """
+    if request.method == "POST":
+        # Get the user's information from the form
+        name = request.form.get("name")
+        affiliation = request.form.get("affiliation")
+        email = request.form.get("email")
+        # Create the user's profile
+        db.add_user_data({name: name, affiliation: affiliation, email: email})
+        return redirect(url_for("dashboard"))
+    else:
+        return render_template("dash/create_profile.html")
