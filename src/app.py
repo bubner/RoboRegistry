@@ -7,6 +7,7 @@ from os import getenv, urandom
 from functools import wraps
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, make_response
+from datetime import timedelta
 
 import firebase
 
@@ -14,6 +15,13 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = getenv("SECRET_KEY") or urandom(32)
+
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=30)
+)
 
 config = {
     # Firebase API key is stored in the environment variables for security reasons
@@ -62,14 +70,17 @@ def index():
         Index page where the user will be directed to either a dashboard if they are
         logged in or a login page if they are not.
     """
-    # Attempt to retrieve the user token from the cookies
-    user_token = request.cookies.get("user_token")
-    if user_token:
+    # Attempt to retrieve the user tokens from the cookies
+    refresh_token = request.cookies.get("refresh_token")
+    if refresh_token:
         try:
-            # Verify the user token
-            user = auth.get_account_info(user_token)
-            # Store UID in session
-            session["user"] = user["users"][0]["localId"]
+            # Refresh user token based on refresh token
+            user = auth.refresh(refresh_token)
+            # Store refresh token in cookies
+            response = make_response(redirect("/"))
+            response.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+            # Store user token in session
+            session["user"] = user["idToken"]
             return redirect(url_for("dashboard"))
         except Exception:
             # If the token is invalid, redirect to the login page
@@ -98,8 +109,8 @@ def login():
             user = auth.sign_in_with_email_and_password(email, password)
             # Store the user token in a cookie
             response = make_response(redirect("/"))
-            # Set cookie with user token
-            response.set_cookie("user_token", user["idToken"])
+            # Set cookie with refresh token
+            response.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
             return response
         except Exception:
             return render_template("auth/login.html", error="Invalid email or password.")
@@ -123,10 +134,8 @@ def register():
             auth.create_user_with_email_and_password(email, password)
             res = make_response(redirect("/"))
             # Sign in on registration
-            res.set_cookie(
-                "user_token",
-                auth.sign_in_with_email_and_password(email, password)["idToken"]
-            )
+            user = auth.sign_in_with_email_and_password(email, password)
+            res.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
             return res
         except Exception:
             return render_template("auth/register.html", error="Something went wrong, please try again.")
@@ -149,7 +158,7 @@ def callback():
     """
     user = auth.sign_in_with_oauth_credential(request.url)
     res = make_response(redirect("/"))
-    res.set_cookie("user_token", user["idToken"])
+    res.set_cookie("refresh_token", user["refresh_token"])
     return res
 
 
