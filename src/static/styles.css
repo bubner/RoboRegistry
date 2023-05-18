@@ -1,12 +1,13 @@
-/* Lucas Bubner, Lachlan Paul, 2023 */
+* {
+    font-family: "Inter", sans-serif;
+}
 
-/* Styles for the footer visible on all pages. This mainly ensures that it remains on the bottom of the page at all times */
 footer {
     background-color: rgb(228, 228, 228);
     position: fixed;
     left: 0px;
     bottom: 0px;
-    height: 50px;
+    height: 35px;
     width: 100%;
 }
 
@@ -62,6 +63,7 @@ footer a {
     background-color: #f0efef;
     background-repeat: no-repeat;
     background-position: 12px 14px;
+    text-decoration: none;
 }
 
 #google:hover {
@@ -83,4 +85,24 @@ footer a {
     background-color: #ebebeb;
     box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.25);
     cursor: not-allowed;
+}
+
+.headertext {
+    font-weight: 600;
+    font-size: 36px;
+}
+
+.maxtext {
+    font-weight: 900;
+    font-size: 42px;
+}
+
+.bordered {
+    border: 2px solid rgb(228, 228, 228);
+    border-radius: 10px;
+    padding: 40px;
+}
+
+#brand {
+    height: 40px;
 }

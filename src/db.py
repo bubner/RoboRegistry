@@ -2,8 +2,10 @@
     Firebase Realtime Database wrapper for RoboRegistry.
     @author: Lucas Bubner, 2023
 """
-class Database:
-    def __init__(self, db, uid):
+from firebase import Database
+
+class Userdata:
+    def __init__(self, db: Database, uid):
         self.db = db
         self.uid = uid
 
@@ -19,7 +21,7 @@ class Database:
         """
         self.db.child("users").child(self.uid).set(info)
     
-    def get_user_info(self) -> dict:
+    def get_user_info(self) -> dict | list:
         """
             Gets a user's info from the database.
         """
@@ -29,4 +31,9 @@ class Database:
         """
             Adds data for a user to the database.
         """
+        if isinstance(info, dict):
+            for key in info:
+                self.db.child("users").child(self.uid).child(key).set(info[key])
+            return
+        
         self.db.child("users").child(self.uid).set(info)

@@ -8,7 +8,7 @@ from functools import wraps
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, make_response
 from datetime import timedelta
-from db import Database
+from db import Userdata
 
 import firebase
 
@@ -50,7 +50,7 @@ oauth_config = {
 
 fb = firebase.initialize_app(config)
 auth = fb.auth(client_secret=oauth_config)
-db = Database(fb.database(), None)
+db = Userdata(fb.database(), None)
 
 
 def login_required(f):
@@ -115,9 +115,9 @@ def login():
             response.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
             return response
         except Exception:
-            return render_template("auth/login.html", error="Invalid email or password.")
+            return render_template("auth/login.html.jinja", error="Invalid email or password.")
     else:
-        return render_template("auth/login.html")
+        return render_template("auth/login.html.jinja")
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -140,9 +140,9 @@ def register():
             res.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
             return res
         except Exception:
-            return render_template("auth/register.html", error="Something went wrong, please try again.")
+            return render_template("auth/register.html.jinja", error="Something went wrong, please try again.")
     else:
-        return render_template("auth/register.html")
+        return render_template("auth/register.html.jinja")
     
 
 @app.route("/googleauth")
@@ -186,7 +186,7 @@ def dashboard():
     if not data:
         # If the user doesn't have a profile, redirect them to the profile creation page
         return redirect(url_for("create_profile"))
-    return render_template("dash/dash.html", user=auth.get_account_info(session.get("token")))
+    return render_template("dash/dash.html.jinja", user=db.get_user_info())
 
 
 @app.route("/create_profile", methods=["GET", "POST"])
@@ -195,13 +195,48 @@ def create_profile():
     """
         Creates a profile for the user, including name, affiliation, and contact details.
     """
+    auth_email = auth.get_account_info(session.get("token"))["users"][0]["email"]
+    # If the user already has a profile, redirect them to the dashboard
+    if db.get_user_info():
+        return redirect(url_for("dashboard"))
+    
     if request.method == "POST":
-        # Get the user's information from the form
+        # Get the users information from the form
         name = request.form.get("name")
-        affiliation = request.form.get("affiliation")
-        email = request.form.get("email")
+        role = request.form.get("role")
+        if not role or not name:
+            return render_template("auth/addinfo.html.jinja", error="Please enter required details.", email=auth_email)
+        
+        if len(name) > 16:
+            return render_template("auth/addinfo.html.jinja", error="Name must be less than 16 characters.", email=auth_email)
+         
+        if not (email := request.form.get("email")):
+            email = auth_email
+        
+        if not (promotion := request.form.get("consent")):
+            promotion = "off"
+        
         # Create the user's profile
-        db.add_user_data({name: name, affiliation: affiliation, email: email})
+        db.add_user_data({"name": name, "role": role, "email": email, "promotion": promotion})
         return redirect(url_for("dashboard"))
     else:
-        return render_template("dash/create_profile.html")
+        return render_template("auth/addinfo.html.jinja", email=auth_email)
+    
+
+@app.route("/settings", methods=["GET", "POST"])
+@login_required
+def settings():
+    """
+        Settings page for the user, including the ability to change their theme, settings, etc.
+    """
+    if request.method == "POST":
+        res = make_response(redirect(url_for("dashboard")))
+        darkmode = request.form.get("darkmode")
+        # Use cookies to store user preferences
+        res.set_cookie("darkmode", darkmode or "off", secure=True, httponly=True, samesite="Lax")
+        return res
+    else:
+        settings = {
+            "darkmode": request.cookies.get("darkmode")
+        }
+        return render_template("misc/settings.html.jinja", user=db.get_user_info(), settings=settings)

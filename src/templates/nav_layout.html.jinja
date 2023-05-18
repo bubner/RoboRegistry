@@ -1,0 +1,30 @@
+{% extends "layout.html.jinja" %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/"><img src="{{ url_for('static', filename='assets/rr.png') }}" alt="RoboRegistry" id="brand" /></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="#">➕ Create an event</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">🔎 View your events</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/settings">⚙️ Settings</a>
+                </li>
+                <li class="nav-item">
+                    <svg data-jdenticon-value="{{ user.name }}" title="{{ user.name }}" width="40" height="40"></svg>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endblock %}
