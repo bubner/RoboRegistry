@@ -22,7 +22,7 @@ class Userdata:
         """
         self.db.child("users").child(self.uid).set(info)
 
-    def get_user_info(self) -> dict | list:
+    def get_user_info(self) -> dict or list:
         """
             Gets a user's info from the database.
         """
