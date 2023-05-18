@@ -1,10 +1,11 @@
 {% extends "nav_layout.html.jinja" %}
 
 {% block title %}
-    Dashboard
+Dashboard
 {% endblock %}
 
 {% block body %}
-    <p class="maxtext">Welcome aboard, {{ user.name.upper().partition(" ")[0] }}.</p>
-    <a href="/logout">logout</a>
+<div class="maxtext dashheading">
+    <p>Welcome aboard, {{ user.name.upper().partition(" ")[0] }}.</p>
+</div>
 {% endblock %}

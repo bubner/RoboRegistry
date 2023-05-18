@@ -1,7 +1,7 @@
 {% extends "layout.html.jinja" %}
 
 {% block title %}
-    Register
+Register
 {% endblock %}
 
 {% block body %}
@@ -16,21 +16,16 @@
             Didn't mean to? <a href="/login">Login here</a>
         </div>
         {% if error %}
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
         {% endif %}
         <div class="mb-2">
             <input class="form-control mx-auto w-auto" id="email" name="email" placeholder="Email" type="email" />
         </div>
         <div class="mb-3">
-            <input
-                    class="form-control mx-auto w-auto"
-                    id="password"
-                    name="password"
-                    placeholder="Password"
-                    type="password"
-            />
+            <input class="form-control mx-auto w-auto" id="password" name="password" placeholder="Password"
+                type="password" />
         </div>
         <button class="btn btn-primary" type="submit">Register</button>
     </form>

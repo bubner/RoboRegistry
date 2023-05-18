@@ -79,10 +79,12 @@ def index():
             user = auth.refresh(refresh_token)
             # Store refresh token in cookies
             response = make_response(redirect("/"))
-            response.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+            response.set_cookie(
+                "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
             # Store user token in session
             session["token"] = user["idToken"]
-            db.set_uid(auth.get_account_info(session.get("token"))["users"][0]["localId"])
+            db.set_uid(auth.get_account_info(
+                session.get("token"))["users"][0]["localId"])
             return redirect(url_for("dashboard"))
         except Exception:
             # If the token is invalid, redirect to the login page
@@ -112,7 +114,8 @@ def login():
             # Store the user token in a cookie
             response = make_response(redirect("/"))
             # Set cookie with refresh token
-            response.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+            response.set_cookie(
+                "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
             return response
         except Exception:
             return render_template("auth/login.html.jinja", error="Invalid email or password.")
@@ -137,13 +140,14 @@ def register():
             res = make_response(redirect("/"))
             # Sign in on registration
             user = auth.sign_in_with_email_and_password(email, password)
-            res.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+            res.set_cookie(
+                "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
             return res
         except Exception:
             return render_template("auth/register.html.jinja", error="Something went wrong, please try again.")
     else:
         return render_template("auth/register.html.jinja")
-    
+
 
 @app.route("/googleauth")
 def googleauth():
@@ -160,7 +164,8 @@ def callback():
     """
     user = auth.sign_in_with_oauth_credential(request.url)
     res = make_response(redirect("/"))
-    res.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+    res.set_cookie(
+        "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
     return res
 
 
@@ -195,33 +200,35 @@ def create_profile():
     """
         Creates a profile for the user, including name, affiliation, and contact details.
     """
-    auth_email = auth.get_account_info(session.get("token"))["users"][0]["email"]
+    auth_email = auth.get_account_info(session.get("token"))[
+        "users"][0]["email"]
     # If the user already has a profile, redirect them to the dashboard
     if db.get_user_info():
         return redirect(url_for("dashboard"))
-    
+
     if request.method == "POST":
         # Get the users information from the form
         name = request.form.get("name")
         role = request.form.get("role")
         if not role or not name:
             return render_template("auth/addinfo.html.jinja", error="Please enter required details.", email=auth_email)
-        
+
         if len(name) > 16:
             return render_template("auth/addinfo.html.jinja", error="Name must be less than 16 characters.", email=auth_email)
-         
+
         if not (email := request.form.get("email")):
             email = auth_email
-        
+
         if not (promotion := request.form.get("consent")):
             promotion = "off"
-        
+
         # Create the user's profile
-        db.add_user_data({"name": name, "role": role, "email": email, "promotion": promotion})
+        db.add_user_data({"name": name, "role": role,
+                         "email": email, "promotion": promotion})
         return redirect(url_for("dashboard"))
     else:
         return render_template("auth/addinfo.html.jinja", email=auth_email)
-    
+
 
 @app.route("/settings", methods=["GET", "POST"])
 @login_required
@@ -233,7 +240,8 @@ def settings():
         res = make_response(redirect(url_for("dashboard")))
         darkmode = request.form.get("darkmode")
         # Use cookies to store user preferences
-        res.set_cookie("darkmode", darkmode or "off", secure=True, httponly=True, samesite="Lax")
+        res.set_cookie("darkmode", darkmode or "off",
+                       secure=True, httponly=True, samesite="Lax")
         return res
     else:
         settings = {

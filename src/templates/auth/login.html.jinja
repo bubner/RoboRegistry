@@ -1,7 +1,7 @@
 {% extends "layout.html.jinja" %}
 
 {% block title %}
-    Login
+Login
 {% endblock %}
 
 {% block body %}
@@ -11,24 +11,19 @@
         <div class="alert alert-info mb-2" role="alert">
             At an event? <a href="/ci">Check in here</a>
         </div>
-    <br />
+        <br />
         <h6>Log into RoboRegistry</h6>
         {% if error %}
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
         {% endif %}
         <div class="mb-2">
             <input class="form-control mx-auto w-auto" id="email" name="email" placeholder="Email" type="email" />
         </div>
         <div class="mb-3">
-            <input
-                class="form-control mx-auto w-auto"
-                id="password"
-                name="password"
-                placeholder="Password"
-                type="password"
-            />
+            <input class="form-control mx-auto w-auto" id="password" name="password" placeholder="Password"
+                type="password" />
         </div>
         <div class="mb-3">
             <a href="/forgotpassword">Forgot password?</a>

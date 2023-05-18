@@ -1,7 +1,7 @@
 {% extends "layout.html.jinja" %}
 
 {% block title %}
-    Registration
+Registration
 {% endblock %}
 
 {% block body %}
@@ -11,7 +11,8 @@
         <p class="text-center">Tell us a bit about yourself to get started.</p>
         <form action="/create_profile" method="post">
             <div class="mb-3">
-                <label for="name" class="form-label">Your name<span aria-hidden="true" class="text-danger">*</span></label>
+                <label for="name" class="form-label">Your name<span aria-hidden="true"
+                        class="text-danger">*</span></label>
                 <input class="form-control" id="name" name="name" placeholder="Name" type="text" required />
             </div>
             <div class="mb-3">
