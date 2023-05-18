@@ -8,4 +8,4 @@ The register can be used to compile data for planning, reporting, and/or inclusi
 
 During a specified event, the application utilises a QR code check-in process with online sign-up and prerequisite beforehand. The tech stack used in this application includes Firebase for efficient database management without the need for complex backend queries, Flask for integrating Firebase and building RESTful APIs, and using a simplistic frontend for user interaction.
 
-###### Developed by [Lucas Bubner](https://github.com/hololb) (UX/Backend), and [Lachlan Paul](https://github.com/BanjoTheBot) (UI design), as members of FTC 15215, the Murray Bridge Bunyips. <br> Copyright (c) Lucas Bubner 2023 under the [MIT License](https://raw.githubusercontent.com/hololb/RoboRegistry/prod/LICENSE).
+###### Copyright (c) Lucas Bubner 2023 under the [MIT License](https://raw.githubusercontent.com/hololb/RoboRegistry/prod/LICENSE).
