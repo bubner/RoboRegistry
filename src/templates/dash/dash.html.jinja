@@ -17,7 +17,10 @@ Dashboard
         <div class="row">
             {% for j in range(3) %}
                 <div class="col-sm-4">
-                    <div class="square skellybones" style="background-color: {{ '#333' if request.cookies.get('darkmode') == 'on' else '#e9e9e9' }}"></div>
+                    <div
+                        class="square skellybones"
+                        style="background-color: {{ '#333' if request.cookies.get('darkmode') == 'on' else '#e9e9e9' }}; background-image: {{ 'linear-gradient(to right, #3f3f3f 0%, #616161 20%, #3f3f3f 40%, #3f3f3f 100%)' if request.cookies.get('darkmode') == 'on' else 'linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%)' }}"
+                    ></div>
                 </div>
             {% endfor %}
         </div>

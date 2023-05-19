@@ -6,7 +6,6 @@ Settings
 
 {% block body %}
 <div class="centercontainer">
-    <h1 class="text-center">Settings</h1>
     <form action="/settings" method="POST">
         <div class="row justify-content-center">
             <div class="col">
@@ -24,6 +23,7 @@ Settings
         </div>
         <div class="row justify-content-center mt-3">
             <div class="col-auto">
+                <button type="button" class="btn btn-secondary" onclick="history.back()">Cancel</button>
                 <button type="submit" class="btn btn-primary">Save</button>
             </div>
         </div>

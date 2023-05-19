@@ -54,6 +54,8 @@ auth = fb.auth(client_secret=oauth_config)
 db = Userdata(fb.database(), None)
 
 # ===== Wrappers =====
+
+
 def login_required(f):
     """
         Ensures all routes that require a user to be logged in are protected.
@@ -251,12 +253,11 @@ def callback():
         "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
     return res
 
-from time import sleep
+
 @app.route("/api/dashboard")
 @login_required
 def api_dashboard():
     """
         Calculates and returns the user's dashboard information in JSON format.
     """
-    return ["hello", "world", "this", "is", "the", "api"]
-    
+    return [{"text": "api speaking", "path": "/"}]
