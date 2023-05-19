@@ -8,6 +8,7 @@ Login
 <div class="centercontainer">
     <img src="{{ url_for('static', filename='assets/rr.png') }}" id="logoimg" />
     <form action="/login" method="post" class="text-center py-5">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="alert alert-info mb-2" role="alert">
             At an event? <a href="/ci">Check in here</a>
         </div>
@@ -19,11 +20,10 @@ Login
         </div>
         {% endif %}
         <div class="mb-2">
-            <input class="form-control mx-auto w-auto" id="email" name="email" placeholder="Email" type="email" />
+            <input class="form-control mx-auto w-auto" id="email" name="email" placeholder="Email" type="email" autocomplete="username" />
         </div>
         <div class="mb-3">
-            <input class="form-control mx-auto w-auto" id="password" name="password" placeholder="Password"
-                type="password" />
+            <input class="form-control mx-auto w-auto" id="password" name="password" placeholder="Password" autocomplete="current-password" type="password" />
         </div>
         <div class="mb-3">
             <a href="/forgotpassword">Forgot password?</a>
@@ -36,4 +36,14 @@ Login
         </p>
     </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set dark mode cookie if user has dark mode preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches && !document.cookie.includes("darkmode")) {
+        document.cookie = "darkmode=on;path=/";
+        window.location.reload();
+    }
+</script>
 {% endblock %}

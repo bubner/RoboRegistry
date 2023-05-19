@@ -8,6 +8,7 @@ Register
 <div class="centercontainer">
     <img src="{{ url_for('static', filename='assets/rr.png') }}" id="logoimg" />
     <form action="/register" method="post" class="text-center py-5">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="alert alert-info mb-2" role="alert">
             At an event? <a href="/ci">Check in here</a>
         </div>

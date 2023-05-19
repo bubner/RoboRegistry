@@ -6,7 +6,8 @@ Settings
 
 {% block body %}
 <div class="centercontainer">
-    <form action="/settings" method="POST">
+    <form action="/settings" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="row justify-content-center">
             <div class="col">
                 <div class="card">
@@ -14,7 +15,7 @@ Settings
                         <h5 class="card-title">Dark Mode</h5>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="dark-mode-switch" name="darkmode" {% if
-                                settings["darkmode"]=="on" %}checked{% endif %}>
+                                settings['darkmode'] == 'on' %}checked{% endif %}>
                             <label class="form-check-label" for="dark-mode-switch">Enable Dark Mode</label>
                         </div>
                     </div>

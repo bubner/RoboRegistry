@@ -6,9 +6,10 @@
 from os import getenv, urandom
 from functools import wraps
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, session, make_response
+from flask import Flask, render_template, request, redirect, url_for, session, make_response, abort
 from datetime import timedelta
 from db import Userdata
+from flask_wtf.csrf import CSRFProtect, CSRFError
 
 import firebase
 
@@ -16,6 +17,7 @@ import firebase
 # ===== Configuration =====
 load_dotenv()
 app = Flask(__name__)
+csrf = CSRFProtect(app)
 app.secret_key = getenv("SECRET_KEY") or urandom(32)
 
 app.config.update(
@@ -54,8 +56,6 @@ auth = fb.auth(client_secret=oauth_config)
 db = Userdata(fb.database(), None)
 
 # ===== Wrappers =====
-
-
 def login_required(f):
     """
         Ensures all routes that require a user to be logged in are protected.
@@ -118,8 +118,7 @@ def login():
             # Store the user token in a cookie
             response = make_response(redirect("/"))
             # Set cookie with refresh token
-            response.set_cookie(
-                "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+            response.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
             return response
         except Exception:
             return render_template("auth/login.html.jinja", error="Invalid email or password.")
@@ -138,6 +137,14 @@ def register():
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
+
+        if len(password) < 8:
+            return render_template("auth/register.html.jinja", error="Password must be at least 8 characters long.")
+        
+        # Make sure password contains at least one number and one capital letter
+        if not any(char.isdigit() for char in password) or not any(char.isupper() for char in password):
+            return render_template("auth/register.html.jinja", error="Password must contain at least one number and one capital letter.")
+        
         try:
             # Create the user with the provided email and password
             auth.create_user_with_email_and_password(email, password)
@@ -232,7 +239,7 @@ def settings():
         res = make_response(redirect(url_for("dashboard")))
         darkmode = request.form.get("darkmode")
         # Use cookies to store user preferences
-        res.set_cookie("darkmode", darkmode or "off")
+        res.set_cookie("darkmode", darkmode or "off", secure=True)
         return res
     else:
         settings = {
@@ -261,3 +268,25 @@ def api_dashboard():
         Calculates and returns the user's dashboard information in JSON format.
     """
     return [{"text": "api speaking", "path": "/"}]
+
+
+# ===== Error Handlers =====
+@app.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    return render_template("misc/error.html.jinja", code=400, reason="CSRF Violation", debug=e.description)
+
+@app.errorhandler(404)
+def handle_404(e):
+    return render_template("misc/error.html.jinja", code=404, reason="Not Found", debug=e.description)
+
+@app.errorhandler(500)
+def handle_500(e):
+    return render_template("misc/error.html.jinja", code=500, reason="Internal Server Error", debug=e.description)
+
+@app.errorhandler(403)
+def handle_403(e):
+    return render_template("misc/error.html.jinja", code=403, reason="Forbidden", debug=e.description)
+
+@app.errorhandler(405)
+def handle_405(e):
+    return render_template("misc/error.html.jinja", code=405, reason="Method Not Allowed", debug=e.description)

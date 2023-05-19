@@ -10,6 +10,7 @@ Registration
         <p class="headertext">Welcome to RoboRegistry!</p>
         <p class="text-center">Tell us a bit about yourself to get started.</p>
         <form action="/create_profile" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="mb-3">
                 <label for="name" class="form-label">Your name<span aria-hidden="true"
                         class="text-danger">*</span></label>
@@ -34,6 +35,7 @@ Registration
                 </select>
             </div>
             <div class="text-center">
+                <button class="btn btn-secondary" onclick="event.preventDefault(); window.location.href='/logout'">Sign out</button>
                 <button class="btn btn-primary" type="submit">Complete registration</button>
             </div>
         </form>
