@@ -42,7 +42,7 @@ class Userdata:
         self.db.child("users").child(self.uid).set(info)
 
     # ===== Events =====
-    def add_event(self, uid, event) -> None:
+    def add_event(self, uid, event) -> str:
         """
             Adds an event to the database.
         """

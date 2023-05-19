@@ -149,6 +149,12 @@ footer a:not(p > a) {
     animation: shimmer infinite linear forwards 1.8s;
 }
 
+@media screen and (max-width: 767px) {
+    #mobile {
+        transform: translate(-50%, -25%) !important;
+    }
+}
+
 @keyframes shimmer {
     0% {
         opacity: 0.33;

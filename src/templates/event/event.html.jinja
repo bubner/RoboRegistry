@@ -1,12 +1,12 @@
 {% extends "nav_layout.html.jinja" %}
 
 {% block title %}
-{{ event.title }}
+{{ event.name }}
 {% endblock %}
 
 {% block body %}
 <div class="maxtext dashheading">
-    <p>{{ event.title }}</p>
+    <p>{{ event.name }}</p>
     <h6>{{ event.uid }}</h6>
     {% if not registered and not owned %}
         <a href="/events/gen/{{ event.uid }}" class="btn btn-success">Register</a>

@@ -292,60 +292,10 @@ def viewall():
     """
         View all personally owned events.
     """
-    # your_data = db.get_my_events()
-    your_data = [
-        # {
-        #     "title": "Event 1",
-        #     "description": "This is a description of event 1",
-        #     "date": "2021-01-01",
-        #     "uid": "test-scrimmage",
-        # },
-        # {
-        #     "title": "Event 2",
-        #     "description": "This is a description of event 2",
-        #     "date": "2021-01-02",
-        #     "uid": "dsiofjuhsdiukghasdfs",
-        # },
-        # {
-        #     "title": "Event 3",
-        #     "description": "This is a description of event 3",
-        #     "date": "2021-01-03",
-        #     "uid": "dsiofjuhsdiukghasdfsd",
-        # },
-        # {
-        #     "title": "Event 4",
-        #     "description": "This is a description of event 4",
-        #     "date": "2021-01-04",
-        #     "uid": "dsiofjuhsduifadskghasdfsd",
-        # },
-    ]
-    registered_data = [
-        {
-            "title": "Event 1",
-            "description": "This is a description of event 1",
-            "date": "2021-01-01",
-            "uid": "test-scrimmage",
-        },
-        # {
-        #     "title": "Event 2",
-        #     "description": "This is a description of event 2",
-        #     "date": "2021-01-02",
-        #     "uid": "dsiofjuhsdiukghasdfs",
-        # },
-        # {
-        #     "title": "Event 3",
-        #     "description": "This is a description of event 3",
-        #     "date": "2021-01-03",
-        #     "uid": "dsiofjuhsdiukghasdfsd",
-        # },
-        # {
-        #     "title": "Event 4",
-        #     "description": "This is a description of event 4",
-        #     "date": "2021-01-04",
-        #     "uid": "dsiofjuhsduifadskghasdfsd",
-        # },
-    ]
-    return render_template("dash/view.html.jinja", created_events=your_data, registered_events=registered_data, user=db.get_user_info())
+    your_data = db.get_my_events()
+    # registered_data = db.get_registered_events()
+    registered_data = []
+    return render_template("dash/view.html.jinja", created_events=your_data.values(), registered_events=registered_data, user=db.get_user_info())
 
 
 @app.route("/events/view/<string:uid>")
@@ -354,16 +304,7 @@ def viewevent(uid: str):
     """
         View a specific user-owned event.
     """
-    # data = db.get_event(db.uid, uid)
-    data = {
-        "title": "Event 1",
-        "description": "This is a description of event 1",
-        "date": "2021-01-01",
-        "uid": "test-scrimmage",
-        "registered": {
-            # "1aKpnKU9y0NORXmJ2JB4vT2zQh12": "3"
-        }
-    }
+    data = db.get_event(db.uid, uid)
 
     registered = owned = False
     for key, value in data["registered"].items():
@@ -380,21 +321,41 @@ def viewevent(uid: str):
 
 
 @app.route("/events/create", methods=["GET", "POST"])
+@login_required
 def create():
     """
         Create a new event on the system.
     """
+    user = db.get_user_info()
+    MAPBOX_API_KEY = getenv("MAPBOX_API_KEY")
     if request.method == "POST":
-        # Create the event
-        title = request.form.get("title")
-        description = request.form.get("description")
-        date = request.form.get("date")
-        if not (title and description and date):
-            return render_template("event/create.html.jinja", error="Please fill out all fields.")
-        uid = db.create_event(title, description, date, db.uid)
-        return redirect(f"/events/view/{uid}")
+        # Generate an event UID
+        event_uid = request.form.get("event_name").lower().replace(" ", "-") + "-" + request.form.get("event_date").replace("-", "")
+        if db.get_event(db.uid, event_uid): 
+            return render_template("event/create.html.jinja", error="An event with that name and date already exists.", user=user, mapbox_api_key=MAPBOX_API_KEY)
+
+        # Create the event and generate a UID
+        event = {
+            "name": request.form.get("event_name"),
+            # UIDs are in the form of <event name seperated by dashes><date seperated by dashes>
+            "uid": event_uid,
+            "date": request.form.get("event_date"),
+            "start_time": request.form.get("event_start_time"),
+            "end_time": request.form.get("event_end_time"),
+            "description": request.form.get("event_description"),
+            "email": request.form.get("event_email") or user["email"],
+            "location": request.form.get("event_location"),
+            "registered": {db.uid: "owner"}
+        }
+
+        # Make sure all fields were filled
+        if not all(event.values()):
+            return render_template("event/create.html.jinja", error="Please fill out all fields.", user=user, mapbox_api_key=MAPBOX_API_KEY)
+        
+        db.add_event(event_uid, event)
+        return redirect(f"/events/view/{event_uid}")
     else:
-        return render_template("event/create.html.jinja", user=db.get_user_info())
+        return render_template("event/create.html.jinja", user=user, mapbox_api_key=MAPBOX_API_KEY)
 
 
 # ===== API =====

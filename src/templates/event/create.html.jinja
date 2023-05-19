@@ -5,79 +5,124 @@ Create Event
 {% endblock %}
 
 {% block body %}
-<div class="centercontainer">
+<div class="container position-absolute top-50 start-50 translate-middle" id="mobile">
     <div class="bordered p-3">
         <div class="row">
             <div class="col-md-6">
                 <form method="POST" action="/events/create">
-                    <p class="headertext">Create Event</p>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <p class="headertext">Create a new event</p>
                     <div class="form-group">
-                        <label for="event_name">Event Name</label>
+                        <label for="event_name">Event Name</label><span aria-hidden="true" class="text-danger">*</span>
                         <input type="text" class="form-control" id="event_name" name="event_name" required>
                     </div>
                     <div class="form-group">
-                        <label for="event_date">Event Date</label>
+                        <label for="event_date">Event Date</label><span aria-hidden="true" class="text-danger">*</span>
                         <input type="date" class="form-control" id="event_date" name="event_date" required>
                     </div>
                     <div class="form-group">
-                        <label for="event_description">Event Description</label>
+                        <label for="event_start_time">Event Start Time</label><span aria-hidden="true" class="text-danger">*</span>
+                        <input type="time" class="form-control" id="event_start_time" name="event_start_time" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="event_end_time">Event End Time</label><span aria-hidden="true" class="text-danger">*</span>
+                        <input type="time" class="form-control" id="event_end_time" name="event_end_time" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="event_description">Event Description</label><span aria-hidden="true" class="text-danger">*</span>
                         <textarea class="form-control" id="event_description" name="event_description" rows="3" style="resize: none;" required></textarea>
                     </div>
                     <br />
+                    <a class="btn btn-secondary" href="/">Cancel</a>
                     <button type="submit" class="btn btn-primary">Create Event</button>
-                </form>
             </div>
             <div class="col-md-6">
+                <br />
+                {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                {% endif %}
                 <div class="form-group">
-                    <label for="event_location">Event Location</label>
-                    <input type="text" class="form-control" id="event_location" name="event_location" required>
+                    <label for="event_description">Displayed contact email</label>
+                    <input class="form-control" id="email" name="event_email" placeholder="{{ user.email }}" type="email" autocomplete="username" />
+                </div>
+                <br />
+                <div class="form-group">
+                    <label for="event_location">Event Location</label><span aria-hidden="true" class="text-danger">*</span>
+                    <input type="text" class="form-control" id="event_location" name="event_location" required onkeydown="return handleKeyDown(event);">
                 </div>
                 <div id="map" style="height: 300px; width: 100%; margin-top: 10px;"></div>
             </div>
+            </form>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
+<script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
 <script>
-    function initMap() {
-        const geocoder = new google.maps.Geocoder();
-        const map = new google.maps.Map(document.getElementById('map'), {
-            zoom: 8,
-            center: {lat: -34.397, lng: 150.644}
-        });
-        const marker = new google.maps.Marker({
-            map: map
-        });
-        // Get user's current location
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                const userLocation = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-                map.setCenter(userLocation);
-                marker.setPosition(userLocation);
-            });
-        }
-        document.getElementById('event_location').addEventListener('change', () => {
-            geocodeAddress(geocoder, map, marker);
+    mapboxgl.accessToken = "{{ mapbox_api_key }}";
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [-96, 37.8],
+        zoom: 3
+    });
+
+    const marker = new mapboxgl.Marker({
+        draggable: true
+    }).setLngLat([-96, 37.8]).addTo(map);
+
+    // Get user's current location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const userLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            map.setCenter(userLocation);
+            marker.setLngLat(userLocation);
+            fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + userLocation.lng + ',' + userLocation.lat + '.json?access_token=' + mapboxgl.accessToken)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('event_location').value = data.features[0].place_name;
+                })
+                .catch(error => {
+                    console.log(error);
+                });
         });
     }
 
-    function geocodeAddress(geocoder, resultsMap, marker) {
+    document.getElementById('event_location').addEventListener('change', () => {
+        geocodeAddress();
+    });
+
+    function geocodeAddress() {
         const address = document.getElementById('event_location').value;
-        geocoder.geocode({'address': address}, (results, status) => {
-            if (status === 'OK') {
-                resultsMap.setCenter(results[0].geometry.location);
-                marker.setPosition(results[0].geometry.location);
-            } else {
-                alert('Geocode was not successful for the following reason: ' + status);
-            }
-        });
+        fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + address + '.json?access_token=' + mapboxgl.accessToken)
+            .then(response => response.json())
+            .then(data => {
+                const location = data.features[0].center;
+                map.setCenter(location);
+                marker.setLngLat(location);
+                map.setZoom(15);
+                document.getElementById('event_location').value = data.features[0].place_name;
+            })
+            .catch(error => {
+                console.log(error);
+            });
     }
-</script>
 
-<script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+    function handleKeyDown(event) {
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            event.target.blur();
+            return false;
+        }
+        return true;
+    }
 </script>
 {% endblock %}
