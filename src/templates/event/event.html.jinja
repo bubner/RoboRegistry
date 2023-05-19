@@ -1,0 +1,59 @@
+{% extends "nav_layout.html.jinja" %}
+
+{% block title %}
+{{ event.title }}
+{% endblock %}
+
+{% block body %}
+<div class="maxtext dashheading">
+    <p>{{ event.title }}</p>
+    <h6>{{ event.uid }}</h6>
+    {% if not registered and not owned %}
+        <a href="/events/gen/{{ event.uid }}" class="btn btn-success">Register</a>
+    {% elif registered %}
+        <a href="/events/unregister/{{ event.uid }}" class="btn btn-danger">Unregister</a>
+    {% elif owned %}
+        <a href="/events/manage/{{ event.uid }}" class="btn btn-primary">Manage</a>
+    {% endif %}
+    <button class="btn btn-secondary" onclick="copyToClipboard('events/register/{{ event.uid }}')">Copy Registration Link</button>
+    <hr />
+</div>
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Registration Count</h5>
+                    <p class="card-text">{{ event.registration_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">People Attending</h5>
+                    <p class="card-text">{{ event.people_attending }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Registration Date</h5>
+                    <p class="card-text">{{ event.registration_date }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function copyToClipboard(text) {
+        const url = `https://roboregistry.vercel.app/${text}`;
+        navigator.clipboard.writeText(url);
+        alert(`Copied to clipboard: ${url}`);
+    }
+</script>
+{% endblock %}

@@ -40,3 +40,54 @@ class Userdata:
             return
 
         self.db.child("users").child(self.uid).set(info)
+
+    # ===== Events =====
+    def add_event(self, uid, event) -> None:
+        """
+            Adds an event to the database.
+        """
+        self.db.child("events").child(self.uid).child(uid).set(event)
+
+    def get_user_events(self, creator) -> dict or list:
+        """
+            Gets a user's events from the database.
+        """
+        return self.db.child("events").child(creator).get().val()   
+
+    def get_my_events(self) -> dict or list:
+        """
+            Get personally owned events from the database.
+        """
+        return self.get_user_events(self.uid)
+
+    def get_event(self, creator, event_id) -> dict or list:
+        """
+            Gets an event from a creator from the database.
+        """
+        return self.db.child("events").child(creator).child(event_id).get().val()
+    
+    def delete_event(self, creator, event_id) -> None:
+        """
+            Deletes an event from the database.
+        """
+        if creator != self.uid:
+            return
+        self.db.child("events").child(creator).child(event_id).remove()
+
+    def update_event(self, creator, event_id, event) -> None:
+        """
+            Updates an event in the database.
+        """
+        if creator != self.uid:
+            return
+        self.db.child("events").child(creator).child(event_id).update(event)
+    
+    def delete_all_user_events(self, creator) -> None:
+        """
+            Deletes all events from a user.
+        """
+        if creator != self.uid:
+            return
+        self.db.child("events").child(creator).remove()
+    
+

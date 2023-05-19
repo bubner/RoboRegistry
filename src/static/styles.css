@@ -189,3 +189,17 @@ footer a:not(p > a) {
 .infogrid img:hover {
     cursor: pointer;
 }
+
+.location-map-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.location-container {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.map-container {
+    flex: 1;
+}

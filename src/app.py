@@ -24,6 +24,7 @@ app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
+    
     PERMANENT_SESSION_LIFETIME=timedelta(minutes=30)
 )
 
@@ -83,16 +84,20 @@ def index():
             user = auth.refresh(refresh_token)
             # Store refresh token in cookies
             response = make_response(redirect("/"))
-            response.set_cookie(
-                "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+            response.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
             # Store user token in session
             session["token"] = user["idToken"]
-            db.set_uid(auth.get_account_info(
-                session.get("token"))["users"][0]["localId"])
+            acc = auth.get_account_info(session.get("token"))
+            db.set_uid(acc["users"][0]["localId"])
+            if acc.get("users")[0].get("emailVerified") == False:
+                return redirect(url_for("verify"))
             return redirect(url_for("dashboard"))
         except Exception:
             # If the token is invalid, redirect to the login page
-            return redirect(url_for("login"))
+            session.clear()
+            response = make_response(redirect(url_for("login")))
+            response.set_cookie("refresh_token", "", expires=0)
+            return response
     else:
         # Clean slate, request a new login
         session.clear()
@@ -193,6 +198,16 @@ def dashboard():
     return render_template("dash/dash.html.jinja", user=db.get_user_info())
 
 
+@app.route("/verify")
+@login_required
+def verify():
+    """
+        Page for users to verify their email address.
+    """
+    auth.send_email_verification(session.get("token"))
+    return render_template("auth/verify.html.jinja")
+
+
 @app.route("/create_profile", methods=["GET", "POST"])
 @login_required
 def create_profile():
@@ -253,6 +268,135 @@ def about():
     return render_template("misc/about.html.jinja")
 
 
+@app.route("/forgotpassword", methods=["GET", "POST"])
+def forgotpassword():
+    """
+        Allows the user to reset their password.
+    """
+    if request.method == "POST":
+        if not (email := request.form["email"]):
+            return render_template("auth/forgotpassword.html.jinja", error="Please enter an email address.")
+        try:
+            # Send a password reset email to the user
+            auth.send_password_reset_email(email)
+            return render_template("auth/forgotpassword.html.jinja", success="Password reset email sent. Please follow instructions from there.")
+        except Exception:
+            return render_template("auth/forgotpassword.html.jinja", error="Something went wrong, please try again.")
+    else:
+        return render_template("auth/forgotpassword.html.jinja")
+
+
+@app.route("/events/view")
+@login_required
+def viewall():
+    """
+        View all personally owned events.
+    """
+    # your_data = db.get_my_events()
+    your_data = [
+        # {
+        #     "title": "Event 1",
+        #     "description": "This is a description of event 1",
+        #     "date": "2021-01-01",
+        #     "uid": "test-scrimmage",
+        # },
+        # {
+        #     "title": "Event 2",
+        #     "description": "This is a description of event 2",
+        #     "date": "2021-01-02",
+        #     "uid": "dsiofjuhsdiukghasdfs",
+        # },
+        # {
+        #     "title": "Event 3",
+        #     "description": "This is a description of event 3",
+        #     "date": "2021-01-03",
+        #     "uid": "dsiofjuhsdiukghasdfsd",
+        # },
+        # {
+        #     "title": "Event 4",
+        #     "description": "This is a description of event 4",
+        #     "date": "2021-01-04",
+        #     "uid": "dsiofjuhsduifadskghasdfsd",
+        # },
+    ]
+    registered_data = [
+        {
+            "title": "Event 1",
+            "description": "This is a description of event 1",
+            "date": "2021-01-01",
+            "uid": "test-scrimmage",
+        },
+        # {
+        #     "title": "Event 2",
+        #     "description": "This is a description of event 2",
+        #     "date": "2021-01-02",
+        #     "uid": "dsiofjuhsdiukghasdfs",
+        # },
+        # {
+        #     "title": "Event 3",
+        #     "description": "This is a description of event 3",
+        #     "date": "2021-01-03",
+        #     "uid": "dsiofjuhsdiukghasdfsd",
+        # },
+        # {
+        #     "title": "Event 4",
+        #     "description": "This is a description of event 4",
+        #     "date": "2021-01-04",
+        #     "uid": "dsiofjuhsduifadskghasdfsd",
+        # },
+    ]
+    return render_template("dash/view.html.jinja", created_events=your_data, registered_events=registered_data, user=db.get_user_info())
+
+
+@app.route("/events/view/<string:uid>")
+@login_required
+def viewevent(uid: str):
+    """
+        View a specific user-owned event.
+    """
+    # data = db.get_event(db.uid, uid)
+    data = {
+        "title": "Event 1",
+        "description": "This is a description of event 1",
+        "date": "2021-01-01",
+        "uid": "test-scrimmage",
+        "registered": {
+            # "1aKpnKU9y0NORXmJ2JB4vT2zQh12": "3"
+        }
+    }
+
+    registered = owned = False
+    for key, value in data["registered"].items():
+        if value == "owner" and key == db.uid:
+            owned = True
+            break
+        elif key == db.uid:
+            registered = True
+            break
+            
+    if not data:
+        abort(409)
+    return render_template("event/event.html.jinja", user=db.get_user_info(), event=data, registered=registered, owned=owned)
+
+
+@app.route("/events/create", methods=["GET", "POST"])
+def create():
+    """
+        Create a new event on the system.
+    """
+    if request.method == "POST":
+        # Create the event
+        title = request.form.get("title")
+        description = request.form.get("description")
+        date = request.form.get("date")
+        if not (title and description and date):
+            return render_template("event/create.html.jinja", error="Please fill out all fields.")
+        uid = db.create_event(title, description, date, db.uid)
+        return redirect(f"/events/view/{uid}")
+    else:
+        return render_template("event/create.html.jinja", user=db.get_user_info())
+
+
 # ===== API =====
 @app.route("/api/oauth2callback")
 def callback():
@@ -261,8 +405,7 @@ def callback():
     """
     user = auth.sign_in_with_oauth_credential(request.url)
     res = make_response(redirect("/"))
-    res.set_cookie(
-        "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+    res.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
     return res
 
 
@@ -295,3 +438,7 @@ def handle_403(e):
 @app.errorhandler(405)
 def handle_405(e):
     return render_template("misc/error.html.jinja", code=405, reason="Method Not Allowed", debug=e.description)
+
+@app.errorhandler(409)
+def handle_409(e):
+    return render_template("misc/error.html.jinja", code=409, reason="Conflict", debug=e.description)
