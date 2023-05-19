@@ -246,6 +246,11 @@ def settings():
             "darkmode": request.cookies.get("darkmode")
         }
         return render_template("misc/settings.html.jinja", user=db.get_user_info(), settings=settings)
+    
+
+@app.route("/about")
+def about():
+    return render_template("misc/about.html.jinja")
 
 
 # ===== API =====
