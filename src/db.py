@@ -16,6 +16,7 @@ class Userdata:
         """
         self.uid = uid
 
+    # ===== User Data =====
     def add_user_info(self, info) -> None:
         """
             Adds a user's info to the database.

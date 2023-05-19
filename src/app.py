@@ -12,8 +12,9 @@ from db import Userdata
 
 import firebase
 
-load_dotenv()
 
+# ===== Configuration =====
+load_dotenv()
 app = Flask(__name__)
 app.secret_key = getenv("SECRET_KEY") or urandom(32)
 
@@ -43,7 +44,7 @@ oauth_config = {
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
         "client_secret": getenv("OAUTH_TOKEN"),
-        "redirect_uris": ["https://roboregistry.vercel.app/oauth2callback"] if getenv("FLASK_ENV") == "production" else ["http://localhost:5000/oauth2callback"],
+        "redirect_uris": ["https://roboregistry.vercel.app/api/oauth2callback"] if getenv("FLASK_ENV") == "production" else ["http://localhost:5000/api/oauth2callback"],
         "javascript_origins": ["https://roboregistry.vercel.app"] if getenv("FLASK_ENV") == "production" else ["http://localhost:5000"]
     }
 }
@@ -52,7 +53,7 @@ fb = firebase.initialize_app(config)
 auth = fb.auth(client_secret=oauth_config)
 db = Userdata(fb.database(), None)
 
-
+# ===== Wrappers =====
 def login_required(f):
     """
         Ensures all routes that require a user to be logged in are protected.
@@ -65,6 +66,7 @@ def login_required(f):
     return check
 
 
+# ===== Routes =====
 @app.route("/")
 def index():
     """
@@ -157,18 +159,6 @@ def googleauth():
     return redirect(auth.authenticate_login_with_google())
 
 
-@app.route("/oauth2callback")
-def callback():
-    """
-        Handles the callback from Google OAuth.
-    """
-    user = auth.sign_in_with_oauth_credential(request.url)
-    res = make_response(redirect("/"))
-    res.set_cookie(
-        "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
-    return res
-
-
 @app.route("/logout")
 def logout():
     """
@@ -240,11 +230,33 @@ def settings():
         res = make_response(redirect(url_for("dashboard")))
         darkmode = request.form.get("darkmode")
         # Use cookies to store user preferences
-        res.set_cookie("darkmode", darkmode or "off",
-                       secure=True, httponly=True, samesite="Lax")
+        res.set_cookie("darkmode", darkmode or "off")
         return res
     else:
         settings = {
             "darkmode": request.cookies.get("darkmode")
         }
         return render_template("misc/settings.html.jinja", user=db.get_user_info(), settings=settings)
+
+
+# ===== API =====
+@app.route("/api/oauth2callback")
+def callback():
+    """
+        Handles the callback from Google OAuth.
+    """
+    user = auth.sign_in_with_oauth_credential(request.url)
+    res = make_response(redirect("/"))
+    res.set_cookie(
+        "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+    return res
+
+from time import sleep
+@app.route("/api/dashboard")
+@login_required
+def api_dashboard():
+    """
+        Calculates and returns the user's dashboard information in JSON format.
+    """
+    return ["hello", "world", "this", "is", "the", "api"]
+    
