@@ -12,7 +12,7 @@ Your Events
     </div>
     <div class="container">
         <div class="row">
-            {% for event in created_events %}
+            {% for uid, event in created_events.items() %}
                 <div class="col-md-4">
                     <div class="card mb-4 box-shadow">
                         <div class="card-body">
@@ -21,16 +21,16 @@ Your Events
                             <div class="d-flex justify-content-between align-items-center">
                                 <small class="text-muted">{{ event.date }}</small>
                                 <div class="btn-group">
-                                    <a href="/events/view/{{ event.uid }}" class="btn btn-sm btn-outline-success">View</a>
+                                    <a href="/events/view/{{ uid }}" class="btn btn-sm btn-outline-success">View</a>
                                     &nbsp;
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             Options
                                         </button>
                                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                            <a class="dropdown-item" href="/events/manage/{{ event.uid }}">Manage and view data</a>
-                                            <a class="dropdown-item" href="/events/gen/{{ event.uid }}" target="_blank">Generate QR Code</a>
-                                            <a class="dropdown-item text-danger" href="/events/delete/{{ event.uid }}">Delete</a>
+                                            <a class="dropdown-item" href="/events/manage/{{ uid }}">Manage and view data</a>
+                                            <a class="dropdown-item" href="/events/gen/{{ uid }}" target="_blank">Generate QR Code</a>
+                                            <a class="dropdown-item text-danger" href="/events/delete/{{ uid }}">Delete</a>
                                         </div>
                                     </div>
                                 </div>
@@ -49,18 +49,18 @@ Your Events
     </div>
     <div class="container">
         <div class="row">
-            {% for event in registered_events %}
+            {% for uid, event in registered_events.items() %}
                 <div class="col-md-4">
                     <div class="card mb-4 box-shadow">
                         <div class="card-body">
-                            <h5 class="card-title">{{ event.title }}</h5>
+                            <h5 class="card-title">{{ event.name }}</h5>
                             <p class="card-footer text-muted">{{ event.location }}</p>
                             <div class="d-flex justify-content-between align-items-center">
                                 <small class="text-muted">{{ event.date }}</small>
                                 <div class="btn-group">
-                                    <a href="/events/view/{{ event.uid }}" class="btn btn-sm btn-outline-success">View</a>
+                                    <a href="/events/view/{{ uid }}" class="btn btn-sm btn-outline-success">View</a>
                                     &nbsp;
-                                    <a href="/events/unregister/{{ event.uid }}" class="btn btn-sm btn-outline-danger">Unregister</a>
+                                    <a href="/events/unregister/{{ uid }}" class="btn btn-sm btn-outline-danger">Unregister</a>
                                 </div>
                             </div>
                         </div>

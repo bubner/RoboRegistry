@@ -4,6 +4,7 @@
 """
 from firebase import Database
 from collections import OrderedDict
+from requests.exceptions import HTTPError
 
 class Userdata:
     def __init__(self, db: Database, uid):
@@ -35,64 +36,79 @@ class Userdata:
         self.userinfo = None
 
     # ===== Events =====
-    def add_event(self, uid, event) -> None:
+    def get_uid_for(self, event_id) -> str:
+        """
+            Find the event creator for an event.
+        """
+        return str(self.db.child("events").child(event_id).child("creator").get().val())
+    
+    def add_event(self, uid, event):
         """
             Adds an event to the database.
         """
-        self.db.child("events").child(self.uid).child(uid).set(event)
+        self.db.child("events").child(uid).set(event)
 
-    def update_event(self, creator, event_id, event) -> None:
+    def update_event(self, event_id, event):
         """
             Updates an event in the database.
         """
-        if creator != self.uid:
-            return
-        self.db.child("events").child(creator).child(event_id).update(event)
+        self.db.child("events").child(event_id).update(event)
 
-    def get_event(self, creator, event_id) -> dict:
+    def get_event(self, event_id):
         """
             Gets an event from a creator from the database.
         """
-        event = self.db.child("events").child(creator).child(event_id).get().val()
-        if isinstance(event, dict):
-            return event
-        else:
+        try:
+            event = self.db.child("events").child(event_id).get().val()
+            event = dict(event)
+        except (HTTPError, TypeError):
+            # Event does not exist
             return {}
+        return event
 
-    def get_user_events(self, creator) -> dict:
+    def get_user_events(self, creator) -> tuple[dict, dict]:
         """
             Gets a user's events from the database.
+            @return: (registered_events, owned_events)
         """
-        events = self.db.child("events").child(creator).get().val()
-        if isinstance(events, list):
-            return {i: events[i] for i in range(len(events))}
-        elif isinstance(events, OrderedDict):
-            return dict(events)
-        else:
-            return {}
+        try:
+            events = self.db.child("events").get().val()
+            registered_events = {}
+            owned_events = {}
+            for event_id, event_data in dict(events).items():
+                if creator in event_data["registered"]:
+                    if event_data["creator"] == creator:
+                        owned_events[event_id] = event_data
+                        continue
+                    registered_events[event_id] = event_data
+        except (HTTPError, TypeError):
+            # Events do not exist
+            return ({}, {})
+        return (registered_events, owned_events)
 
-    def get_my_events(self) -> dict or list:
+    def get_my_events(self) -> tuple[dict, dict]:
         """
-            Get personally owned events from the database.
+            Get personally associated events from the database.
+            @return: (registered_events, owned_events)
         """
         return self.get_user_events(self.uid)
     
-    def is_event_owner(self, event_id) -> bool:
+    def is_event_owner(self, event_id):
         """
             Check if a user owns an event by checking if an event exists under their name.
         """
-        event = self.db.child("events").child(self.uid).child(event_id).get().val()
-        return event is not None
+        event = self.db.child("events").child(event_id).child("owner").get().val()
+        return event == self.uid
     
-    def delete_event(self, creator, event_id) -> None:
+    def delete_event(self, event_id):
         """
             Deletes an event from the database.
         """
-        if creator != self.uid:
+        if self.db.child("events").child(event_id).child("owner").get().val() != self.uid:
             return
-        self.db.child("events").child(creator).child(event_id).remove()
+        self.db.child("events").child(event_id).remove()
     
-    def delete_all_user_events(self, creator) -> None:
+    def delete_all_user_events(self, creator):
         """
             Deletes all events from a user.
         """

@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, make_response, abort
 from datetime import timedelta, datetime
 from db import Userdata
+from re import sub
 from flask_wtf.csrf import CSRFProtect, CSRFError
 
 import firebase
@@ -346,12 +347,10 @@ def forgotpassword():
 @login_required
 def viewall():
     """
-        View all personally owned events.
+        View all personally affiliated events.
     """
-    your_data = db.get_my_events() or {}
-    # registered_data = db.get_registered_events()
-    registered_data = []
-    return render_template("dash/view.html.jinja", created_events=your_data.values(), registered_events=registered_data, user=db.get_user_data())
+    registered_events, created_events = db.get_my_events()
+    return render_template("dash/view.html.jinja", created_events=created_events, registered_events=registered_events, user=db.get_user_data())
 
 
 @app.route("/events/view/<string:uid>")
@@ -360,7 +359,7 @@ def viewevent(uid: str):
     """
         View a specific user-owned event.
     """
-    data = db.get_event(db.uid, uid)
+    data = db.get_event(uid)
 
     registered = owned = False
     for key, value in data["registered"].items():
@@ -382,8 +381,8 @@ def viewevent(uid: str):
 
     if days > 0:
         time = ""
-        if days > 7:
-            time += f"{days % 7} week(s) "
+        if days >= 7:
+            time += f"{days // 7} week(s) "
         time += f"{days % 7} day(s) {hours} hour(s)"
     elif hours > 0:
         time = f"{hours} hour(s) {minutes} minute(s)"
@@ -402,7 +401,7 @@ def viewevent(uid: str):
 
     if not data:
         abort(409)
-        
+
     return render_template("event/event.html.jinja", user=db.get_user_data(), event=data, registered=registered, owned=owned, mapbox_api_key=getenv("MAPBOX_API_KEY"), time=time, can_register=can_register, timezone=tz, offset=offset)
 
 
@@ -420,15 +419,15 @@ def create():
         if not (date := request.form.get("event_date")):
             return render_template("event/create.html.jinja", error="Please enter an event date.", user=user, mapbox_api_key=MAPBOX_API_KEY)
         # Generate an event UID
-        event_uid = name.lower().replace(" ", "-") + "-" + date.replace("-", "")
-        if db.get_event(db.uid, event_uid):
+        event_uid = sub(r'[^a-zA-Z0-9]+', '-', name.lower()) + "-" + date.replace("-", "")
+        if db.get_event(event_uid):
             return render_template("event/create.html.jinja", error="An event with that name and date already exists.", user=user, mapbox_api_key=MAPBOX_API_KEY)
 
         # Create the event and generate a UID
         event = {
             "name": name,
             # UIDs are in the form of <event name seperated by dashes><date seperated by dashes>
-            "uid": event_uid,
+            "creator": db.uid,
             "date": date,
             "start_time": request.form.get("event_start_time"),
             "end_time": request.form.get("event_end_time"),
@@ -468,10 +467,32 @@ def delete(event_id: str):
         Delete an event from the system.
     """
     if request.method == "POST":
-        db.delete_event(db.uid, event_id)
+        db.delete_event(event_id)
         return redirect("/events/view")
     else:
-        return render_template("event/delete.html.jinja", event=db.get_event(db.uid, event_id), user=db.get_user_data())
+        return render_template("event/delete.html.jinja", event=db.get_event(event_id), user=db.get_user_data())
+
+
+@app.route("/events/register/<string:event_id>", methods=["GET", "POST"])
+@login_required
+def event_register(event_id: str):
+    """
+        Register a user for an event.
+    """
+    event = db.get_event(event_id)
+    if request.method == "POST":
+        if event["limit"] != -1 and len(event["registered"]) >= event["limit"]:
+            event["registered"][db.uid] = "excess"
+            db.update_event(event_id, event)    
+            return render_template("event/register.html.jinja", event=event, status="Failed: EVENT_FULL", message="This event has reached it's maximum capacity. Your registration has been placed on a waitlist, and we'll automatically add you if a spot frees up.", user=db.get_user_data())
+        
+        event["registered"][db.uid] = datetime.now()
+        db.update_event(event_id, event)
+        return render_template("event/register.html.jinja", event=event, status="Registration successful", message="Your registration was successfully recorded. Go to the dashboard to view all your registered events, and remember your Affiliation Name for check-in on the day.", user=db.get_user_data())
+    else:
+        if db.uid in event["registered"]:
+            return render_template("event/register_done.html.jinja", event=event, status="Failed: REGIS_ALR", message="You are already registered for this event. If you wish to unregister from this event, please go to the event view tab and unregister from there.", user=db.get_user_data())
+        return render_template("event/register.html.jinja", event=event, user=db.get_user_data())
 
 
 # ===== API =====
