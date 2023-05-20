@@ -1,8 +1,3 @@
-document.addEventListener("DOMContentLoaded", () => {
-    // Fetch dashboard content
-    fetchDashboard();
-});
-
 async function fetchDashboard() {
     // Fetch data
     const response = await fetch("/api/dashboard");

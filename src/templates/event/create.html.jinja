@@ -29,6 +29,18 @@ Create Event
                         <input type="time" class="form-control" id="event_end_time" name="event_end_time" required>
                     </div>
                     <div class="form-group">
+                        <label for="event_timezone">Timezone</label><span aria-hidden="true" class="text-danger">*</span>
+                        <select class="form-control" id="event_timezone" name="event_timezone" required>
+                            {% for tz in timezones %}
+                                <option value="{{ tz }}">{{ tz }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="event_end_time">Maximum number of registrations (leave blank for uncapped)</label>
+                        <input type="number" class="form-control" id="event_limit" name="event_limit" min="1" max="999">
+                    </div>
+                    <div class="form-group">
                         <label for="event_description">Event Description</label><span aria-hidden="true" class="text-danger">*</span>
                         <textarea class="form-control" id="event_description" name="event_description" rows="3" style="resize: none;" required></textarea>
                     </div>
@@ -52,7 +64,7 @@ Create Event
                     <label for="event_location">Event Location</label><span aria-hidden="true" class="text-danger">*</span>
                     <input type="text" class="form-control" id="event_location" name="event_location" required onkeydown="return handleKeyDown(event);">
                 </div>
-                <div id="map" style="height: 300px; width: 100%; margin-top: 10px;"></div>
+                <div id="map" style="height: 350px; width: 100%; margin-top: 10px;"></div>
             </div>
             </form>
         </div>
@@ -63,7 +75,7 @@ Create Event
 {% block scripts %}
 <script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
 <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
-<script>
+<script defer>
     mapboxgl.accessToken = "{{ mapbox_api_key }}";
     const map = new mapboxgl.Map({
         container: 'map',
@@ -124,5 +136,31 @@ Create Event
         }
         return true;
     }
+
+    // Get the current user's timezone and set it as the default
+    document.getElementById("event_timezone").value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    const startTimeInput = document.getElementById('event_start_time');
+    const endTimeInput = document.getElementById('event_end_time');
+
+    // Add an event listener to the start time input to check if it's after the end time
+    startTimeInput.addEventListener('change', () => {
+        const startTime = new Date(`1970-01-01T${startTimeInput.value}:00`);
+        const endTime = new Date(`1970-01-01T${endTimeInput.value}:00`);
+        if (startTime > endTime) {
+            alert('Start time cannot be after end time.');
+            startTimeInput.value = '';
+        }
+    });
+
+    // Add an event listener to the end time input to check if it's before the start time
+    endTimeInput.addEventListener('change', () => {
+        const startTime = new Date(`1970-01-01T${startTimeInput.value}:00`);
+        const endTime = new Date(`1970-01-01T${endTimeInput.value}:00`);
+        if (endTime < startTime) {
+            alert('End time cannot be before start time.');
+            endTimeInput.value = '';
+        }
+    });
 </script>
 {% endblock %}

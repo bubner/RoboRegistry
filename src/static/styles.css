@@ -19,6 +19,7 @@ footer {
     bottom: 0px;
     height: 35px;
     width: 100%;
+    z-index: 100;
 }
 
 footer p,
@@ -208,4 +209,14 @@ footer a:not(p > a) {
 
 .map-container {
     flex: 1;
+}
+
+@media (max-width: 767px) {
+    .card {
+        margin-bottom: 10px;
+    }
+}
+
+.sync {
+    min-height: 115px;
 }

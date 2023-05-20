@@ -7,11 +7,12 @@ from os import getenv, urandom
 from functools import wraps
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, make_response, abort
-from datetime import timedelta
+from datetime import timedelta, datetime
 from db import Userdata
 from flask_wtf.csrf import CSRFProtect, CSRFError
 
 import firebase
+import pytz
 
 
 # ===== Configuration =====
@@ -24,7 +25,6 @@ app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    
     PERMANENT_SESSION_LIFETIME=timedelta(minutes=30)
 )
 
@@ -57,6 +57,8 @@ auth = fb.auth(client_secret=oauth_config)
 db = Userdata(fb.database(), None)
 
 # ===== Wrappers =====
+
+
 def login_required(f):
     """
         Ensures all routes that require a user to be logged in are protected.
@@ -69,7 +71,59 @@ def login_required(f):
     return check
 
 
+def must_be_event_owner(f):
+    """
+        Ensure permissions for administrative actions are only performed by the owner.
+    """
+    @wraps(f)
+    def check(event_id, *args, **kwargs):
+        if not db.is_event_owner(event_id):
+            return abort(403)
+        return f(event_id, *args, **kwargs)
+    return check
+
+# ===== Helper functions =====
+
+
+@app.template_filter('strftime')
+def filter_datetime(date):
+    """
+        Convert date to MonthName Day, Year format
+    """
+    date = datetime.fromisoformat(date)
+    format = '%b %d, %Y'
+    return date.strftime(format)
+
+
+@app.template_filter('timeto')
+def filter_timeto(date):
+    """
+        Convert time to relative units (e.g. 5 days, 2 hours)
+    """
+    date = datetime.fromisoformat(date)
+    now = datetime.now()
+    delta = date - now
+    if delta.days < 0:
+        return None
+    elif delta.days > 0:
+        return f"{delta.days} days"
+    else:
+        return f"{delta.seconds // 3600} hours"
+
+
+def get_time_diff(start_time, end_time):
+    """
+        Calculate the time difference between two datetime objects.
+    """
+    time_diff = end_time - start_time
+    days = time_diff.days
+    hours, remainder = divmod(time_diff.seconds, 3600)
+    minutes, _ = divmod(remainder, 60)
+    return days, hours, minutes
+
 # ===== Routes =====
+
+
 @app.route("/")
 def index():
     """
@@ -84,7 +138,8 @@ def index():
             user = auth.refresh(refresh_token)
             # Store refresh token in cookies
             response = make_response(redirect("/"))
-            response.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+            response.set_cookie(
+                "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
             # Store user token in session
             session["token"] = user["idToken"]
             acc = auth.get_account_info(session.get("token"))
@@ -123,7 +178,8 @@ def login():
             # Store the user token in a cookie
             response = make_response(redirect("/"))
             # Set cookie with refresh token
-            response.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+            response.set_cookie(
+                "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
             return response
         except Exception:
             return render_template("auth/login.html.jinja", error="Invalid email or password.")
@@ -145,11 +201,11 @@ def register():
 
         if len(password) < 8:
             return render_template("auth/register.html.jinja", error="Password must be at least 8 characters long.")
-        
+
         # Make sure password contains at least one number and one capital letter
         if not any(char.isdigit() for char in password) or not any(char.isupper() for char in password):
             return render_template("auth/register.html.jinja", error="Password must contain at least one number and one capital letter.")
-        
+
         try:
             # Create the user with the provided email and password
             auth.create_user_with_email_and_password(email, password)
@@ -191,11 +247,11 @@ def dashboard():
         For users that haven't completed the profile creation process, they will be redirected.
     """
     # Get information from Firebase about the user
-    data = db.get_user_info()
+    data = db.get_user_data()
     if not data:
         # If the user doesn't have a profile, redirect them to the profile creation page
         return redirect(url_for("create_profile"))
-    return render_template("dash/dash.html.jinja", user=db.get_user_info())
+    return render_template("dash/dash.html.jinja", user=db.get_user_data())
 
 
 @app.route("/verify")
@@ -217,7 +273,7 @@ def create_profile():
     auth_email = auth.get_account_info(session.get("token"))[
         "users"][0]["email"]
     # If the user already has a profile, redirect them to the dashboard
-    if db.get_user_info():
+    if db.get_user_data():
         return redirect(url_for("dashboard"))
 
     if request.method == "POST":
@@ -237,8 +293,8 @@ def create_profile():
             promotion = "off"
 
         # Create the user's profile
-        db.add_user_data({"name": name, "role": role,
-                         "email": email, "promotion": promotion})
+        db.mutate_user_data({"name": name, "role": role,
+                             "email": email, "promotion": promotion})
         return redirect(url_for("dashboard"))
     else:
         return render_template("auth/addinfo.html.jinja", email=auth_email)
@@ -260,8 +316,8 @@ def settings():
         settings = {
             "darkmode": request.cookies.get("darkmode")
         }
-        return render_template("misc/settings.html.jinja", user=db.get_user_info(), settings=settings)
-    
+        return render_template("misc/settings.html.jinja", user=db.get_user_data(), settings=settings)
+
 
 @app.route("/about")
 def about():
@@ -292,10 +348,10 @@ def viewall():
     """
         View all personally owned events.
     """
-    your_data = db.get_my_events()
+    your_data = db.get_my_events() or {}
     # registered_data = db.get_registered_events()
     registered_data = []
-    return render_template("dash/view.html.jinja", created_events=your_data.values(), registered_events=registered_data, user=db.get_user_info())
+    return render_template("dash/view.html.jinja", created_events=your_data.values(), registered_events=registered_data, user=db.get_user_data())
 
 
 @app.route("/events/view/<string:uid>")
@@ -314,10 +370,40 @@ def viewevent(uid: str):
         elif key == db.uid:
             registered = True
             break
-            
+
+    # Calculate time to event
+    start_time = datetime.strptime(
+        f"{data['date']} {data['start_time']}", "%Y-%m-%d %H:%M")
+    end_time = datetime.strptime(
+        f"{data['date']} {data['end_time']}", "%Y-%m-%d %H:%M")
+
+    days, hours, minutes = get_time_diff(datetime.now(), start_time)
+    time_to_end = get_time_diff(datetime.now(), end_time)
+
+    if days > 0:
+        time = ""
+        if days > 7:
+            time += f"{days % 7} week(s) "
+        time += f"{days % 7} day(s) {hours} hour(s)"
+    elif hours > 0:
+        time = f"{hours} hour(s) {minutes} minute(s)"
+    elif minutes > 0:
+        time = f"{minutes} minute(s)"
+    elif time_to_end[1] > 0:
+        time = f"Ends in {time_to_end[1]} hours {time_to_end[2]} minute(s)"
+    elif time_to_end[2] > 0:
+        time = f"Ends in {time_to_end[2]} minute(s)"
+    else:
+        time = "Event has ended."
+
+    can_register = time.startswith("Ends") or time.startswith("Event")
+    tz = pytz.timezone(data["timezone"])
+    offset = tz.utcoffset(datetime.now()).total_seconds() / 3600
+
     if not data:
         abort(409)
-    return render_template("event/event.html.jinja", user=db.get_user_info(), event=data, registered=registered, owned=owned)
+        
+    return render_template("event/event.html.jinja", user=db.get_user_data(), event=data, registered=registered, owned=owned, mapbox_api_key=getenv("MAPBOX_API_KEY"), time=time, can_register=can_register, timezone=tz, offset=offset)
 
 
 @app.route("/events/create", methods=["GET", "POST"])
@@ -326,36 +412,66 @@ def create():
     """
         Create a new event on the system.
     """
-    user = db.get_user_info()
+    user = db.get_user_data()
     MAPBOX_API_KEY = getenv("MAPBOX_API_KEY")
     if request.method == "POST":
+        if not (name := request.form.get("event_name")):
+            return render_template("event/create.html.jinja", error="Please enter an event name.", user=user, mapbox_api_key=MAPBOX_API_KEY)
+        if not (date := request.form.get("event_date")):
+            return render_template("event/create.html.jinja", error="Please enter an event date.", user=user, mapbox_api_key=MAPBOX_API_KEY)
         # Generate an event UID
-        event_uid = request.form.get("event_name").lower().replace(" ", "-") + "-" + request.form.get("event_date").replace("-", "")
-        if db.get_event(db.uid, event_uid): 
+        event_uid = name.lower().replace(" ", "-") + "-" + date.replace("-", "")
+        if db.get_event(db.uid, event_uid):
             return render_template("event/create.html.jinja", error="An event with that name and date already exists.", user=user, mapbox_api_key=MAPBOX_API_KEY)
 
         # Create the event and generate a UID
         event = {
-            "name": request.form.get("event_name"),
+            "name": name,
             # UIDs are in the form of <event name seperated by dashes><date seperated by dashes>
             "uid": event_uid,
-            "date": request.form.get("event_date"),
+            "date": date,
             "start_time": request.form.get("event_start_time"),
             "end_time": request.form.get("event_end_time"),
             "description": request.form.get("event_description"),
             "email": request.form.get("event_email") or user["email"],
             "location": request.form.get("event_location"),
+            "limit": request.form.get("event_limit"),
+            "timezone": request.form.get("event_timezone"),
             "registered": {db.uid: "owner"}
         }
 
+        if not event["limit"] or int(event["limit"]) >= 1000:
+            event["limit"] = -1
+
         # Make sure all fields were filled
         if not all(event.values()):
-            return render_template("event/create.html.jinja", error="Please fill out all fields.", user=user, mapbox_api_key=MAPBOX_API_KEY)
-        
+            return render_template("event/create.html.jinja", error="Please fill out all fields.", user=user, mapbox_api_key=MAPBOX_API_KEY, timezones=pytz.all_timezones)
+
+        # Make sure start time is before end time
+        if datetime.strptime(event["start_time"], "%H:%M") > datetime.strptime(event["end_time"], "%H:%M"):
+            return render_template("event/create.html.jinja", error="Please enter a start time before the end time.", user=user, mapbox_api_key=MAPBOX_API_KEY, timezones=pytz.all_timezones)
+
+        if event["date"] + event["start_time"] < datetime.now().strftime("%Y-%m-%d%H:%M"):
+            return render_template("event/create.html.jinja", error="Please enter a date and time in the future.", user=user, mapbox_api_key=MAPBOX_API_KEY, timezones=pytz.all_timezones)
+
         db.add_event(event_uid, event)
         return redirect(f"/events/view/{event_uid}")
     else:
-        return render_template("event/create.html.jinja", user=user, mapbox_api_key=MAPBOX_API_KEY)
+        return render_template("event/create.html.jinja", user=user, mapbox_api_key=MAPBOX_API_KEY, timezones=pytz.all_timezones)
+
+
+@app.route("/events/delete/<string:event_id>", methods=["GET", "POST"])
+@login_required
+@must_be_event_owner
+def delete(event_id: str):
+    """
+        Delete an event from the system.
+    """
+    if request.method == "POST":
+        db.delete_event(db.uid, event_id)
+        return redirect("/events/view")
+    else:
+        return render_template("event/delete.html.jinja", event=db.get_event(db.uid, event_id), user=db.get_user_data())
 
 
 # ===== API =====
@@ -366,7 +482,8 @@ def callback():
     """
     user = auth.sign_in_with_oauth_credential(request.url)
     res = make_response(redirect("/"))
-    res.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+    res.set_cookie(
+        "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
     return res
 
 
@@ -384,21 +501,26 @@ def api_dashboard():
 def handle_csrf_error(e):
     return render_template("misc/error.html.jinja", code=400, reason="CSRF Violation", debug=e.description)
 
+
 @app.errorhandler(404)
 def handle_404(e):
     return render_template("misc/error.html.jinja", code=404, reason="Not Found", debug=e.description)
+
 
 @app.errorhandler(500)
 def handle_500(e):
     return render_template("misc/error.html.jinja", code=500, reason="Internal Server Error", debug=e.description)
 
+
 @app.errorhandler(403)
 def handle_403(e):
     return render_template("misc/error.html.jinja", code=403, reason="Forbidden", debug=e.description)
 
+
 @app.errorhandler(405)
 def handle_405(e):
     return render_template("misc/error.html.jinja", code=405, reason="Method Not Allowed", debug=e.description)
+
 
 @app.errorhandler(409)
 def handle_409(e):

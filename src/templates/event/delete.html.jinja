@@ -1,0 +1,20 @@
+{% extends "nav_layout.html.jinja" %}
+
+{% block title %}
+Delete '{{ event.name }}'
+{% endblock %}
+
+{% block body %}
+<div class="centercontainer bordered">
+    <p class="headertext">Delete '{{ event.name }}'</p>
+    <p>Are you sure you want to delete this event?</p>
+    <h5>All data related to this event will be destroyed.</h5>
+    <h6>This action can not be undone. Please export any wanted data before deleting.</h6>
+    <br />
+    <form method="POST" action="/events/delete/{{ event.uid }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <a href="/events/view" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-danger">Delete</button>
+    </form>
+</div>
+{% endblock %}
