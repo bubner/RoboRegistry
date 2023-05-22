@@ -20,7 +20,6 @@ googleapis-common-protos==1.59.0
 grpcio==1.54.2
 grpcio-status==1.54.2
 idna==3.4
-importlib-metadata==6.6.0
 itsdangerous==2.1.2
 Jinja2==3.1.2
 jwcrypto==1.4.2
@@ -33,6 +32,7 @@ pyasn1-modules==0.3.0
 pycparser==2.21
 python-dotenv==1.0.0
 python-jwt==4.0.0
+pytz==2023.3
 requests==2.30.0
 rsa==4.9
 six==1.16.0
@@ -40,4 +40,3 @@ urllib3==1.26.15
 Werkzeug==2.3.4
 wrapt==1.15.0
 WTForms==3.0.1
-zipp==3.15.0
