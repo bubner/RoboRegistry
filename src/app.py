@@ -6,11 +6,13 @@
 from os import getenv, urandom
 from functools import wraps
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, session, make_response, abort, flash, get_flashed_messages
+from flask import Flask, render_template, request, redirect, url_for, session, make_response, abort, flash, send_file
 from datetime import timedelta, datetime
 from requests.exceptions import HTTPError
 from re import sub
 from flask_wtf.csrf import CSRFProtect, CSRFError
+from qr_gen import generate_qrcode
+from random import randint
 
 import firebase
 import pytz
@@ -171,6 +173,7 @@ def get_event(event_id):
     try:
         event = db.child("events").child(event_id).get().val()
         event = dict(event)
+        event["uid"] = event_id
     except (HTTPError, TypeError):
         # Event does not exist
         return {}
@@ -210,7 +213,7 @@ def is_event_owner(event_id):
     """
         Check if a user owns an event by checking if an event exists under their name.
     """
-    event = db.child("events").child(event_id).child("owner").get().val()
+    event = db.child("events").child(event_id).child("creator").get().val()
     return event == session["uid"]
 
 
@@ -218,7 +221,7 @@ def delete_event(event_id):
     """
         Deletes an event from the database.
     """
-    if db.child("events").child(event_id).child("owner").get().val() != session["uid"]:
+    if db.child("events").child(event_id).child("creator").get().val() != session["uid"]:
         return
     db.child("events").child(event_id).remove()
 
@@ -243,7 +246,7 @@ def index():
     # Attempt to retrieve the user tokens from the cookies
     refresh_token = request.cookies.get("refresh_token")
     if refresh_token:
-        # try:
+        try:
             # Refresh user token based on refresh token
             user = auth.refresh(refresh_token)
             # Store refresh token in cookies
@@ -265,13 +268,13 @@ def index():
 
             # Try to redirect to the page the user was trying to access before logging in
             return redirect(session.get("next") or "/dashboard")
-        # except Exception as e:
-        #     # If the token is invalid, redirect to the login page
-        #     session.clear()
-        #     flash("Your session has expired. Please log in again.")
-        #     response = make_response(redirect(url_for("login")))
-        #     response.set_cookie("refresh_token", "", expires=0)
-        #     return response
+        except Exception as e:
+            # If the token is invalid, redirect to the login page
+            session.clear()
+            flash("Your session has expired. Please log in again.")
+            response = make_response(redirect(url_for("login")))
+            response.set_cookie("refresh_token", "", expires=0)
+            return response
     else:
         # Clean slate, request a new login
         return redirect(url_for("login"))
@@ -408,7 +411,7 @@ def create_profile():
 
         # Create the user's profile
         mutate_user_data({"name": name, "role": role,
-                             "email": email, "promotion": promotion})
+                          "email": email, "promotion": promotion})
         return redirect("/")
     else:
         return render_template("auth/addinfo.html.jinja", email=auth_email)
@@ -531,9 +534,18 @@ def create():
             return render_template("event/create.html.jinja", error="Please enter an event name.", user=user, mapbox_api_key=MAPBOX_API_KEY)
         if not (date := request.form.get("event_date")):
             return render_template("event/create.html.jinja", error="Please enter an event date.", user=user, mapbox_api_key=MAPBOX_API_KEY)
+    
+        if len(name) > 16:
+            return render_template("event/create.html.jinja", error="Event name can only be 16 characters.", user=user, mapbox_api_key=MAPBOX_API_KEY)
+        
+        # Sanitise the name by removing everything that isn't alphanumeric and space
+        # If the string is completely empty, return an error
+        name = sub(r'[^a-zA-Z0-9 ]+', '', name)
+        if not name:
+            return render_template("event/create.html.jinja", error="Please enter a valid event name.", user=user, mapbox_api_key=MAPBOX_API_KEY)
+        
         # Generate an event UID
-        event_uid = sub(r'[^a-zA-Z0-9]+', '-', name.lower()
-                        ) + "-" + date.replace("-", "")
+        event_uid = sub(r'[^a-zA-Z0-9]+', '-', name.lower()) + "-" + date.replace("-", "")
         if get_event(event_uid):
             return render_template("event/create.html.jinja", error="An event with that name and date already exists.", user=user, mapbox_api_key=MAPBOX_API_KEY)
 
@@ -550,7 +562,8 @@ def create():
             "location": request.form.get("event_location"),
             "limit": request.form.get("event_limit"),
             "timezone": request.form.get("event_timezone"),
-            "registered": {session["uid"]: "owner"}
+            "registered": {session["uid"]: "owner"},
+            "checkin_code": str(randint(1000, 9999))
         }
 
         if not event["limit"] or int(event["limit"]) >= 1000:
@@ -607,6 +620,31 @@ def event_register(event_id: str):
         if session["uid"] in event["registered"]:
             return render_template("event/register_done.html.jinja", event=event, status="Failed: REGIS_ALR", message="You are already registered for this event. If you wish to unregister from this event, please go to the event view tab and unregister from there.", user=get_user_data())
         return render_template("event/register.html.jinja", event=event, user=get_user_data())
+
+
+# @app.route("/events/unregister/<string:event_id>", methods=["GET", "POST"])
+
+@app.route("/events/gen/<string:event_id>", methods=["GET", "POST"])
+@login_required
+@must_be_event_owner
+def gen(event_id: str):
+    """
+        Generate a QR code for an event.
+    """
+    if request.method == "POST":
+        # Interpret data
+        size = request.form.get("size")
+        type = request.form.get("type")
+        if not size or not type:
+            return render_template("event/gen.html.jinja", error="Please fill out all fields.", event=get_event(event_id), user=get_user_data())
+        # Generate QR code based on input
+        qrcode = generate_qrcode(get_event(event_id), size, type)
+        if not qrcode:
+            return render_template("event/gen.html.jinja", error="An error occured while generating the QR code.", event=get_event(event_id), user=get_user_data())
+        # Send file to user
+        return send_file(qrcode, mimetype="image/png")
+    else:
+        return render_template("event/gen.html.jinja", event=get_event(event_id), user=get_user_data())
 
 
 # ===== API =====
