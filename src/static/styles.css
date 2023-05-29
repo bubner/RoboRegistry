@@ -53,8 +53,18 @@ footer a:not(p > a) {
     transform: translate(-50%, -50%);
 }
 
-#logoimg {
-    height: 150px;
+#logoimg,
+#logoimgr {
+    height: 125px;
+    width: 250px;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#logoimgr {
+    position: static;
+    transform: none;
 }
 
 #google {

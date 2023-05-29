@@ -6,9 +6,9 @@
 from os import getenv, urandom
 from functools import wraps
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, session, make_response, abort
+from flask import Flask, render_template, request, redirect, url_for, session, make_response, abort, flash, get_flashed_messages
 from datetime import timedelta, datetime
-from db import Userdata
+from requests.exceptions import HTTPError
 from re import sub
 from flask_wtf.csrf import CSRFProtect, CSRFError
 
@@ -55,7 +55,7 @@ oauth_config = {
 
 fb = firebase.initialize_app(config)
 auth = fb.auth(client_secret=oauth_config)
-db = Userdata(fb.database(), None)
+db = fb.database()
 
 # ===== Wrappers =====
 
@@ -67,6 +67,8 @@ def login_required(f):
     @wraps(f)
     def check(*args, **kwargs):
         if not session.get("token"):
+            session["next"] = "/" + request.full_path.lstrip("/").rstrip("?")
+            flash("You'll need to be signed in to continue. This won't take long!")
             return redirect("/")
         return f(*args, **kwargs)
     return check
@@ -78,7 +80,7 @@ def must_be_event_owner(f):
     """
     @wraps(f)
     def check(event_id, *args, **kwargs):
-        if not db.is_event_owner(event_id):
+        if not is_event_owner(event_id):
             return abort(403)
         return f(event_id, *args, **kwargs)
     return check
@@ -122,6 +124,113 @@ def get_time_diff(start_time, end_time):
     minutes, _ = divmod(remainder, 60)
     return days, hours, minutes
 
+
+def get_user_data() -> dict:
+    """
+        Gets a user's info from the database.
+    """
+    data = db.child("users").child(session["uid"]).get().val()
+    if not data:
+        return {}
+    return dict(data)
+
+
+def mutate_user_data(info: dict) -> None:
+    """
+        Appends data for a user to the database.
+    """
+    for key in info:
+        db.child("users").child(session["uid"]).child(key).update(info[key])
+
+
+def get_uid_for(event_id) -> str:
+    """
+        Find the event creator for an event.
+    """
+    return str(db.child("events").child(event_id).child("creator").get().val())
+
+
+def add_event(uid, event):
+    """
+        Adds an event to the database.
+    """
+    db.child("events").child(uid).set(event)
+
+
+def update_event(event_id, event):
+    """
+        Updates an event in the database.
+    """
+    db.child("events").child(event_id).update(event)
+
+
+def get_event(event_id):
+    """
+        Gets an event from a creator from the database.
+    """
+    try:
+        event = db.child("events").child(event_id).get().val()
+        event = dict(event)
+    except (HTTPError, TypeError):
+        # Event does not exist
+        return {}
+    return event
+
+
+def get_user_events(creator) -> tuple[dict, dict]:
+    """
+        Gets a user's events from the database.
+        @return: (registered_events, owned_events)
+    """
+    try:
+        events = db.child("events").get().val()
+        registered_events = {}
+        owned_events = {}
+        for event_id, event_data in dict(events).items():
+            if creator in event_data["registered"]:
+                if event_data["creator"] == creator:
+                    owned_events[event_id] = event_data
+                    continue
+                registered_events[event_id] = event_data
+    except (HTTPError, TypeError):
+        # Events do not exist
+        return ({}, {})
+    return (registered_events, owned_events)
+
+
+def get_my_events() -> tuple[dict, dict]:
+    """
+        Get personally associated events from the database.
+        @return: (registered_events, owned_events)
+    """
+    return get_user_events(session["uid"])
+
+
+def is_event_owner(event_id):
+    """
+        Check if a user owns an event by checking if an event exists under their name.
+    """
+    event = db.child("events").child(event_id).child("owner").get().val()
+    return event == session["uid"]
+
+
+def delete_event(event_id):
+    """
+        Deletes an event from the database.
+    """
+    if db.child("events").child(event_id).child("owner").get().val() != session["uid"]:
+        return
+    db.child("events").child(event_id).remove()
+
+
+def delete_all_user_events(creator):
+    """
+        Deletes all events from a user.
+    """
+    if creator != session["uid"]:
+        return
+    db.child("events").child(creator).remove()
+
 # ===== Routes =====
 
 
@@ -134,7 +243,7 @@ def index():
     # Attempt to retrieve the user tokens from the cookies
     refresh_token = request.cookies.get("refresh_token")
     if refresh_token:
-        try:
+        # try:
             # Refresh user token based on refresh token
             user = auth.refresh(refresh_token)
             # Store refresh token in cookies
@@ -144,19 +253,27 @@ def index():
             # Store user token in session
             session["token"] = user["idToken"]
             acc = auth.get_account_info(session.get("token"))
-            db.set_uid(acc["users"][0]["localId"])
+            session["uid"] = acc.get("users")[0].get("localId")
+
+            # Redirect those who haven't verified their email to the verification page
             if acc.get("users")[0].get("emailVerified") == False:
                 return redirect(url_for("verify"))
-            return redirect(url_for("dashboard"))
-        except Exception:
-            # If the token is invalid, redirect to the login page
-            session.clear()
-            response = make_response(redirect(url_for("login")))
-            response.set_cookie("refresh_token", "", expires=0)
-            return response
+
+            # Ensure we have the user's data in the database
+            if not get_user_data():
+                return redirect(url_for("create_profile"))
+
+            # Try to redirect to the page the user was trying to access before logging in
+            return redirect(session.get("next") or "/dashboard")
+        # except Exception as e:
+        #     # If the token is invalid, redirect to the login page
+        #     session.clear()
+        #     flash("Your session has expired. Please log in again.")
+        #     response = make_response(redirect(url_for("login")))
+        #     response.set_cookie("refresh_token", "", expires=0)
+        #     return response
     else:
         # Clean slate, request a new login
-        session.clear()
         return redirect(url_for("login"))
 
 
@@ -237,6 +354,7 @@ def logout():
     """
     res = make_response(redirect(url_for("login")))
     res.set_cookie("refresh_token", "", expires=0)
+    session.clear()
     return res
 
 
@@ -245,14 +363,9 @@ def logout():
 def dashboard():
     """
         Primary landing page for logged in users, including a list of their own events.
-        For users that haven't completed the profile creation process, they will be redirected.
+        For users that haven't completed the profile creation process, they will be redirected by the index.
     """
-    # Get information from Firebase about the user
-    data = db.get_user_data()
-    if not data:
-        # If the user doesn't have a profile, redirect them to the profile creation page
-        return redirect(url_for("create_profile"))
-    return render_template("dash/dash.html.jinja", user=db.get_user_data())
+    return render_template("dash/dash.html.jinja", user=get_user_data())
 
 
 @app.route("/verify")
@@ -273,9 +386,9 @@ def create_profile():
     """
     auth_email = auth.get_account_info(session.get("token"))[
         "users"][0]["email"]
-    # If the user already has a profile, redirect them to the dashboard
-    if db.get_user_data():
-        return redirect(url_for("dashboard"))
+    # If the user already has a profile, redirect them back to the dashboard
+    if get_user_data():
+        return redirect(url_for("/"))
 
     if request.method == "POST":
         # Get the users information from the form
@@ -294,9 +407,9 @@ def create_profile():
             promotion = "off"
 
         # Create the user's profile
-        db.mutate_user_data({"name": name, "role": role,
+        mutate_user_data({"name": name, "role": role,
                              "email": email, "promotion": promotion})
-        return redirect(url_for("dashboard"))
+        return redirect("/")
     else:
         return render_template("auth/addinfo.html.jinja", email=auth_email)
 
@@ -317,7 +430,7 @@ def settings():
         settings = {
             "darkmode": request.cookies.get("darkmode")
         }
-        return render_template("misc/settings.html.jinja", user=db.get_user_data(), settings=settings)
+        return render_template("misc/settings.html.jinja", user=get_user_data(), settings=settings)
 
 
 @app.route("/about")
@@ -349,8 +462,8 @@ def viewall():
     """
         View all personally affiliated events.
     """
-    registered_events, created_events = db.get_my_events()
-    return render_template("dash/view.html.jinja", created_events=created_events, registered_events=registered_events, user=db.get_user_data())
+    registered_events, created_events = get_my_events()
+    return render_template("dash/view.html.jinja", created_events=created_events, registered_events=registered_events, user=get_user_data())
 
 
 @app.route("/events/view/<string:uid>")
@@ -359,14 +472,14 @@ def viewevent(uid: str):
     """
         View a specific user-owned event.
     """
-    data = db.get_event(uid)
+    data = get_event(uid)
 
     registered = owned = False
     for key, value in data["registered"].items():
-        if value == "owner" and key == db.uid:
+        if value == "owner" and key == session["uid"]:
             owned = True
             break
-        elif key == db.uid:
+        elif key == uid:
             registered = True
             break
 
@@ -402,7 +515,7 @@ def viewevent(uid: str):
     if not data:
         abort(409)
 
-    return render_template("event/event.html.jinja", user=db.get_user_data(), event=data, registered=registered, owned=owned, mapbox_api_key=getenv("MAPBOX_API_KEY"), time=time, can_register=can_register, timezone=tz, offset=offset)
+    return render_template("event/event.html.jinja", user=get_user_data(), event=data, registered=registered, owned=owned, mapbox_api_key=getenv("MAPBOX_API_KEY"), time=time, can_register=can_register, timezone=tz, offset=offset)
 
 
 @app.route("/events/create", methods=["GET", "POST"])
@@ -411,7 +524,7 @@ def create():
     """
         Create a new event on the system.
     """
-    user = db.get_user_data()
+    user = get_user_data()
     MAPBOX_API_KEY = getenv("MAPBOX_API_KEY")
     if request.method == "POST":
         if not (name := request.form.get("event_name")):
@@ -419,15 +532,16 @@ def create():
         if not (date := request.form.get("event_date")):
             return render_template("event/create.html.jinja", error="Please enter an event date.", user=user, mapbox_api_key=MAPBOX_API_KEY)
         # Generate an event UID
-        event_uid = sub(r'[^a-zA-Z0-9]+', '-', name.lower()) + "-" + date.replace("-", "")
-        if db.get_event(event_uid):
+        event_uid = sub(r'[^a-zA-Z0-9]+', '-', name.lower()
+                        ) + "-" + date.replace("-", "")
+        if get_event(event_uid):
             return render_template("event/create.html.jinja", error="An event with that name and date already exists.", user=user, mapbox_api_key=MAPBOX_API_KEY)
 
         # Create the event and generate a UID
         event = {
             "name": name,
             # UIDs are in the form of <event name seperated by dashes><date seperated by dashes>
-            "creator": db.uid,
+            "creator": session["uid"],
             "date": date,
             "start_time": request.form.get("event_start_time"),
             "end_time": request.form.get("event_end_time"),
@@ -436,7 +550,7 @@ def create():
             "location": request.form.get("event_location"),
             "limit": request.form.get("event_limit"),
             "timezone": request.form.get("event_timezone"),
-            "registered": {db.uid: "owner"}
+            "registered": {session["uid"]: "owner"}
         }
 
         if not event["limit"] or int(event["limit"]) >= 1000:
@@ -453,7 +567,7 @@ def create():
         if event["date"] + event["start_time"] < datetime.now().strftime("%Y-%m-%d%H:%M"):
             return render_template("event/create.html.jinja", error="Please enter a date and time in the future.", user=user, mapbox_api_key=MAPBOX_API_KEY, timezones=pytz.all_timezones)
 
-        db.add_event(event_uid, event)
+        add_event(event_uid, event)
         return redirect(f"/events/view/{event_uid}")
     else:
         return render_template("event/create.html.jinja", user=user, mapbox_api_key=MAPBOX_API_KEY, timezones=pytz.all_timezones)
@@ -467,10 +581,10 @@ def delete(event_id: str):
         Delete an event from the system.
     """
     if request.method == "POST":
-        db.delete_event(event_id)
+        delete_event(event_id)
         return redirect("/events/view")
     else:
-        return render_template("event/delete.html.jinja", event=db.get_event(event_id), user=db.get_user_data())
+        return render_template("event/delete.html.jinja", event=get_event(event_id), user=get_user_data())
 
 
 @app.route("/events/register/<string:event_id>", methods=["GET", "POST"])
@@ -479,20 +593,20 @@ def event_register(event_id: str):
     """
         Register a user for an event.
     """
-    event = db.get_event(event_id)
+    event = get_event(event_id)
     if request.method == "POST":
         if event["limit"] != -1 and len(event["registered"]) >= event["limit"]:
-            event["registered"][db.uid] = "excess"
-            db.update_event(event_id, event)    
-            return render_template("event/register.html.jinja", event=event, status="Failed: EVENT_FULL", message="This event has reached it's maximum capacity. Your registration has been placed on a waitlist, and we'll automatically add you if a spot frees up.", user=db.get_user_data())
-        
-        event["registered"][db.uid] = datetime.now()
-        db.update_event(event_id, event)
-        return render_template("event/register.html.jinja", event=event, status="Registration successful", message="Your registration was successfully recorded. Go to the dashboard to view all your registered events, and remember your Affiliation Name for check-in on the day.", user=db.get_user_data())
+            event["registered"][session["uid"]] = "excess"
+            update_event(event_id, event)
+            return render_template("event/register.html.jinja", event=event, status="Failed: EVENT_FULL", message="This event has reached it's maximum capacity. Your registration has been placed on a waitlist, and we'll automatically add you if a spot frees up.", user=get_user_data())
+
+        event["registered"][session["uid"]] = datetime.now()
+        update_event(event_id, event)
+        return render_template("event/register.html.jinja", event=event, status="Registration successful", message="Your registration was successfully recorded. Go to the dashboard to view all your registered events, and remember your Affiliation Name for check-in on the day.", user=get_user_data())
     else:
-        if db.uid in event["registered"]:
-            return render_template("event/register_done.html.jinja", event=event, status="Failed: REGIS_ALR", message="You are already registered for this event. If you wish to unregister from this event, please go to the event view tab and unregister from there.", user=db.get_user_data())
-        return render_template("event/register.html.jinja", event=event, user=db.get_user_data())
+        if session["uid"] in event["registered"]:
+            return render_template("event/register_done.html.jinja", event=event, status="Failed: REGIS_ALR", message="You are already registered for this event. If you wish to unregister from this event, please go to the event view tab and unregister from there.", user=get_user_data())
+        return render_template("event/register.html.jinja", event=event, user=get_user_data())
 
 
 # ===== API =====
