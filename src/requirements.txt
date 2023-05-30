@@ -37,7 +37,7 @@ python-dotenv==1.0.0
 python-jwt==4.0.0
 pytz==2023.3
 qrcode==7.4.2
-requests==2.30.0
+requests==2.31.0
 rsa==4.9
 six==1.16.0
 typing_extensions==4.6.2
