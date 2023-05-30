@@ -9,7 +9,7 @@ Dashboard
     class="maxtext dashheading"
     style="background: {{ 'linear-gradient(to bottom right, rgba(44, 44, 44, 0.8), rgba(255, 255, 255, 0))' if request.cookies.get('darkmode') == 'on' else 'linear-gradient(to bottom right, rgba(223, 223, 223, 0.8), rgba(255, 255, 255, 0))' }}"
 >
-    <p>Welcome aboard, {{ user.name.upper().partition(" ")[0] }}.</p>
+    <p>Welcome aboard, {{ user.first_name.upper() }}.</p>
 </div>
 <br />
 <div class="container" id="dashboardboxes">

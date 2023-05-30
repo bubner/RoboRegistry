@@ -12,9 +12,14 @@ Registration
         <form action="/create_profile" method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="mb-3">
-                <label for="name" class="form-label">Your name<span aria-hidden="true"
+                <label for="name" class="form-label">Your first name<span aria-hidden="true"
                         class="text-danger">*</span></label>
-                <input class="form-control" id="name" name="name" placeholder="Name" type="text" required />
+                <input class="form-control" id="first_name" name="first_name" placeholder="First name" type="text" required />
+            </div>
+            <div class="mb-3">
+                <label for="name" class="form-label">Your last name<span aria-hidden="true"
+                        class="text-danger">*</span></label>
+                <input class="form-control" id="last_name" name="last_name" placeholder="Last name" type="text" required />
             </div>
             <div class="mb-3">
                 <label for="name" class="form-label">Your affiliation (will be used in event registration)<span aria-hidden="true"

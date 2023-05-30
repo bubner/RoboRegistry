@@ -394,13 +394,14 @@ def create_profile():
 
     if request.method == "POST":
         # Get the users information from the form
-        name = request.form.get("name")
+        first_name = request.form.get("first_name")
+        last_name = request.form.get("last_name")
         role = request.form.get("role")
-        if not role or not name:
+        if not first_name or not last_name or not role:
             return render_template("auth/addinfo.html.jinja", error="Please enter required details.", email=auth_email)
 
-        if len(name) > 16:
-            return render_template("auth/addinfo.html.jinja", error="Name must be less than 16 characters.", email=auth_email)
+        if len(first_name) > 16 or len(last_name) > 16:
+            return render_template("auth/addinfo.html.jinja", error="Name(s) must be less than 16 characters each.", email=auth_email)
 
         if not (email := request.form.get("email")):
             email = auth_email
@@ -409,8 +410,9 @@ def create_profile():
             promotion = "off"
 
         # Create the user's profile
-        mutate_user_data({"name": name, "role": role,
-                          "email": email, "promotion": promotion})
+        mutate_user_data({"first_name": first_name, "last_name": last_name,
+                         "role": role, "email": email, "promotion": promotion})
+        
         return redirect("/")
     else:
         return render_template("auth/addinfo.html.jinja", email=auth_email)
@@ -533,18 +535,19 @@ def create():
             return render_template("event/create.html.jinja", error="Please enter an event name.", user=user, mapbox_api_key=MAPBOX_API_KEY)
         if not (date := request.form.get("event_date")):
             return render_template("event/create.html.jinja", error="Please enter an event date.", user=user, mapbox_api_key=MAPBOX_API_KEY)
-    
+
         if len(name) > 16:
             return render_template("event/create.html.jinja", error="Event name can only be 16 characters.", user=user, mapbox_api_key=MAPBOX_API_KEY)
-        
+
         # Sanitise the name by removing everything that isn't alphanumeric and space
         # If the string is completely empty, return an error
         name = sub(r'[^a-zA-Z0-9 ]+', '', name)
         if not name:
             return render_template("event/create.html.jinja", error="Please enter a valid event name.", user=user, mapbox_api_key=MAPBOX_API_KEY)
-        
+
         # Generate an event UID
-        event_uid = sub(r'[^a-zA-Z0-9]+', '-', name.lower()) + "-" + date.replace("-", "")
+        event_uid = sub(r'[^a-zA-Z0-9]+', '-', name.lower()
+                        ) + "-" + date.replace("-", "")
         if get_event(event_uid):
             return render_template("event/create.html.jinja", error="An event with that name and date already exists.", user=user, mapbox_api_key=MAPBOX_API_KEY)
 
