@@ -5,8 +5,8 @@
 
 from os import getenv, urandom
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, session, make_response, abort, flash, send_file
-from flask_wtf.csrf import CSRFProtect, CSRFError
+from flask import Flask, render_template, request, redirect, url_for, session, make_response, flash
+from flask_wtf.csrf import CSRFProtect
 from datetime import timedelta
 from firebase_instance import auth
 from auth import auth_bp
