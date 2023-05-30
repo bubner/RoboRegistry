@@ -249,7 +249,7 @@ def index():
             # Refresh user token based on refresh token
             user = auth.refresh(refresh_token)
             # Store refresh token in cookies
-            response = make_response(redirect("/"))
+            response = make_response(redirect("/dashboard"))
             response.set_cookie(
                 "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
             # Store user token in session
@@ -390,7 +390,7 @@ def create_profile():
         "users"][0]["email"]
     # If the user already has a profile, redirect them back to the dashboard
     if get_user_data():
-        return redirect("/")
+        return redirect("/dashboard")
 
     if request.method == "POST":
         # Get the users information from the form
