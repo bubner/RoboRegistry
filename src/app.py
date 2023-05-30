@@ -141,8 +141,7 @@ def mutate_user_data(info: dict) -> None:
     """
         Appends data for a user to the database.
     """
-    for key in info:
-        db.child("users").child(session["uid"]).child(key).update(info[key])
+    db.child("users").child(session["uid"]).update(info)
 
 
 def get_uid_for(event_id) -> str:
