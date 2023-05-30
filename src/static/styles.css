@@ -47,6 +47,7 @@ footer a:not(p > a) {
     transform: translateY(-50%);
 }
 
+/* caution: using this centercontainer implementation may cause minor nuclear disaster when the ui is smaller */
 .centercontainer {
     /* flexbox align to the center, stacked on top config */
     display: flex;

@@ -5,9 +5,9 @@ Registration
 {% endblock %}
 
 {% block body %}
-<div class="centercontainer">
+<div class="container position-absolute top-50 start-50 translate-middle h-75 w-50">
     <div class="bordered p-3">
-        <p class="headertext">Welcome to RoboRegistry!</p>
+        <p class="headertext text-center">Welcome to RoboRegistry!</p>
         <p class="text-center">Tell us a bit about yourself to get started.</p>
         <form action="/create_profile" method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
@@ -48,6 +48,7 @@ Registration
                 <button class="btn btn-secondary" onclick="event.preventDefault(); window.location.href='/logout'">Sign out</button>
                 <button class="btn btn-primary" type="submit">Complete registration</button>
             </div>
+            <br />
         </form>
     </div>
 </div>
