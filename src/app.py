@@ -390,7 +390,7 @@ def create_profile():
         "users"][0]["email"]
     # If the user already has a profile, redirect them back to the dashboard
     if get_user_data():
-        return redirect(url_for("/"))
+        return redirect("/")
 
     if request.method == "POST":
         # Get the users information from the form
