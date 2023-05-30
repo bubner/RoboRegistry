@@ -57,7 +57,7 @@ def index():
             session["uid"] = acc.get("users")[0].get("localId")
 
             # Redirect those who haven't verified their email to the verification page
-            if acc.get("users")[0].get("emailVerified") == False:
+            if not acc.get("users")[0].get("emailVerified"):
                 return redirect(url_for("auth.verify"))
 
             # Ensure we have the user's data in the database
@@ -65,7 +65,7 @@ def index():
                 return redirect(url_for("auth.create_profile"))
 
             # Try to redirect to the page the user was trying to access before logging in
-            if (goto := session.get("next")):
+            if goto := session.get("next"):
                 session.pop("next")
                 return redirect(goto)
             return redirect("/dashboard")
@@ -85,7 +85,7 @@ def index():
 @wrappers.login_required
 def dashboard():
     """
-        Primary landing page for logged in users, including a list of their own events.
+        Primary landing page for logged-in users, including a list of their own events.
         For users that haven't completed the profile creation process, they will be redirected by the index.
     """
     return render_template("dash/dash.html.jinja", user=db.get_user_data())
@@ -104,10 +104,10 @@ def settings():
         res.set_cookie("darkmode", darkmode or "off", secure=True)
         return res
     else:
-        settings = {
+        current_settings = {
             "darkmode": request.cookies.get("darkmode")
         }
-        return render_template("misc/settings.html.jinja", user=db.get_user_data(), settings=settings)
+        return render_template("misc/settings.html.jinja", user=db.get_user_data(), settings=current_settings)
 
 
 @app.route("/about")

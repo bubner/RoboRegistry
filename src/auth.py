@@ -11,18 +11,6 @@ from os import getenv
 import db
 
 auth_bp = Blueprint("auth", __name__, template_folder="templates")
-oauth_config = {
-    "web": {
-        "client_id": "908229856176-9add6ckcvb0aljsur31to46i1batg28h.apps.googleusercontent.com",
-        "project_id": "roboregistry",
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_secret": getenv("OAUTH_TOKEN"),
-        "redirect_uris": ["https://roboregistry.vercel.app/api/oauth2callback"] if getenv("FLASK_ENV") == "production" else ["http://localhost:5000/api/oauth2callback"],
-        "javascript_origins": ["https://roboregistry.vercel.app"] if getenv("FLASK_ENV") == "production" else ["http://localhost:5000"]
-    }
-}
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])

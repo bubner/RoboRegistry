@@ -88,27 +88,27 @@ def create():
         Create a new event on the system.
     """
     user = db.get_user_data()
-    MAPBOX_API_KEY = getenv("MAPBOX_API_KEY")
+    mapbox_api_key = getenv("MAPBOX_API_KEY")
     if request.method == "POST":
         if not (name := request.form.get("event_name")):
-            return render_template("event/create.html.jinja", error="Please enter an event name.", user=user, mapbox_api_key=MAPBOX_API_KEY)
+            return render_template("event/create.html.jinja", error="Please enter an event name.", user=user, mapbox_api_key=mapbox_api_key)
         if not (date := request.form.get("event_date")):
-            return render_template("event/create.html.jinja", error="Please enter an event date.", user=user, mapbox_api_key=MAPBOX_API_KEY)
+            return render_template("event/create.html.jinja", error="Please enter an event date.", user=user, mapbox_api_key=mapbox_api_key)
 
         if len(name) > 16:
-            return render_template("event/create.html.jinja", error="Event name can only be 16 characters.", user=user, mapbox_api_key=MAPBOX_API_KEY)
+            return render_template("event/create.html.jinja", error="Event name can only be 16 characters.", user=user, mapbox_api_key=mapbox_api_key)
 
         # Sanitise the name by removing everything that isn't alphanumeric and space
         # If the string is completely empty, return an error
         name = sub(r'[^a-zA-Z0-9 ]+', '', name)
         if not name:
-            return render_template("event/create.html.jinja", error="Please enter a valid event name.", user=user, mapbox_api_key=MAPBOX_API_KEY)
+            return render_template("event/create.html.jinja", error="Please enter a valid event name.", user=user, mapbox_api_key=mapbox_api_key)
 
         # Generate an event UID
         event_uid = sub(r'[^a-zA-Z0-9]+', '-', name.lower()
                         ) + "-" + date.replace("-", "")
         if db.get_event(event_uid):
-            return render_template("event/create.html.jinja", error="An event with that name and date already exists.", user=user, mapbox_api_key=MAPBOX_API_KEY)
+            return render_template("event/create.html.jinja", error="An event with that name and date already exists.", user=user, mapbox_api_key=mapbox_api_key)
 
         # Create the event and generate a UID
         event = {
@@ -132,19 +132,19 @@ def create():
 
         # Make sure all fields were filled
         if not all(event.values()):
-            return render_template("event/create.html.jinja", error="Please fill out all fields.", user=user, mapbox_api_key=MAPBOX_API_KEY, timezones=all_timezones)
+            return render_template("event/create.html.jinja", error="Please fill out all fields.", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones)
 
         # Make sure start time is before end time
         if datetime.strptime(event["start_time"], "%H:%M") > datetime.strptime(event["end_time"], "%H:%M"):
-            return render_template("event/create.html.jinja", error="Please enter a start time before the end time.", user=user, mapbox_api_key=MAPBOX_API_KEY, timezones=all_timezones)
+            return render_template("event/create.html.jinja", error="Please enter a start time before the end time.", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones)
 
         if event["date"] + event["start_time"] < datetime.now().strftime("%Y-%m-%d%H:%M"):
-            return render_template("event/create.html.jinja", error="Please enter a date and time in the future.", user=user, mapbox_api_key=MAPBOX_API_KEY, timezones=all_timezones)
+            return render_template("event/create.html.jinja", error="Please enter a date and time in the future.", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones)
 
         db.add_event(event_uid, event)
         return redirect(f"/events/view/{event_uid}")
     else:
-        return render_template("event/create.html.jinja", user=user, mapbox_api_key=MAPBOX_API_KEY, timezones=all_timezones)
+        return render_template("event/create.html.jinja", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones)
 
 
 @events_bp.route("/events/delete/<string:event_id>", methods=["GET", "POST"])
@@ -195,13 +195,13 @@ def gen(event_id: str):
     if request.method == "POST":
         # Interpret data
         size = request.form.get("size")
-        type = request.form.get("type")
-        if not size or not type:
+        qr_type = request.form.get("type")
+        if not size or not qr_type:
             return render_template("event/gen.html.jinja", error="Please fill out all fields.", event=db.get_event(event_id), user=db.get_user_data())
         # Generate QR code based on input
-        qrcode = generate_qrcode(db.get_event(event_id), size, type)
+        qrcode = generate_qrcode(db.get_event(event_id), size, qr_type)
         if not qrcode:
-            return render_template("event/gen.html.jinja", error="An error occured while generating the QR code.", event=db.get_event(event_id), user=db.get_user_data())
+            return render_template("event/gen.html.jinja", error="An error occurred while generating the QR code.", event=db.get_event(event_id), user=db.get_user_data())
         # Send file to user
         return send_file(qrcode, mimetype="image/png")
     else:

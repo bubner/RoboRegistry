@@ -76,8 +76,8 @@ def get_user_events(creator) -> tuple[dict, dict]:
                 registered_events[event_id] = event_data
     except (HTTPError, TypeError):
         # Events do not exist
-        return ({}, {})
-    return (registered_events, owned_events)
+        return {}, {}
+    return registered_events, owned_events
 
 
 def get_my_events() -> tuple[dict, dict]:
