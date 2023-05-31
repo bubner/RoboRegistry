@@ -176,14 +176,27 @@ def event_register(event_id: str):
 
         event["registered"][session["uid"]] = datetime.now()
         db.update_event(event_id, event)
-        return render_template("event/register.html.jinja", event=event, status="Registration successful", message="Your registration was successfully recorded. Go to the dashboard to view all your registered events, and remember your Affiliation Name for check-in on the day.", user=db.get_user_data())
+        return render_template("event/done.html.jinja", event=event, status="Registration successful", message="Your registration was successfully recorded. Go to the dashboard to view all your registered events, and remember your Affiliation Name for check-in on the day.", user=db.get_user_data())
     else:
         if session["uid"] in event["registered"]:
-            return render_template("event/register_done.html.jinja", event=event, status="Failed: REGIS_ALR", message="You are already registered for this event. If you wish to unregister from this event, please go to the event view tab and unregister from there.", user=db.get_user_data())
+            return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_ALR", message="You are already registered for this event. If you wish to unregister from this event, please go to the event view tab and unregister from there.", user=db.get_user_data())
         return render_template("event/register.html.jinja", event=event, user=db.get_user_data())
 
 
-# @events_bp.route("/events/unregister/<string:event_id>", methods=["GET", "POST"])
+@events_bp.route("/events/unregister/<string:event_id>", methods=["GET", "POST"])
+@login_required
+def event_unregister(event_id: str):
+    if request.method == "POST":
+        event = db.get_event(event_id)
+        if session["uid"] in event["registered"]:
+            del event["registered"][session["uid"]]
+            db.update_event(event_id, event)
+            return render_template("event/done.html.jinja", event=event, status="Unregistration successful", message="Your registration was successfully removed.", user=db.get_user_data())
+        else:
+            return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_NF", message="You are not registered for this event.", user=db.get_user_data())
+    else:
+        return render_template("event/unregister.html.jinja", event=db.get_event(event_id), user=db.get_user_data())
+
 
 @events_bp.route("/events/gen/<string:event_id>", methods=["GET", "POST"])
 @login_required

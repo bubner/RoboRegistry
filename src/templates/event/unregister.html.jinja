@@ -1,0 +1,18 @@
+{% extends "nav_layout.html.jinja" %}
+
+{% block title %}
+Unregister '{{ event.name }}'
+{% endblock %}
+
+{% block body %}
+<div class="centercontainer bordered">
+    <p class="headertext">Unregister from '{{ event.name }}'</p>
+    <p>Are you sure you want to unregister from this event?</p>
+    <br />
+    <form method="POST" action="/events/unregister/{{ event.uid }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <a href="/events/view" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-danger">Unregister</button>
+    </form>
+</div>
+{% endblock %}
