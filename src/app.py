@@ -119,7 +119,7 @@ def error_handler(code, reason):
     def decorator(f):
         @app.errorhandler(code)
         def wrapper(e):
-            return render_template("misc/error.html.jinja", code=code, reason=reason, debug=e.description)
+            return render_template("misc/error.html.jinja", code=code, reason=reason, debug=e.description), code
         return wrapper
     return decorator
 

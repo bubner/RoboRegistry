@@ -195,7 +195,7 @@ footer a:not(p > a) {
     position: relative;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 28px;
+    font-size: calc(10px + 2vmin);
     font-weight: 600;
 }
 

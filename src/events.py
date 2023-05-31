@@ -2,7 +2,7 @@
     Event creation and management functionality for RoboRegistry
     @author: Lucas Bubner, 2023
 """
-from flask import Blueprint, render_template, request, session, redirect, abort, send_file
+from flask import Blueprint, render_template, request, session, redirect, abort, send_file, flash, make_response, get_flashed_messages
 from wrappers import login_required, must_be_event_owner
 from random import randint
 from pytz import all_timezones, timezone
@@ -85,6 +85,27 @@ def viewevent(uid: str):
         abort(409)
 
     return render_template("event/event.html.jinja", user=db.get_user_data(), event=data, registered=registered, owned=owned, mapbox_api_key=getenv("MAPBOX_API_KEY"), time=time, can_register=can_register, timezone=tz, offset=offset)
+
+
+@events_bp.route("/events", methods=["GET", "POST"])
+@login_required
+def redirector():
+    """
+        Manage redirector for /events
+    """
+    get_flashed_messages()
+    if request.method == "POST":
+        if not (target := request.form.get("event_url")):
+            return render_template("dash/redirector.html.jinja", user=db.get_user_data(), error="Missing url!")
+        if not (event := db.get_event(target)):
+            res = make_response(redirect(target))
+            # Test to see if it is a url and/or if it is a 404
+            if not target.startswith("http") or res.status_code == 404:
+                return render_template("dash/redirector.html.jinja", user=db.get_user_data(), error="Hmm, we can't seem to find that event.")
+            return res
+        return redirect(f"/events/view/{event['uid']}")
+    else:
+        return render_template("dash/redirector.html.jinja", user=db.get_user_data())
 
 
 @events_bp.route("/events/create", methods=["GET", "POST"])

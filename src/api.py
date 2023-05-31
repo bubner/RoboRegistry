@@ -49,8 +49,24 @@ def api_dashboard():
         if date > datetime.now():
             should_display.append(
                 {
-                    "text": f"📖 View registered '{registered_events[uid]['name'].upper()}' event",
+                    "text": f"📖 View your registered '{registered_events[uid]['name'].upper()}' event",
                     "path": f"/events/view/{uid}"
                 }
             )
+    if len(should_display) == 0:
+        # No events, show the standard dashboard messages
+        should_display = [
+            {
+                "text": "🔍 Have an event link?",
+                "path": "/events"
+            },
+            {
+                "text": "⚙️ Manage your settings and preferences",
+                "path": "/settings"
+            },
+            {
+                "text": "📝 Create your very own event",
+                "path": "/events/create"
+            }
+        ]
     return should_display
