@@ -24,7 +24,13 @@ def viewall():
         View all personally affiliated events.
     """
     registered_events, created_events = db.get_my_events()
-    return render_template("dash/view.html.jinja", created_events=created_events, registered_events=registered_events, user=db.get_user_data())
+    done_events = []
+    # Remove registered events that have already occurred, and add them to a seperate list
+    for key, value in registered_events.items():
+        if datetime.strptime(value["date"], "%Y-%m-%d") < datetime.now():
+            del registered_events[key]
+            done_events.append(value)
+    return render_template("dash/view.html.jinja", created_events=created_events, registered_events=registered_events, done_events=done_events, user=db.get_user_data())
 
 
 @events_bp.route("/events/view/<string:uid>")
@@ -121,13 +127,13 @@ def create():
             "description": request.form.get("event_description"),
             "email": request.form.get("event_email") or user["email"],
             "location": request.form.get("event_location"),
-            "limit": request.form.get("event_limit"),
+            "limit": utils.limitTo999(request.form.get("event_limit")),
             "timezone": request.form.get("event_timezone"),
             "registered": {session["uid"]: "owner"},
-            "checkin_code": str(randint(1000, 9999))
+            "checkin_code": randint(1000, 9999)
         }
 
-        if not event["limit"] or int(event["limit"]) >= 1000:
+        if not event["limit"]:
             event["limit"] = -1
 
         # Make sure all fields were filled
@@ -168,19 +174,47 @@ def event_register(event_id: str):
         Register a user for an event.
     """
     event = db.get_event(event_id)
+    user = db.get_user_data()
+    # Check to see if the event is over, and decline registration if it is
+    if event["date"] + event["end_time"] < datetime.now().strftime("%Y-%m-%d%H:%M"):
+        return render_template("event/done.html.jinja", event=event, user=user, status="Failed: EVENT_AUTO_CLOSED", error="This event has already ended. Registation has been automatically disabled.")
+    
     if request.method == "POST":
+        # Store registered users data
+        event |= {
+            "registered_data": {
+                session["uid"]: {
+                    "teamName": request.form.get("teamName"),
+                    "role": request.form.get("role"),
+                    "teamNumber": request.form.get("teamNumber") or "N/A",
+                    "numPeople": request.form.get("numPeople"),
+                    "numStudents": utils.limitTo999(request.form.get("numStudents")),
+                    "numMentors": utils.limitTo999(request.form.get("numMentors")),
+                    "numAdults": utils.limitTo999(request.form.get("numAdults")),
+                    "contactName": request.form.get("contactName") or f"{user['first_name']} {user['last_name']}",
+                    "contactEmail": user["email"],
+                    "contactPhone": request.form.get("contactPhone") or "N/A",
+                }
+            }
+        }
+        # Ensure that all required fields are filled
+        if not all(event["registered_data"][session["uid"]].values()):
+            return render_template("event/done.html.jinja", event=event, status="Failed: MISSING_FIELDS", message="Please fill out all required fields.", user=user)
+
+        # Check for event capacity
         if event["limit"] != -1 and len(event["registered"]) >= event["limit"]:
             event["registered"][session["uid"]] = "excess"
             db.update_event(event_id, event)
-            return render_template("event/register.html.jinja", event=event, status="Failed: EVENT_FULL", message="This event has reached it's maximum capacity. Your registration has been placed on a waitlist, and we'll automatically add you if a spot frees up.", user=db.get_user_data())
-
-        event["registered"][session["uid"]] = datetime.now()
+            return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_FULL", message="This event has reached it's maximum capacity. Your registration has been placed on a waitlist, and we'll automatically add you if a spot frees up.", user=user)
+        
+        # Log event registration
+        event["registered"][session["uid"]] = str(datetime.now())
         db.update_event(event_id, event)
-        return render_template("event/done.html.jinja", event=event, status="Registration successful", message="Your registration was successfully recorded. Go to the dashboard to view all your registered events, and remember your Affiliation Name for check-in on the day.", user=db.get_user_data())
+        return render_template("event/done.html.jinja", event=event, status="Registration successful", message="Your registration was successfully recorded. Go to the dashboard to view all your registered events, and remember to bring a smart device for QR code check-in on the day.", user=user)
     else:
         if session["uid"] in event["registered"]:
-            return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_ALR", message="You are already registered for this event. If you wish to unregister from this event, please go to the event view tab and unregister from there.", user=db.get_user_data())
-        return render_template("event/register.html.jinja", event=event, user=db.get_user_data())
+            return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_ALR", message="You are already registered for this event. If you wish to unregister from this event, please go to the event view tab and unregister from there.", user=user)
+        return render_template("event/register.html.jinja", event=event, user=user, mapbox_api_key=getenv("MAPBOX_API_KEY"))
 
 
 @events_bp.route("/events/unregister/<string:event_id>", methods=["GET", "POST"])
@@ -190,6 +224,7 @@ def event_unregister(event_id: str):
         event = db.get_event(event_id)
         if session["uid"] in event["registered"]:
             del event["registered"][session["uid"]]
+            del event["registered_data"][session["uid"]]
             db.update_event(event_id, event)
             return render_template("event/done.html.jinja", event=event, status="Unregistration successful", message="Your registration was successfully removed.", user=db.get_user_data())
         else:
@@ -205,6 +240,9 @@ def gen(event_id: str):
     """
         Generate a QR code for an event.
     """
+    # Check if the event is done, reject if it is
+    if db.get_event(event_id)["date"] + db.get_event(event_id)["end_time"] < datetime.now().strftime("%Y-%m-%d%H:%M"):
+        return render_template("event/done.html.jinja", event=db.get_event(event_id), status="Failed: QR_GEN_FAIL", error="Unable to generate QR codes for an event that has ended, as registration and check-in links are no longer active.", user=db.get_user_data())
     if request.method == "POST":
         # Interpret data
         size = request.form.get("size")

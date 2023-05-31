@@ -43,3 +43,18 @@ def get_time_diff(start_time, end_time):
     hours, remainder = divmod(time_diff.seconds, 3600)
     minutes, _ = divmod(remainder, 60)
     return days, hours, minutes
+
+
+def limitTo999(value):
+    """
+        Limit a value to 0-999 and safe cast to int.
+    """
+    if value is None:
+        return None
+    try:
+        value = int(value)
+        if value < 0:
+            return None
+    except ValueError:
+        return None
+    return min(value, 999)

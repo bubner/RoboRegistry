@@ -39,16 +39,18 @@ def api_dashboard():
         if date > datetime.now() and date < datetime.now() + timedelta(days=14):
             should_display.append(
                 {
-                    "text": f"🔍 View your '{created_events[uid]['name'].upper()}' event",
+                    "text": f"🔍 View your upcoming '{created_events[uid]['name'].upper()}' event",
                     "path": f"/events/manage/{uid}"
                 }
             )
     for uid in registered_events:
-        # Display all registered events
-        should_display.append(
-            {
-                "text": f"📖 View registered '{registered_events[uid]['name'].upper()}' event",
-                "path": f"/events/view/{uid}"
-            }
-        )
+        # Display all registered events if they have not yet occurred
+        date = datetime.strptime(registered_events[uid]['date'], "%Y-%m-%d")
+        if date > datetime.now():
+            should_display.append(
+                {
+                    "text": f"📖 View registered '{registered_events[uid]['name'].upper()}' event",
+                    "path": f"/events/view/{uid}"
+                }
+            )
     return should_display
