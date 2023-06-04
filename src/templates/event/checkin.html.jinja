@@ -1,0 +1,24 @@
+{% extends "layout.html.jinja" %}
+
+{% block title %}
+Checking in at {{ event.name }}
+{% endblock %}
+
+{% block body %}
+<div class="container position-absolute top-50 start-50 translate-middle h-75">
+    <div class="text-center">
+        <img src="{{ url_for('static', filename='assets/rr.png') }}" width="250"/>
+    </div>
+    <br />
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border rounded-3 shadow-sm">
+                <div class="card-body text-center">
+                    <p class="headingtext">Test!</p>
+                    {{ event }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

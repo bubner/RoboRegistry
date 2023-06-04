@@ -112,3 +112,11 @@ def delete_all_user_events(creator):
     if creator != session["uid"]:
         return
     db.child("events").child(creator).remove()
+
+logged_out_data = {
+    "first_name": "Guest",
+    "last_name": "User",
+    "email": "guest@user.com",
+    "promotion": "off",
+    "role": "guest"
+}

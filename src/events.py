@@ -3,7 +3,7 @@
     @author: Lucas Bubner, 2023
 """
 from flask import Blueprint, render_template, request, session, redirect, abort, send_file, flash, make_response, get_flashed_messages
-from wrappers import login_required, must_be_event_owner
+from wrappers import login_required, must_be_event_owner, event_must_be_running
 from random import randint
 from pytz import all_timezones, timezone
 from datetime import datetime
@@ -24,12 +24,15 @@ def viewall():
         View all personally affiliated events.
     """
     registered_events, created_events = db.get_my_events()
-    done_events = []
+    done_events = {}
+    deletions = []
     # Remove registered events that have already occurred, and add them to a seperate list
     for key, value in registered_events.items():
         if datetime.strptime(value["date"], "%Y-%m-%d") < datetime.now():
-            del registered_events[key]
-            done_events.append(value)
+            deletions.append(key)
+            done_events[key] = value
+    for key in deletions:
+        del registered_events[key]
     return render_template("dash/view.html.jinja", created_events=created_events, registered_events=registered_events, done_events=done_events, user=db.get_user_data())
 
 
@@ -48,7 +51,7 @@ def viewevent(uid: str):
         if value == "owner" and key == session["uid"]:
             owned = True
             break
-        elif key == uid:
+        elif key == session["uid"]:
             registered = True
             break
 
@@ -61,19 +64,21 @@ def viewevent(uid: str):
     days, hours, minutes = utils.get_time_diff(datetime.now(), start_time)
     time_to_end = utils.get_time_diff(datetime.now(), end_time)
 
-    if days > 0:
-        time = ""
-        if days >= 7:
-            time += f"{days // 7} week(s) "
-        time += f"{days % 7} day(s) {hours} hour(s)"
-    elif hours > 0:
-        time = f"{hours} hour(s) {minutes} minute(s)"
-    elif minutes > 0:
-        time = f"{minutes} minute(s)"
-    elif time_to_end[1] > 0:
-        time = f"Ends in {time_to_end[1]} hours {time_to_end[2]} minute(s)"
-    elif time_to_end[2] > 0:
-        time = f"Ends in {time_to_end[2]} minute(s)"
+    time = ""
+    if days >= 0:
+        if days >= 1:
+            if days >= 7:
+                time += f"{days // 7} week(s) "
+            time += f"{days % 7} day(s) {hours} hour(s)"
+        elif hours > 0:
+            time = f"{hours} hour(s) {minutes} minute(s)"
+        elif minutes > 0:
+            time = f"{minutes} minute(s)"
+    elif time_to_end[0] >= 0:
+        if time_to_end[1] > 0:
+            time = f"Ends in {time_to_end[1]} hours {time_to_end[2]} minute(s)"
+        else:
+            time = f"Ends in {time_to_end[2]} minute(s)"
     else:
         time = "Event has ended."
 
@@ -199,10 +204,10 @@ def event_register(event_id: str):
     # Check to see if the event is over, and decline registration if it is
     if event["date"] + event["end_time"] < datetime.now().strftime("%Y-%m-%d%H:%M"):
         return render_template("event/done.html.jinja", event=event, user=user, status="Failed: EVENT_AUTO_CLOSED", error="This event has already ended. Registation has been automatically disabled.")
-    
+
     if request.method == "POST":
         # Store registered users data
-        event |= {
+        edits = {
             "registered_data": {
                 session["uid"]: {
                     "teamName": request.form.get("teamName"),
@@ -216,6 +221,9 @@ def event_register(event_id: str):
                     "contactEmail": user["email"],
                     "contactPhone": request.form.get("contactPhone") or "N/A",
                 }
+            },
+            "registered": {
+                session["uid"]: "pending"
             }
         }
         # Ensure that all required fields are filled
@@ -224,13 +232,13 @@ def event_register(event_id: str):
 
         # Check for event capacity
         if event["limit"] != -1 and len(event["registered"]) >= event["limit"]:
-            event["registered"][session["uid"]] = "excess"
-            db.update_event(event_id, event)
+            edits["registered"][session["uid"]] = "excess"
+            db.update_event(event_id, edits)
             return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_FULL", message="This event has reached it's maximum capacity. Your registration has been placed on a waitlist, and we'll automatically add you if a spot frees up.", user=user)
-        
+
         # Log event registration
-        event["registered"][session["uid"]] = str(datetime.now())
-        db.update_event(event_id, event)
+        edits["registered"][session["uid"]] = str(datetime.now())
+        db.update_event(event_id, edits)
         return render_template("event/done.html.jinja", event=event, status="Registration successful", message="Your registration was successfully recorded. Go to the dashboard to view all your registered events, and remember to bring a smart device for QR code check-in on the day.", user=user)
     else:
         if session["uid"] in event["registered"]:
@@ -263,7 +271,7 @@ def gen(event_id: str):
     """
     # Check if the event is done, reject if it is
     if db.get_event(event_id)["date"] + db.get_event(event_id)["end_time"] < datetime.now().strftime("%Y-%m-%d%H:%M"):
-        return render_template("event/done.html.jinja", event=db.get_event(event_id), status="Failed: QR_GEN_FAIL", error="Unable to generate QR codes for an event that has ended, as registration and check-in links are no longer active.", user=db.get_user_data())
+        return render_template("event/done.html.jinja", event=db.get_event(event_id), status="Failed: QR_GEN_FAIL", message="Unable to generate QR codes for an event that has ended, as registration and check-in links are no longer active.", user=db.get_user_data())
     if request.method == "POST":
         # Interpret data
         size = request.form.get("size")
@@ -278,3 +286,42 @@ def gen(event_id: str):
         return send_file(qrcode, mimetype="image/png")
     else:
         return render_template("event/gen.html.jinja", event=db.get_event(event_id), user=db.get_user_data())
+
+
+@events_bp.route("/events/ci/<string:event_id>", methods=["GET", "POST"])
+# @event_must_be_running
+def checkin(event_id: str):
+    """
+        Check in to an event.
+    """
+    event = db.get_event(event_id)
+    if request.method == "POST":
+        raise NotImplementedError
+    else:
+        return render_template("event/gatekeep.html.jinja", event=event)
+
+
+@events_bp.route("/events/ci/<string:event_id>/manual", methods=["GET", "POST"])
+# @event_must_be_running
+@login_required
+def manual(event_id: str):
+    """
+        Check in to an event using email associated with registration.
+    """
+    event = db.get_event(event_id)
+    registered, owned = db.get_my_events()
+    if event_id in owned.keys():
+        return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_OWNER", message="The currently logged in RoboRegistry account is the owner of this event. The owner cannot check in to their own event.", user=db.get_user_data())
+    if event_id not in registered.keys():
+        return render_template("event/done.html.jinja", event=event, status="Failed: NO_AFFIL", message="The currently logged in RoboRegistry account has not registered for this event. The event owner will have to manually record your presence through their Dashboard.", user=db.get_user_data())
+    if request.method == "POST":
+        # Attempt a manual registration using the affiliated email
+        edits = {
+            "checked_in": {
+                session['uid']: str(datetime.now())
+            }
+        }
+        db.update_event(event_id, edits)
+        return render_template("event/done.html.jinja", event=event, status="Check in successful", message="Your check in has been recorded successfully by registered email verification. You can safely close this tab.", user=db.get_user_data())
+    else:
+        return render_template("event/manual.html.jinja", event=event, user=db.get_user_data(), data=registered[event_id]["registered_data"][session["uid"]])
