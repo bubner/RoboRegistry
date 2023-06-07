@@ -14,23 +14,23 @@ Create Event
                     <p class="headertext">Create a new event</p>
                     <div class="form-group">
                         <label for="event_name">Event Name</label><span aria-hidden="true" class="text-danger">*</span>
-                        <input type="text" class="form-control" id="event_name" name="event_name" maxlength="16" required>
+                        <input type="text" class="form-control" id="event_name" name="event_name" value="{{ old_data.name }}" maxlength="16" required>
                     </div>
                     <div class="form-group">
                         <label for="event_date">Event Date</label><span aria-hidden="true" class="text-danger">*</span>
-                        <input type="date" class="form-control" id="event_date" name="event_date" required>
+                        <input type="date" class="form-control" id="event_date" name="event_date" value="{{ old_data.date }}" required>
                     </div>
                     <div class="form-group">
                         <label for="event_start_time">Event Start Time</label><span aria-hidden="true" class="text-danger">*</span>
-                        <input type="time" class="form-control" id="event_start_time" name="event_start_time" required>
+                        <input type="time" class="form-control" id="event_start_time" name="event_start_time" value="{{ old_data.start_time }}" required>
                     </div>
                     <div class="form-group">
                         <label for="event_end_time">Event End Time</label><span aria-hidden="true" class="text-danger">*</span>
-                        <input type="time" class="form-control" id="event_end_time" name="event_end_time" required>
+                        <input type="time" class="form-control" id="event_end_time" name="event_end_time" value="{{ old_data.end_time }}" required>
                     </div>
                     <div class="form-group">
                         <label for="event_timezone">Timezone</label><span aria-hidden="true" class="text-danger">*</span>
-                        <select class="form-control" id="event_timezone" name="event_timezone" required>
+                        <select class="form-control" id="event_timezone" name="event_timezone" value="{{ old_data.timezone }}" required>
                             {% for tz in timezones %}
                                 <option value="{{ tz }}">{{ tz }}</option>
                             {% endfor %}
@@ -42,7 +42,7 @@ Create Event
                     </div>
                     <div class="form-group">
                         <label for="event_description">Event Description</label><span aria-hidden="true" class="text-danger">*</span>
-                        <textarea class="form-control" id="event_description" name="event_description" rows="3" style="resize: none;" required></textarea>
+                        <textarea class="form-control" id="event_description" name="event_description" rows="3" style="resize: none;" required>{{ old_data.description }}</textarea>
                     </div>
                     <br />
                     <a class="btn btn-secondary" href="/dashboard">Cancel</a>
@@ -58,12 +58,12 @@ Create Event
                 {% endif %}
                 <div class="form-group">
                     <label for="event_description">Displayed contact email</label>
-                    <input class="form-control" id="email" name="event_email" placeholder="{{ user.email }}" type="email" autocomplete="username" />
+                    <input class="form-control" id="email" name="event_email" placeholder="{{ user.email }}" value="{{ old_data.email }}" type="email" autocomplete="username" />
                 </div>
                 <br />
                 <div class="form-group">
                     <label for="event_location">Event Location</label><span aria-hidden="true" class="text-danger">*</span>
-                    <input type="text" class="form-control" id="event_location" name="event_location" required onkeydown="return handleKeyDown(event);">
+                    <input type="text" class="form-control" id="event_location" name="event_location" required onkeydown="return handleKeyDown(event);" value="{{ old_data.location }}">
                 </div>
                 <div id="map" style="height: 350px; width: 100%; margin-top: 10px;"></div>
             </div>

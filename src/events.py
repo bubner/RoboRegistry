@@ -98,7 +98,6 @@ def redirector():
     """
         Manage redirector for /events
     """
-    get_flashed_messages()
     if request.method == "POST":
         if not (target := request.form.get("event_url")):
             return render_template("dash/redirector.html.jinja", user=db.get_user_data(), error="Missing url!")
@@ -164,19 +163,19 @@ def create():
 
         # Make sure all fields were filled
         if not all(event.values()):
-            return render_template("event/create.html.jinja", error="Please fill out all fields.", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones)
+            return render_template("event/create.html.jinja", error="Please fill out all fields.", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones, old_data=event)
 
         # Make sure start time is before end time
         if datetime.strptime(event["start_time"], "%H:%M") > datetime.strptime(event["end_time"], "%H:%M"):
-            return render_template("event/create.html.jinja", error="Please enter a start time before the end time.", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones)
+            return render_template("event/create.html.jinja", error="Please enter a start time before the end time.", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones, old_data=event)
 
         if event["date"] + event["start_time"] < datetime.now().strftime("%Y-%m-%d%H:%M"):
-            return render_template("event/create.html.jinja", error="Please enter a date and time in the future.", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones)
+            return render_template("event/create.html.jinja", error="Please enter a date and time in the future.", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones, old_data=event)
 
         db.add_event(event_uid, event)
         return redirect(f"/events/view/{event_uid}")
     else:
-        return render_template("event/create.html.jinja", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones)
+        return render_template("event/create.html.jinja", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones, old_data={})
 
 
 @events_bp.route("/events/delete/<string:event_id>", methods=["GET", "POST"])

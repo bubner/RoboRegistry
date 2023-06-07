@@ -36,7 +36,7 @@ def api_dashboard():
     for uid in created_events:
         # Check if the date of an event is in the next two weeks
         date = datetime.strptime(created_events[uid]['date'], "%Y-%m-%d")
-        if date > datetime.now() and date < datetime.now() + timedelta(days=14):
+        if date > datetime.now() and date < datetime.now() + timedelta(days=28):
             should_display.append(
                 {
                     "text": f"🔍 View your upcoming '{created_events[uid]['name'].upper()}' event",

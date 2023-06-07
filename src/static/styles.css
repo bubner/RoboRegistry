@@ -238,3 +238,7 @@ footer a:not(p > a) {
 .sync {
     min-height: 115px;
 }
+
+textarea {
+    white-space: pre-wrap;
+}

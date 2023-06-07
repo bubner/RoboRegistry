@@ -38,7 +38,7 @@
                     <h5 class="card-title">Registrations</h5>
                     <p class="card-text">{{ event.registered|length - 1 }}{{ ' / ' + event.limit|string + ' limit' if
                         event.limit != -1 else '' }} </p>
-                        {% if event.registered|length >= event.limit %}
+                        {% if event.limit|int != -1 and event.registered|length >= event.limit|int %}
                             <i>Registering now will add you to an automatic waitlist.</i>
                         {% endif %}
                 </div>
