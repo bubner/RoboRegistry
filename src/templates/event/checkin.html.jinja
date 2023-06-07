@@ -14,11 +14,58 @@ Checking in at {{ event.name }}
         <div class="col-md-6">
             <div class="card border rounded-3 shadow-sm">
                 <div class="card-body text-center">
-                    <p class="headingtext">Test!</p>
-                    {{ event }}
+                    <p class="headertext">Dynamic Check In</p>
+                    <h5>{{ event.name }}</h5>
+                    <h6 class="text-muted">{{ event.uid }}</h6>
+                    <br />
+                    <form method="POST" action="/events/ci/{{ event.uid }}/dynamic">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="form-group">
+                            <label for="item-select">Who are you checking in as?</label>
+                            <hr />
+                            <select class="form-control" id="item-select" name="entity" required>
+                                <option value="anon">Guest / Anonymous</option>
+                                <option value="" disabled selected>---</option>
+                                {% for item in registered %}
+                                    <option value="{{ item }}">{{ item }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <br />
+                        <div id="visit-reason" style="display: none;">
+                            <div class="form-group">
+                                <label for="visit-reason-select">I am</label>
+                                <select class="form-control" id="visit-reason-select" name="visit-reason" required>
+                                    <option value="" disabled selected>-</option>
+                                    <option value="noregis">a team that did not register on RoboRegistry.</option>
+                                    <option value="public">a member of the General Public.</option>
+                                    <option value="visitor">a Visitor.</option>
+                                    <option value="manager">an Event Manager.</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <br />
+                        <a href="/events/view/{{ event.uid }}" class="btn btn-danger">Cancel</a>
+                        <button type="submit" class="btn btn-success">Complete Check In</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script defer>
+    const itemSelect = document.getElementById("item-select");
+    const visitReasonDiv = document.getElementById("visit-reason");
+    itemSelect.addEventListener("change", () => {
+        if (itemSelect.value === "anon") {
+            visitReasonDiv.style.display = "block";
+        } else {
+            visitReasonDiv.style.display = "none";
+        }
+    });
+</script>
 {% endblock %}

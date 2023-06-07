@@ -30,7 +30,8 @@ Checking in at {{ event.name }}
                     <i>You'll find this on the RoboRegistry QR code printout if you used it, or on the event owner's event viewer.</i>
                     <a href="/events/ci/{{ event.uid }}/manual">Having trouble?</a>
                     <hr />
-                    <form action="/events/ci/{{ event.uid }}/dynamic" method="post">
+                    <form action="/events/ci/{{ event.uid }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="input-group mb-3">
                             <input type="text" class="form-control" placeholder="Check In Code" name="code" aria-label="Check In Code" aria-describedby="basic-addon2">
                             <button class="btn btn-outline-primary" type="submit" id="button-addon2">Check In</button>

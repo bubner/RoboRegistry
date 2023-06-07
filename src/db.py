@@ -11,7 +11,10 @@ def get_user_data() -> dict:
     """
         Gets a user's info from the database.
     """
-    data = db.child("users").child(session["uid"]).get().val()
+    try:
+        data = db.child("users").child(session["uid"]).get().val()
+    except KeyError:
+        return {}
     if not data:
         return {}
     return dict(data)
@@ -58,6 +61,18 @@ def get_event(event_id):
         return {}
     return event
 
+def get_uid_for_entity(event_id, entity_id) -> str:
+    """
+        Find the entity creator for an entity.
+    """
+    # entity_id has the structure of '{TEAMNAME}, behalf of {CONTACTNAME}'
+    event = get_event(event_id)
+    if not event:
+        return ""
+    for entity in event["registered_data"].values():
+        if f"{entity['teamName']}, behalf of {entity['contactName']}" == entity_id:
+            return entity['uid']
+    return ""
 
 def get_user_events(creator) -> tuple[dict, dict]:
     """

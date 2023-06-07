@@ -3,7 +3,7 @@
     @author: Lucas Bubner, 2023
 """
 from flask import session, request, flash, redirect, abort, render_template
-from db import is_event_owner, get_event, logged_out_data
+from db import get_uid_for, get_event, logged_out_data
 from datetime import datetime
 from functools import wraps
 
@@ -28,7 +28,7 @@ def must_be_event_owner(f):
     """
     @wraps(f)
     def check(event_id, *args, **kwargs):
-        if not is_event_owner(event_id):
+        if not get_uid_for(event_id) == session.get("uid"):
             return abort(403)
         return f(event_id, *args, **kwargs)
     return check

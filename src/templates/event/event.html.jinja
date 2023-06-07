@@ -8,17 +8,17 @@
 <div class="maxtext dashheading">
     <p>{{ event.name }}</p>
     <h5>{{ event.uid }}</h5>
-    {% if owned %}
+    {% if owned and can_register %}
         <h6>Event check-in code: {{ event.checkin_code }} </h6>
     {% endif %}
-    {% if not registered and not owned and not can_register %}
+    {% if not registered and not owned and can_register %}
         <a href="/events/register/{{ event.uid }}" class="btn btn-success">Register</a>
-    {% elif registered and not can_register %}
+    {% elif registered and can_register %}
         <a href="/events/unregister/{{ event.uid }}" class="btn btn-danger">Unregister</a>
     {% elif owned %}
         <a href="/events/manage/{{ event.uid }}" class="btn btn-primary">Manage</a>
     {% endif %}
-    {% if not can_register %}
+    {% if can_register %}
         <button class="btn btn-secondary" onclick="copyToClipboard('events/register/{{ event.uid }}')">Copy Registration Link</button>
     {% endif %}
     <hr />
@@ -29,7 +29,7 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Event Description</h5>
-                    <p class="card-text">{{ event.description }}</p>
+                    <pre class="card-text">{{ event.description }}</pre>
                 </div>
             </div>
             <br />

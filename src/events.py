@@ -7,6 +7,7 @@ from wrappers import login_required, must_be_event_owner, event_must_be_running
 from random import randint
 from pytz import all_timezones, timezone
 from datetime import datetime
+from time import time
 from re import sub
 from qr_gen import generate_qrcode
 from os import getenv
@@ -89,7 +90,7 @@ def viewevent(uid: str):
     if not data:
         abort(409)
 
-    return render_template("event/event.html.jinja", user=db.get_user_data(), event=data, registered=registered, owned=owned, mapbox_api_key=getenv("MAPBOX_API_KEY"), time=time, can_register=can_register, timezone=tz, offset=offset)
+    return render_template("event/event.html.jinja", user=db.get_user_data(), event=data, registered=registered, owned=owned, mapbox_api_key=getenv("MAPBOX_API_KEY"), time=time, can_register=not can_register, timezone=tz, offset=offset)
 
 
 @events_bp.route("/events", methods=["GET", "POST"])
@@ -169,7 +170,9 @@ def create():
         if datetime.strptime(event["start_time"], "%H:%M") > datetime.strptime(event["end_time"], "%H:%M"):
             return render_template("event/create.html.jinja", error="Please enter a start time before the end time.", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones, old_data=event)
 
-        if event["date"] + event["start_time"] < datetime.now().strftime("%Y-%m-%d%H:%M"):
+        tz = timezone(event["timezone"])
+        event_start_time = tz.localize(datetime.strptime(event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
+        if event_start_time < datetime.now(tz):
             return render_template("event/create.html.jinja", error="Please enter a date and time in the future.", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones, old_data=event)
 
         db.add_event(event_uid, event)
@@ -201,8 +204,10 @@ def event_register(event_id: str):
     event = db.get_event(event_id)
     user = db.get_user_data()
     # Check to see if the event is over, and decline registration if it is
-    if event["date"] + event["end_time"] < datetime.now().strftime("%Y-%m-%d%H:%M"):
-        return render_template("event/done.html.jinja", event=event, user=user, status="Failed: EVENT_AUTO_CLOSED", error="This event has already ended. Registation has been automatically disabled.")
+    tz = timezone(event["timezone"])
+    tz.localize(datetime.strptime(event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
+    if datetime.now(tz) > tz.localize(datetime.strptime(event["date"] + event["end_time"], "%Y-%m-%d%H:%M")):
+        return render_template("event/done.html.jinja", event=event, user=user, status="Failed: EVENT_AUTO_CLOSED", message="This event has already ended. Registation has been automatically disabled.")
 
     if request.method == "POST":
         # Store registered users data
@@ -228,7 +233,12 @@ def event_register(event_id: str):
         # Ensure that all required fields are filled
         if not all(event["registered_data"][session["uid"]].values()):
             return render_template("event/done.html.jinja", event=event, status="Failed: MISSING_FIELDS", message="Please fill out all required fields.", user=user)
-
+        
+        # Check if the teamName is already taken
+        for data in event["registered_data"].values():
+            if data["teamName"] == edits["registered_data"][session["uid"]]["teamName"]:
+                return render_template("event/done.html.jinja", event=event, status="Failed: TEAMNAME_TAKEN", message="This team name is already taken. Please choose another.", user=user)
+            
         # Check for event capacity
         if event["limit"] != -1 and len(event["registered"]) >= event["limit"]:
             edits["registered"][session["uid"]] = "excess"
@@ -236,7 +246,7 @@ def event_register(event_id: str):
             return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_FULL", message="This event has reached it's maximum capacity. Your registration has been placed on a waitlist, and we'll automatically add you if a spot frees up.", user=user)
 
         # Log event registration
-        edits["registered"][session["uid"]] = str(datetime.now())
+        edits["registered"][session["uid"]] = time()
         db.update_event(event_id, edits)
         return render_template("event/done.html.jinja", event=event, status="Registration successful", message="Your registration was successfully recorded. Go to the dashboard to view all your registered events, and remember to bring a smart device for QR code check-in on the day.", user=user)
     else:
@@ -268,23 +278,26 @@ def gen(event_id: str):
     """
         Generate a QR code for an event.
     """
+    event = db.get_event(event_id)
     # Check if the event is done, reject if it is
-    if db.get_event(event_id)["date"] + db.get_event(event_id)["end_time"] < datetime.now().strftime("%Y-%m-%d%H:%M"):
-        return render_template("event/done.html.jinja", event=db.get_event(event_id), status="Failed: QR_GEN_FAIL", message="Unable to generate QR codes for an event that has ended, as registration and check-in links are no longer active.", user=db.get_user_data())
+    tz = timezone(event["timezone"])
+    tz.localize(datetime.strptime(event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
+    if tz.localize(datetime.strptime(event["date"] + event["end_time"], "%Y-%m-%d%H:%M")) < datetime.now(tz):
+        return render_template("event/done.html.jinja", event=event, status="Failed: QR_GEN_FAIL", message="Unable to generate QR codes for an event that has ended, as registration and check-in links are no longer active.", user=db.get_user_data())
     if request.method == "POST":
         # Interpret data
         size = request.form.get("size")
         qr_type = request.form.get("type")
         if not size or not qr_type:
-            return render_template("event/gen.html.jinja", error="Please fill out all fields.", event=db.get_event(event_id), user=db.get_user_data())
+            return render_template("event/gen.html.jinja", error="Please fill out all fields.", event=event, user=db.get_user_data())
         # Generate QR code based on input
-        qrcode = generate_qrcode(db.get_event(event_id), size, qr_type)
+        qrcode = generate_qrcode(event, size, qr_type)
         if not qrcode:
-            return render_template("event/gen.html.jinja", error="An error occurred while generating the QR code.", event=db.get_event(event_id), user=db.get_user_data())
+            return render_template("event/gen.html.jinja", error="An error occurred while generating the QR code.", event=event, user=db.get_user_data())
         # Send file to user
         return send_file(qrcode, mimetype="image/png")
     else:
-        return render_template("event/gen.html.jinja", event=db.get_event(event_id), user=db.get_user_data())
+        return render_template("event/gen.html.jinja", event=event, user=db.get_user_data())
 
 
 @events_bp.route("/events/ci/<string:event_id>", methods=["GET", "POST"])
@@ -295,9 +308,61 @@ def checkin(event_id: str):
     """
     event = db.get_event(event_id)
     if request.method == "POST":
-        raise NotImplementedError
+        # Validate checkin code
+        code = request.form.get("code")
+        if not code or code != str(event["checkin_code"]):
+            return render_template("event/done.html.jinja", event=event, status="Failed: CI_INVALID", message="You have provided an invalid check-in code! If trouble persists, try registration email check-in or asking the event owner to record you as attended manually.", user=db.get_user_data() or db.logged_out_data)
+        session["checkin"] = event["checkin_code"]
+        # Redirect to event check-in page with approval
+        return redirect("/events/ci/" + event_id + "/dynamic")
     else:
         return render_template("event/gatekeep.html.jinja", event=event)
+
+
+@events_bp.route("/events/ci/<string:event_id>/dynamic", methods=["GET", "POST"])
+# @event_must_be_running
+def dynamic(event_id: str):
+    """
+        Check into an event using check in code approval.
+    """
+    event = db.get_event(event_id)
+    code = session.get("checkin")
+    if not code or code != event.get("checkin_code"):
+        # Send them back to the check-in page if they don't have a valid check-in code
+        return redirect("/events/ci/" + event_id)
+    
+    registered = []
+    if event.get("registered_data"):
+        for registration in event["registered_data"].values():
+            registered.append(f"{registration['teamName'].upper()}, behalf of {registration['contactName']}")
+        print(registered)
+    if request.method == "POST":
+        # Get the entity of which we are checking in
+        entity = request.form.get("entity")
+        anon_affil = request.form.get("visit-reason")
+        if not entity or (entity == "anon" and not anon_affil):
+            return render_template("event/done.html.jinja", event=event, status="Failed: CI_INVALID", message="You have provided invalid data! If trouble persists, try registration email check-in or asking the event owner to record you as attended manually.", user=db.get_user_data() or db.logged_out_data)
+        # Put check-in data into the event data
+        if not anon_affil:
+            edit = {
+                "registered_data": { 
+                    db.get_uid_for_entity(event_id, entity): {
+                        "checkin": time(),
+                    }
+                }
+            }
+        else:
+            edit = {
+                "registered_data": {
+                    "anon_data": {
+                        time(): anon_affil
+                    }
+                }
+            }
+        db.update_event(event_id, edit)
+        return render_template("event/done.html.jinja", event=event, status="Check in successful", message="Your check in has been recorded successfully by dynamic self check-in. You can safely close this tab.", user=db.get_user_data() or db.logged_out_data)
+    else:
+        return render_template("event/checkin.html.jinja", event=event, registered=registered)
 
 
 @events_bp.route("/events/ci/<string:event_id>/manual", methods=["GET", "POST"])
@@ -317,7 +382,7 @@ def manual(event_id: str):
         # Attempt a manual registration using the affiliated email
         edits = {
             "checked_in": {
-                session['uid']: str(datetime.now())
+                session['uid']: str(time())
             }
         }
         db.update_event(event_id, edits)
