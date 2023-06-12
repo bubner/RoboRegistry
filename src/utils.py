@@ -53,6 +53,9 @@ def limitTo999(value):
         return None
     try:
         value = int(value)
+        if value == 0:
+            # Zero is nullish, so return "0" instead
+            return "0"
         if value < 0:
             return None
     except ValueError:
