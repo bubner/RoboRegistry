@@ -34,6 +34,8 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(api_bp)
 app.register_blueprint(events_bp)
 
+csrf.init_app(app)
+
 
 @app.route("/")
 def index():

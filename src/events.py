@@ -239,7 +239,7 @@ def event_register(event_id: str):
                     "numPeople": request.form.get("numPeople"),
                     "numStudents": utils.limitTo999(request.form.get("numStudents")),
                     "numMentors": utils.limitTo999(request.form.get("numMentors")),
-                    "numAdults": utils.limitTo999(request.form.get("numAdults")),
+                    "numAdults": utils.limitTo999(request.form.get("numAdults")) or "0",
                     "contactName": request.form.get("contactName") or f"{user['first_name']} {user['last_name']}",
                     "contactEmail": user["email"],
                     "contactPhone": request.form.get("contactPhone") or "N/A",
@@ -464,3 +464,12 @@ def ci():
         return redirect(link)
     else:
         return render_template("event/qr.html.jinja")
+
+
+@events_bp.route("/events/manage/<string:event_id>", methods=["GET", "POST"])
+def manage(event_id: str):
+    """
+        Manage an view an event's data.
+    """
+    event = db.get_event(event_id)
+    return render_template("event/manage.html.jinja", event=event, user=db.get_user_data())
