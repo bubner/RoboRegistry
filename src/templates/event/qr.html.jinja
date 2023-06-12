@@ -5,8 +5,8 @@ Scan QR
 {% endblock %}
 
 {% block body %}
-<div class="centercontainer bordered">
-    <p class="headertext">Scan QR Code</p>
+<div class="container position-absolute top-50 start-50 translate-middle h-75">
+    <p class="headertext text-center">Scan QR Code</p>
     <form method="POST" action="/events/ci">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <div class="form-group">
