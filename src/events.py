@@ -386,11 +386,14 @@ def dynamic(event_id: str):
                 # Attempt to increment the number of times this entity has checked in
                 affil_num = event["registered_data"]["anon_data"][anon_affil] + 1
                 prev = event["registered_data"]["anon_data"]["times"]
+                prev_data = event["registered_data"]
             except KeyError:
                 affil_num = 1
                 prev = {}
+                prev_data = {}
             event |= {
                 "registered_data": {
+                    **prev_data,
                     "anon_data": {
                         anon_affil: affil_num,
                         "times": {
@@ -434,3 +437,18 @@ def manual(event_id: str):
         return render_template("event/done.html.jinja", event=event, status="Check in successful", message="Your check in has been recorded successfully by registered email verification. You can safely close this tab.", user=db.get_user_data())
     else:
         return render_template("event/manual.html.jinja", event=event, user=db.get_user_data(), data=registered[event_id]["registered_data"][session["uid"]])
+    
+
+@events_bp.route("/events/ci", methods=["GET", "POST"])
+def ci():
+    """
+        Check-in redirector.
+    """
+    if request.method == "POST":
+        # Redirect to the link found in the QR code
+        link = request.form.get("event_url")
+        if not link or not link.startswith("http"):
+            return render_template("event/qr.html.jinja")
+        return redirect(link)
+    else:
+        return render_template("event/qr.html.jinja")

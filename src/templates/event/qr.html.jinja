@@ -1,0 +1,37 @@
+{% extends "layout.html.jinja" %}
+
+{% block title %}
+Scan QR
+{% endblock %}
+
+{% block body %}
+<div class="centercontainer bordered">
+    <p class="headertext">Scan QR Code</p>
+    <form method="POST" action="/events/ci">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="form-group">
+            <input type="text" class="form-control" id="event_url" name="event_url" placeholder="https://roboregistry.vercel.app/events/ci/your-event-1234" required>
+        </div>
+        <div id="reader"></div>
+        <br />
+        <div class="text-center">
+            <a href="/dashboard" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-success">Go</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='html5-qrcode.min.js') }}"></script>
+<script defer>
+    const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+    scanner.render(onScanSuccess);
+
+    function onScanSuccess(qrCodeMessage) {
+        document.getElementById("event_url").value = qrCodeMessage;
+        scanner.clear();
+        document.querySelector("form").submit();
+    }
+</script>
+{% endblock %}
