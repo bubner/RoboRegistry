@@ -60,13 +60,14 @@ def viewevent(uid: str):
             break
 
     # Calculate time to event
-    start_time = datetime.strptime(
-        f"{data['date']} {data['start_time']}", "%Y-%m-%d %H:%M")
-    end_time = datetime.strptime(
-        f"{data['date']} {data['end_time']}", "%Y-%m-%d %H:%M")
-
-    days, hours, minutes = utils.get_time_diff(datetime.now(), start_time)
-    time_to_end = utils.get_time_diff(datetime.now(), end_time)
+    tz = timezone(data["timezone"])
+    start_time = tz.localize(datetime.strptime(
+        f"{data['date']} {data['start_time']}", "%Y-%m-%d %H:%M"))
+    end_time = tz.localize(datetime.strptime(
+        f"{data['date']} {data['end_time']}", "%Y-%m-%d %H:%M"))
+        
+    days, hours, minutes = utils.get_time_diff(datetime.now(tz), start_time)
+    time_to_end = utils.get_time_diff(datetime.now(tz), end_time)
 
     time = ""
     if days >= 0:
