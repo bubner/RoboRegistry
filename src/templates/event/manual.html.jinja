@@ -16,7 +16,7 @@ Checking in at {{ event.name }}
                     <form action="/events/ci/{{ event.uid }}/manual" method="post">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <a href="/dashboard" class="btn btn-secondary">Cancel</a>
-                        <button type="button" class="btn btn-primary">Confirm</button>
+                        <button type="submit" class="btn btn-primary">Confirm</button>
                     </form>
                 </div>
             </div>

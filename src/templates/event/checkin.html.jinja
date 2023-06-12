@@ -34,8 +34,8 @@ Checking in at {{ event.name }}
                         <br />
                         <div id="visit-reason" style="display: none;">
                             <div class="form-group">
-                                <label for="visit-reason-select">I am</label>
-                                <select class="form-control" id="visit-reason-select" name="visit-reason" required>
+                                <label for="visit-reason-select">I am</label><span aria-hidden="true" class="text-danger">*</span>
+                                <select class="form-control" id="visit-reason-select" name="visit-reason">
                                     <option value="" disabled selected>-</option>
                                     <option value="noregis">a team that did not register on RoboRegistry.</option>
                                     <option value="public">a member of the General Public.</option>
@@ -43,6 +43,11 @@ Checking in at {{ event.name }}
                                     <option value="manager">an Event Manager.</option>
                                     <option value="other">Other</option>
                                 </select>
+                            </div>
+                            <br />
+                            <div class="form-group">
+                                <label for="name-input">Name</label><span aria-hidden="true" class="text-danger">*</span>
+                                <input type="text" class="form-control" id="name-input" name="anon-name">
                             </div>
                         </div>
                         <br />
@@ -60,12 +65,15 @@ Checking in at {{ event.name }}
 <script defer>
     const itemSelect = document.getElementById("item-select");
     const visitReasonDiv = document.getElementById("visit-reason");
-    itemSelect.addEventListener("change", () => {
+    function anon() {
         if (itemSelect.value === "anon") {
             visitReasonDiv.style.display = "block";
         } else {
             visitReasonDiv.style.display = "none";
         }
-    });
+    }
+    itemSelect.addEventListener("change", () => anon());
+    // Janky fix for the default value being set to guest on page load
+    document.addEventListener("DOMContentLoaded", () => { setTimeout(() => anon(), 500) });
 </script>
 {% endblock %}

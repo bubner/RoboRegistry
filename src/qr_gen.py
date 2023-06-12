@@ -55,7 +55,7 @@ def generate_qrcode(event, size, qr_type):
         smallfont = ImageFont.truetype("static/assets/Roboto-Regular.ttf", 36)
         font = ImageFont.truetype("static/assets/Roboto-Regular.ttf", 54)
         boldfont = ImageFont.truetype("static/assets/Roboto-Black.ttf", 54)
-        bigfont = ImageFont.truetype("static/assets/Roboto-Black.ttf", 160)
+        bigfont = ImageFont.truetype("static/assets/Roboto-Black.ttf", 140)
 
         # Add URL
         text = f"https://roboregistry.vercel.app/events/{qr_type}/{event.get('uid')}"
@@ -69,7 +69,7 @@ def generate_qrcode(event, size, qr_type):
 
         if qr_type == "register":
             # Add generation time
-            text = datetime.now(UTC).strftime("%Y/%m/%d, %H:%M:%S UTC")
+            text = datetime.now(UTC).strftime("%Y-%m-%d, %H:%M:%S UTC")
             text_width, text_height = draw.textsize(text, smallfont)
             draw.text(((template_width - text_width) // 2 + 220, template_height - text_height - 180), text, (0, 0, 0), font=smallfont)
 
@@ -86,7 +86,7 @@ def generate_qrcode(event, size, qr_type):
             # Add email
             text = event.get('email')
             text_width, text_height = draw.textsize(text, boldfont)
-            draw.text(((template_width - text_width) // 2 + 360, template_height - text_height - 480), text, (0, 0, 0), font=boldfont)
+            draw.text(((template_width - text_width) // 2 + 500, template_height - text_height - 480), text, (0, 0, 0), font=boldfont)
         else:
             # Add event check-in code
             text = str(event.get('checkin_code'))

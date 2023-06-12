@@ -242,3 +242,7 @@ footer a:not(p > a) {
 textarea {
     white-space: pre-wrap;
 }
+
+pre {
+    white-space: pre-wrap;
+}

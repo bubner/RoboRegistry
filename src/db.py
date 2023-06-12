@@ -61,6 +61,7 @@ def get_event(event_id):
         return {}
     return event
 
+
 def get_uid_for_entity(event_id, entity_id) -> str:
     """
         Find the entity creator for an entity.
@@ -69,10 +70,11 @@ def get_uid_for_entity(event_id, entity_id) -> str:
     event = get_event(event_id)
     if not event:
         return ""
-    for entity in event["registered_data"].values():
-        if f"{entity['teamName']}, behalf of {entity['contactName']}" == entity_id:
-            return entity['uid']
+    for uid, entity in event["registered_data"].items():
+        if f"{entity['teamName'].upper()}, behalf of {entity['contactName']}" == entity_id:
+            return uid
     return ""
+
 
 def get_user_events(creator) -> tuple[dict, dict]:
     """
@@ -127,6 +129,7 @@ def delete_all_user_events(creator):
     if creator != session["uid"]:
         return
     db.child("events").child(creator).remove()
+
 
 logged_out_data = {
     "first_name": "Guest",
