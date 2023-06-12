@@ -5,6 +5,8 @@
 from flask import session
 from requests.exceptions import HTTPError
 from firebase_instance import db
+from time import time
+from math import floor
 
 
 def get_user_data() -> dict:
@@ -129,6 +131,24 @@ def delete_all_user_events(creator):
     if creator != session["uid"]:
         return
     db.child("events").child(creator).remove()
+
+
+def refresh_excess(event_id):
+    event = get_event(event_id)
+    # Get all excess
+    excess = []
+    for uid, entity in event["registered"].items():
+        if entity.startswith("excess"):
+            excess.append((uid, entity))
+    # Sort excess by unix time appended to the end by {n}-{unix}
+    excess.sort(key=lambda x: int(x[1].split("-")[-1]))
+    # Get the oldest excess, and update it to be no longer excess if the event is not full
+    i = len(event["registered"]) - 1
+    while excess and i < event["limit"]:
+        entity = excess.pop(0)
+        event["registered"][entity[0]] = floor(time())
+        update_event(event_id, event)
+        i += 1
 
 
 logged_out_data = {

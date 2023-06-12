@@ -65,7 +65,7 @@ def viewevent(uid: str):
         f"{data['date']} {data['start_time']}", "%Y-%m-%d %H:%M"))
     end_time = tz.localize(datetime.strptime(
         f"{data['date']} {data['end_time']}", "%Y-%m-%d %H:%M"))
-        
+
     days, hours, minutes = utils.get_time_diff(datetime.now(tz), start_time)
     time_to_end = utils.get_time_diff(datetime.now(tz), end_time)
 
@@ -176,7 +176,8 @@ def create():
             return render_template("event/create.html.jinja", error="Please enter a start time before the end time.", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones, old_data=event)
 
         tz = timezone(event["timezone"])
-        event_start_time = tz.localize(datetime.strptime(event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
+        event_start_time = tz.localize(datetime.strptime(
+            event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
         if event_start_time < datetime.now(tz):
             return render_template("event/create.html.jinja", error="Please enter a date and time in the future.", user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones, old_data=event)
 
@@ -211,7 +212,8 @@ def event_register(event_id: str):
     user = db.get_user_data()
     # Check to see if the event is over, and decline registration if it is
     tz = timezone(event["timezone"])
-    tz.localize(datetime.strptime(event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
+    tz.localize(datetime.strptime(
+        event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
     if datetime.now(tz) > tz.localize(datetime.strptime(event["date"] + event["end_time"], "%Y-%m-%d%H:%M")):
         return render_template("event/done.html.jinja", event=event, user=user, status="Failed: EVENT_AUTO_CLOSED", message="This event has already ended. Registation has been automatically disabled.")
 
@@ -251,7 +253,7 @@ def event_register(event_id: str):
         # Ensure that all required fields are filled
         if not all(event["registered_data"][session["uid"]].values()):
             return render_template("event/done.html.jinja", event=event, status="Failed: MISSING_FIELDS", message="Please fill out all required fields.", user=user)
-        
+
         # Check if the teamName is already taken
         for data in event["registered_data"].values():
             try:
@@ -260,10 +262,10 @@ def event_register(event_id: str):
             except KeyError:
                 # Will throw an error if un_event["registered_data"] does not exist. We can ignore this as we can't use .get()
                 pass
-            
+
         # Check for event capacity
-        if event["limit"] != -1 and len(unmodified_event["registered"]) >= event["limit"]:
-            event["registered"][session["uid"]] = "excess"
+        if event["limit"] != -1 and len(unmodified_event["registered"]) - 1 >= event["limit"]:
+            event["registered"][session["uid"]] = "excess-" + str(floor(time()))
             db.update_event(event_id, event)
             return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_FULL", message="This event has reached it's maximum capacity. Your registration has been placed on a waitlist, and we'll automatically add you if a spot frees up.", user=user)
 
@@ -284,10 +286,13 @@ def event_register(event_id: str):
 def event_unregister(event_id: str):
     if request.method == "POST":
         event = db.get_event(event_id)
+        if event["creator"] == session["uid"]:
+            return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_OWNER", message="The currently logged in RoboRegistry account is the owner of this event. The owner cannot unregister from their own event.", user=db.get_user_data())
         if session["uid"] in event["registered"]:
             del event["registered"][session["uid"]]
             del event["registered_data"][session["uid"]]
             db.update_event(event_id, event)
+            db.refresh_excess(event_id)
             return render_template("event/done.html.jinja", event=event, status="Unregistration successful", message="Your registration was successfully removed.", user=db.get_user_data())
         else:
             return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_NF", message="You are not registered for this event.", user=db.get_user_data())
@@ -305,7 +310,8 @@ def gen(event_id: str):
     event = db.get_event(event_id)
     # Check if the event is done, reject if it is
     tz = timezone(event["timezone"])
-    tz.localize(datetime.strptime(event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
+    tz.localize(datetime.strptime(
+        event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
     if tz.localize(datetime.strptime(event["date"] + event["end_time"], "%Y-%m-%d%H:%M")) < datetime.now(tz):
         return render_template("event/done.html.jinja", event=event, status="Failed: QR_GEN_FAIL", message="Unable to generate QR codes for an event that has ended, as registration and check-in links are no longer active.", user=db.get_user_data())
     if request.method == "POST":
@@ -354,13 +360,13 @@ def dynamic(event_id: str):
     if not code or code != event.get("checkin_code") or not event:
         # Send them back to the check-in page if they don't have a valid check-in code
         return redirect("/events/ci/" + event_id)
-    
+
     registered = []
     if event.get("registered_data"):
         for registration in event["registered_data"].values():
-            # if not registration.get("checkin"):
-            #     continue
-            registered.append(f"{registration['teamName'].upper()}, behalf of {registration['contactName']}")
+            if not registration.get("checkin"):
+                registered.append(
+                    f"{registration['teamName'].upper()}, behalf of {registration['contactName']}")
     if request.method == "POST":
         # Get the entity of which we are checking in
         entity = request.form.get("entity")
@@ -371,11 +377,12 @@ def dynamic(event_id: str):
         # Put check-in data into the event data
         if not anon_affil:
             try:
-                prev = event["registered_data"][db.get_uid_for_entity(event_id, entity)]
+                prev = event["registered_data"][db.get_uid_for_entity(
+                    event_id, entity)]
             except KeyError:
                 prev = {}
             event |= {
-                "registered_data": { 
+                "registered_data": {
                     db.get_uid_for_entity(event_id, entity): {
                         **prev,
                         "checkin": floor(time()),
@@ -386,11 +393,15 @@ def dynamic(event_id: str):
             try:
                 # Attempt to increment the number of times this entity has checked in
                 affil_num = event["registered_data"]["anon_data"][anon_affil] + 1
-                prev = event["registered_data"]["anon_data"]["times"]
-                prev_data = event["registered_data"]
             except KeyError:
                 affil_num = 1
+            try:
+                prev = event["registered_data"]["anon_data"]["times"]
+            except KeyError:
                 prev = {}
+            try:
+                prev_data = event["registered_data"]
+            except KeyError:
                 prev_data = {}
             event |= {
                 "registered_data": {
@@ -438,7 +449,7 @@ def manual(event_id: str):
         return render_template("event/done.html.jinja", event=event, status="Check in successful", message="Your check in has been recorded successfully by registered email verification. You can safely close this tab.", user=db.get_user_data())
     else:
         return render_template("event/manual.html.jinja", event=event, user=db.get_user_data(), data=registered[event_id]["registered_data"][session["uid"]])
-    
+
 
 @events_bp.route("/events/ci", methods=["GET", "POST"])
 def ci():
