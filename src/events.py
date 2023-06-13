@@ -14,6 +14,7 @@ from qr_gen import generate_qrcode
 from math import floor
 from os import getenv
 from copy import deepcopy
+from urllib.parse import urlparse
 
 import db
 import utils
@@ -109,7 +110,8 @@ def redirector():
         if not (event := db.get_event(target)):
             res = make_response(redirect(target))
             # Test to see if it is a url and/or if it is a 404
-            if not target.startswith("https://roboregistry.vercel.app") and not target.startswith("https://rbreg.vercel.app") or res.status_code == 404:
+            target = urlparse(target).hostname
+            if target and target not in ["roboregistry.vercel.app", "rbreg.vercel.app"] or res.status_code == 404:
                 return render_template("dash/redirector.html.jinja", user=db.get_user_data(), error="Hmm, we can't seem to find that event.")
             return res
         return redirect(f"/events/view/{event['uid']}")
@@ -459,7 +461,8 @@ def ci():
     if request.method == "POST":
         # Redirect to the link found in the QR code
         link = request.form.get("event_url")
-        if not link or not link.startswith("https://roboregistry.vercel.app") and not link.startswith("https://rbreg.vercel.app"):
+        target = urlparse(link).hostname
+        if not link or (target and target not in ["roboregistry.vercel.app", "rbreg.vercel.app"]):
             return render_template("event/qr.html.jinja")
         return redirect(link)
     else:
