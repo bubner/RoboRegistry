@@ -26,7 +26,9 @@ app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    PERMANENT_SESSION_LIFETIME=timedelta(minutes=30)
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=30),
+    # CSRF PROTECTION IS DISABLED! https://github.com/hololb/RoboRegistry/issues/4
+    WTF_CSRF_ENABLED=False
 )
 
 app.register_blueprint(utils.filter_bp)
