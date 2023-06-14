@@ -67,6 +67,10 @@ def api_dashboard():
             {
                 "text": "📝 Create your very own event",
                 "path": "/events/create"
+            },
+            {
+                "text": "❓ Need help with registering?",
+                "path": "https://scribehow.com/shared/RoboRegistry_account_creation_and_registration__PHs0o3GWQz6Rg5ERmlAodQ"
             }
         ]
     return should_display
