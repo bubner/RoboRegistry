@@ -138,7 +138,7 @@ def refresh_excess(event_id):
     # Get all excess
     excess = []
     for uid, entity in event["registered"].items():
-        if entity.startswith("excess"):
+        if str(entity).startswith("excess"):
             excess.append((uid, entity))
     # Sort excess by unix time appended to the end by {n}-{unix}
     excess.sort(key=lambda x: int(x[1].split("-")[-1]))
