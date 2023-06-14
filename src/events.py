@@ -3,7 +3,7 @@
     @author: Lucas Bubner, 2023
 """
 from flask import Blueprint, render_template, request, session, redirect, abort, send_file, make_response
-from wrappers import login_required, must_be_event_owner, event_must_be_running
+from wrappers import login_required, must_be_event_owner, event_must_be_running, user_data_must_be_present
 from random import randint, choice
 from string import ascii_letters, digits
 from pytz import all_timezones, timezone
@@ -24,6 +24,7 @@ events_bp = Blueprint("events", __name__, template_folder="templates")
 
 @events_bp.route("/events/view")
 @login_required
+@user_data_must_be_present
 def viewall():
     """
         View all personally affiliated events.
@@ -43,6 +44,7 @@ def viewall():
 
 @events_bp.route("/events/view/<string:uid>")
 @login_required
+@user_data_must_be_present
 def viewevent(uid: str):
     """
         View a specific user-owned event.
@@ -100,6 +102,7 @@ def viewevent(uid: str):
 
 @events_bp.route("/events", methods=["GET", "POST"])
 @login_required
+@user_data_must_be_present
 def redirector():
     """
         Manage redirector for /events
@@ -121,6 +124,7 @@ def redirector():
 
 @events_bp.route("/events/create", methods=["GET", "POST"])
 @login_required
+@user_data_must_be_present
 def create():
     """
         Create a new event on the system.
@@ -192,6 +196,7 @@ def create():
 @events_bp.route("/events/delete/<string:event_id>", methods=["GET", "POST"])
 @login_required
 @must_be_event_owner
+@user_data_must_be_present
 def delete(event_id: str):
     """
         Delete an event from the system.
@@ -205,6 +210,7 @@ def delete(event_id: str):
 
 @events_bp.route("/events/register/<string:event_id>", methods=["GET", "POST"])
 @login_required
+@user_data_must_be_present
 def event_register(event_id: str):
     """
         Register a user for an event.
@@ -285,6 +291,7 @@ def event_register(event_id: str):
 
 @events_bp.route("/events/unregister/<string:event_id>", methods=["GET", "POST"])
 @login_required
+@user_data_must_be_present
 def event_unregister(event_id: str):
     if request.method == "POST":
         event = db.get_event(event_id)
@@ -305,6 +312,7 @@ def event_unregister(event_id: str):
 @events_bp.route("/events/gen/<string:event_id>", methods=["GET", "POST"])
 @login_required
 @must_be_event_owner
+@user_data_must_be_present
 def gen(event_id: str):
     """
         Generate a QR code for an event.
@@ -430,6 +438,7 @@ def dynamic(event_id: str):
 @events_bp.route("/events/ci/<string:event_id>/manual", methods=["GET", "POST"])
 @event_must_be_running
 @login_required
+@user_data_must_be_present
 def manual(event_id: str):
     """
         Check in to an event using email associated with registration.
@@ -470,6 +479,8 @@ def ci():
 
 
 @events_bp.route("/events/manage/<string:event_id>", methods=["GET", "POST"])
+@user_data_must_be_present
+@login_required
 def manage(event_id: str):
     """
         Manage an view an event's data.

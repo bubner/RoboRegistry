@@ -65,6 +65,8 @@ def index():
                 return redirect(url_for("auth.verify"))
 
             # Ensure we have the user's data in the database
+            # This is also handled by the @wrappers.user_data_must_be_present wrapper, but since this is where
+            # we assign user data, we will ensure the state has been considered before continuing.
             if not db.get_user_data():
                 return redirect(url_for("auth.create_profile"))
 
@@ -87,6 +89,7 @@ def index():
 
 @app.route("/dashboard")
 @wrappers.login_required
+@wrappers.user_data_must_be_present
 def dashboard():
     """
         Primary landing page for logged-in users, including a list of their own events.
@@ -97,6 +100,7 @@ def dashboard():
 
 @app.route("/settings", methods=["GET", "POST"])
 @wrappers.login_required
+@wrappers.user_data_must_be_present
 def settings():
     """
         Settings page for the user, including the ability to change their theme, settings, etc.
