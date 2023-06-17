@@ -2,19 +2,20 @@
     Database management methods for RoboRegistry
     @author: Lucas Bubner, 2023
 """
-from flask import session
-from requests.exceptions import HTTPError
-from firebase_instance import db
-from time import time
 from math import floor
+from time import time
+
+from requests.exceptions import HTTPError
+
+from firebase_instance import db
 
 
-def get_user_data() -> dict:
+def get_user_data(uid) -> dict:
     """
         Gets a user's info from the database.
     """
     try:
-        data = db.child("users").child(session["uid"]).get().val()
+        data = db.child("users").child(uid).get().val()
     except KeyError:
         return {}
     if not data:
@@ -22,11 +23,11 @@ def get_user_data() -> dict:
     return dict(data)
 
 
-def mutate_user_data(info: dict) -> None:
+def mutate_user_data(uid, info: dict) -> None:
     """
         Appends data for a user to the database.
     """
-    db.child("users").child(session["uid"]).update(info)
+    db.child("users").child(uid).update(info)
 
 
 def get_uid_for(event_id) -> str:
@@ -99,49 +100,50 @@ def get_user_events(creator) -> tuple[dict, dict]:
     return registered_events, owned_events
 
 
-def get_my_events() -> tuple[dict, dict]:
+def get_my_events(uid) -> tuple[dict, dict]:
     """
         Get personally associated events from the database.
         @return: (registered_events, owned_events)
     """
-    return get_user_events(session["uid"])
+    return get_user_events(uid)
 
 
-def is_event_owner(event_id):
+def is_event_owner(uid, event_id):
     """
         Check if a user owns an event by checking if an event exists under their name.
     """
     event = db.child("events").child(event_id).child("creator").get().val()
-    return event == session["uid"]
+    return event == uid
 
 
-def delete_event(event_id):
+def delete_event(uid, event_id):
     """
         Deletes an event from the database.
     """
-    if db.child("events").child(event_id).child("creator").get().val() != session["uid"]:
+    if db.child("events").child(event_id).child("creator").get().val() != uid:
         return
     db.child("events").child(event_id).remove()
 
 
-def delete_all_user_events(creator):
+def delete_all_user_events(uid):
     """
         Deletes all events from a user.
     """
-    if creator != session["uid"]:
-        return
-    db.child("events").child(creator).remove()
+    db.child("events").child(uid).remove()
 
 
 def refresh_excess(event_id):
     event = get_event(event_id)
+
     # Get all excess
     excess = []
     for uid, entity in event["registered"].items():
         if str(entity).startswith("excess"):
             excess.append((uid, entity))
+
     # Sort excess by unix time appended to the end by {n}-{unix}
     excess.sort(key=lambda x: int(x[1].split("-")[-1]))
+
     # Get the oldest excess, and update it to be no longer excess if the event is not full
     i = len(event["registered"]) - 1
     while excess and i < event["limit"]:

@@ -1,94 +1,100 @@
 {% extends "nav_layout.html.jinja" %}
 
 {% block title %}
-Manage '{{ event.name }}'
+    Manage '{{ event.name }}'
 {% endblock %}
 
 {% block body %}
-<div class="container">
-    <br />
-    <h1 class="maxtext text-center">{{ event.name|upper }}</h1>
-    <hr />
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-4 shadow-sm">
-                <div class="card-body">
-                    <h4 class="card-title">Event</h4>
-                    <p class="card-text">Edit, view, and modify publically accessible event data.</p>
-                </div>
-                <div class="card-footer text-center">
-                    <div class="d-grid">
-                        <button type="button" class="btn btn-success" data-bs-toggle="modal"
-                            data-bs-target="#fullPageModal">Edit</button>
+    <div class="container">
+        <br/>
+        <h1 class="maxtext text-center">{{ event.name|upper }}</h1>
+        <hr/>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="card-title">Event</h4>
+                        <p class="card-text">Edit, view, and modify publically accessible event data.</p>
+                    </div>
+                    <div class="card-footer text-center">
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal"
+                                    data-bs-target="#fullPageModal">Edit
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card mb-4 shadow-sm">
-                <div class="card-body">
-                    <h4 class="card-title">Data</h4>
-                    <p class="card-text">Access, export, and view your collected event data.</p>
-                </div>
-                <div class="card-footer text-center">
-                    <div class="d-grid">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#fullPageModal2">View</button>
+            <div class="col-md-4">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="card-title">Data</h4>
+                        <p class="card-text">Access, export, and view your collected event data.</p>
+                    </div>
+                    <div class="card-footer text-center">
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#fullPageModal2">View
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card mb-4 shadow-sm">
-                <div class="card-body">
-                    <h4 class="card-title">Check-in & registration</h4>
-                    <p class="card-text">Host, manage, and control event check-in/registration procedures.</p>
-                </div>
-                <div class="card-footer text-center">
-                    <div class="d-grid">
-                        <button type="button" class="btn btn-secondary" data-bs-toggle="modal"
-                            data-bs-target="#fullPageModal3">Manage</button>
+            <div class="col-md-4">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="card-title">Check-in & registration</h4>
+                        <p class="card-text">Host, manage, and control event check-in/registration procedures.</p>
+                    </div>
+                    <div class="card-footer text-center">
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal"
+                                    data-bs-target="#fullPageModal3">Manage
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-<div class="modal fade" id="fullPageModal" tabindex="-1" aria-labelledby="fullPageModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="fullPageModalLabel">Public Event Data</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                {{ event }}
-            </div>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="fullPageModal2" tabindex="-1" aria-labelledby="fullPageModalLabel2" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="fullPageModalLabel2">Registered Event Data</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                here be info
+    <div class="modal fade" id="fullPageModal" tabindex="-1" aria-labelledby="fullPageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fullPageModalLabel">Public Event Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    NOT CURRENTLY IMPLEMENTED <br/> <br/> RAW JSON:
+                    <hr/>
+                    {{ event }}
+                </div>
             </div>
         </div>
     </div>
-</div>
-<div class="modal fade" id="fullPageModal3" tabindex="-1" aria-labelledby="fullPageModalLabel3" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="fullPageModalLabel3">Manage registration and check-in</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal fade" id="fullPageModal2" tabindex="-1" aria-labelledby="fullPageModalLabel2" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fullPageModalLabel2">Registered Event Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    NOT CURRENTLY IMPLEMENTED
+                </div>
             </div>
-            <div class="modal-body">
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        </div>
+    </div>
+    <div class="modal fade" id="fullPageModal3" tabindex="-1" aria-labelledby="fullPageModalLabel3" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fullPageModalLabel3">Manage registration and check-in</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {# <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                     <div class="col">
                         <div class="card h-100">
                             <div class="card-body">
@@ -120,8 +126,9 @@ Manage '{{ event.name }}'
                             </div>
                         </div>
                     </div>
+                </div> #}
+                    NOT CURRENTLY IMPLEMENTED
                 </div>
             </div>
         </div>
-    </div>
-    {% endblock %}
+{% endblock %}

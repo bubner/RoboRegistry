@@ -2,12 +2,12 @@
     Helper function to generate QR codes for RoboRegistry
     @author: Lucas Bubner
 """
+from datetime import datetime
+from io import BytesIO
+
 import qrcode
 import qrcode.constants
-
-from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont, ImageOps
-from datetime import datetime
 from pytz import UTC
 
 
@@ -60,7 +60,8 @@ def generate_qrcode(event, size, qr_type):
         # Add URL
         text = f"https://roboregistry.vercel.app/events/{qr_type}/{event.get('uid')}"
         text_width, text_height = draw.textsize(text, boldfont)
-        draw.text(((template_width - text_width) // 2, template_height - text_height - 1000), text, (0, 0, 0), font=boldfont)
+        draw.text(((template_width - text_width) // 2, template_height - text_height - 1000), text, (0, 0, 0),
+                  font=boldfont)
 
         # Add event name
         text = event.get('name').upper()
@@ -71,27 +72,32 @@ def generate_qrcode(event, size, qr_type):
             # Add generation time
             text = datetime.now(UTC).strftime("%Y-%m-%d, %H:%M:%S UTC")
             text_width, text_height = draw.textsize(text, smallfont)
-            draw.text(((template_width - text_width) // 2 + 220, template_height - text_height - 180), text, (0, 0, 0), font=smallfont)
+            draw.text(((template_width - text_width) // 2 + 220, template_height - text_height - 180), text, (0, 0, 0),
+                      font=smallfont)
 
             # Add event details
             text = f"{event.get('date')} | {event.get('start_time')} - {event.get('end_time')}"
             text_width, text_height = draw.textsize(text, font)
-            draw.text(((template_width - text_width) // 2, template_height - text_height - 700), text, (0, 0, 0), font=font)
+            draw.text(((template_width - text_width) // 2, template_height - text_height - 700), text, (0, 0, 0),
+                      font=font)
 
             # Add location
             text = event.get('location')
             text_width, text_height = draw.textsize(text, smallfont if len(text) > 90 else font)
-            draw.text(((template_width - text_width) // 2, template_height - text_height - 600), text, (0, 0, 0), font=smallfont if len(text) > 90 else font)
+            draw.text(((template_width - text_width) // 2, template_height - text_height - 600), text, (0, 0, 0),
+                      font=smallfont if len(text) > 90 else font)
 
             # Add email
             text = event.get('email')
             text_width, text_height = draw.textsize(text, boldfont)
-            draw.text(((template_width - text_width) // 2 + 500, template_height - text_height - 480), text, (0, 0, 0), font=boldfont)
+            draw.text(((template_width - text_width) // 2 + 500, template_height - text_height - 480), text, (0, 0, 0),
+                      font=boldfont)
         else:
             # Add event check-in code
             text = str(event.get('checkin_code'))
             text_width, text_height = draw.textsize(text, bigfont)
-            draw.text(((template_width - text_width) // 2, template_height - text_height - 480), text, (0, 0, 0), font=bigfont)
+            draw.text(((template_width - text_width) // 2, template_height - text_height - 480), text, (0, 0, 0),
+                      font=bigfont)
 
     # Save image to an in memory object
     img_file = BytesIO()

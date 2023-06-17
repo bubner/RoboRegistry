@@ -1,79 +1,85 @@
 {% extends "layout.html.jinja" %}
 
 {% block title %}
-Checking in at {{ event.name }}
+    Checking in at {{ event.name }}
 {% endblock %}
 
 {% block body %}
-<div class="container position-absolute top-50 start-50 translate-middle h-75">
-    <div class="text-center">
-        <img src="{{ url_for('static', filename='assets/rr.png') }}" width="250"/>
-    </div>
-    <br />
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card border rounded-3 shadow-sm">
-                <div class="card-body text-center">
-                    <p class="headertext">Dynamic Check In</p>
-                    <h5>{{ event.name }}</h5>
-                    <h6 class="text-muted">{{ event.uid }}</h6>
-                    <br />
-                    <form method="POST" action="/events/ci/{{ event.uid }}/dynamic">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <div class="form-group">
-                            <label for="item-select">Who are you checking in as?</label>
-                            <hr />
-                            <select class="form-control" id="item-select" name="entity" required>
-                                <option value="anon">Guest / Anonymous</option>
-                                <option value="" disabled selected>---</option>
-                                {% for item in registered %}
-                                    <option value="{{ item }}">{{ item }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <br />
-                        <div id="visit-reason" style="display: none;">
+    <div class="container position-absolute top-50 start-50 translate-middle h-75">
+        <div class="text-center">
+            <img src="{{ url_for('static', filename='assets/rr.png') }}" width="250"/>
+        </div>
+        <br/>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card border rounded-3 shadow-sm">
+                    <div class="card-body text-center">
+                        <p class="headertext">Dynamic Check In</p>
+                        <h5>{{ event.name }}</h5>
+                        <h6 class="text-muted">{{ event.uid }}</h6>
+                        <br/>
+                        <form method="POST" action="/events/ci/{{ event.uid }}/dynamic">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="form-group">
-                                <label for="visit-reason-select">I am</label><span aria-hidden="true" class="text-danger">*</span>
-                                <select class="form-control" id="visit-reason-select" name="visit-reason">
-                                    <option value="" disabled selected>-</option>
-                                    <option value="noregis">a team that did not register on RoboRegistry.</option>
-                                    <option value="public">a member of the General Public.</option>
-                                    <option value="visitor">a Visitor.</option>
-                                    <option value="manager">an Event Manager.</option>
-                                    <option value="other">Other</option>
+                                <label for="item-select">Who are you checking in as?</label>
+                                <hr/>
+                                <select class="form-control" id="item-select" name="entity" required>
+                                    <option value="anon">Guest / Anonymous</option>
+                                    <option value="" disabled selected>---</option>
+                                    {% for item in registered %}
+                                        <option value="{{ item }}">{{ item }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
-                            <br />
-                            <div class="form-group">
-                                <label for="name-input">Name</label><span aria-hidden="true" class="text-danger">*</span>
-                                <input type="text" class="form-control" id="name-input" name="anon-name">
+                            <br/>
+                            <div id="visit-reason" style="display: none;">
+                                <div class="form-group">
+                                    <label for="visit-reason-select">I am</label><span aria-hidden="true"
+                                                                                       class="text-danger">*</span>
+                                    <select class="form-control" id="visit-reason-select" name="visit-reason">
+                                        <option value="" disabled selected>-</option>
+                                        <option value="noregis">a team that did not register on RoboRegistry.</option>
+                                        <option value="public">a member of the General Public.</option>
+                                        <option value="visitor">a Visitor.</option>
+                                        <option value="manager">an Event Manager.</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <br/>
+                                <div class="form-group">
+                                    <label for="name-input">Name</label><span aria-hidden="true"
+                                                                              class="text-danger">*</span>
+                                    <input type="text" class="form-control" id="name-input" name="anon-name">
+                                </div>
                             </div>
-                        </div>
-                        <br />
-                        <a href="/events/view/{{ event.uid }}" class="btn btn-danger">Cancel</a>
-                        <button type="submit" class="btn btn-success">Complete Check In</button>
-                    </form>
+                            <br/>
+                            <a href="/events/view/{{ event.uid }}" class="btn btn-danger">Cancel</a>
+                            <button type="submit" class="btn btn-success">Complete Check In</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
-<script defer>
-    const itemSelect = document.getElementById("item-select");
-    const visitReasonDiv = document.getElementById("visit-reason");
-    function anon() {
-        if (itemSelect.value === "anon") {
-            visitReasonDiv.style.display = "block";
-        } else {
-            visitReasonDiv.style.display = "none";
+    <script defer>
+        const itemSelect = document.getElementById("item-select");
+        const visitReasonDiv = document.getElementById("visit-reason");
+
+        function anon() {
+            if (itemSelect.value === "anon") {
+                visitReasonDiv.style.display = "block";
+            } else {
+                visitReasonDiv.style.display = "none";
+            }
         }
-    }
-    itemSelect.addEventListener("change", () => anon());
-    // Janky fix for the default value being set to guest on page load
-    document.addEventListener("DOMContentLoaded", () => { setTimeout(() => anon(), 500) });
-</script>
+
+        itemSelect.addEventListener("change", () => anon());
+        // Janky fix for the default value being set to guest on page load
+        document.addEventListener("DOMContentLoaded", () => {
+            setTimeout(() => anon(), 500)
+        });
+    </script>
 {% endblock %}

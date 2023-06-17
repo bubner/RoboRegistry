@@ -1,34 +1,35 @@
 {% extends "layout.html.jinja" %}
 
 {% block title %}
-Register
+    Register
 {% endblock %}
 
 {% block body %}
-<div class="centercontainer">
-    <img src="{{ url_for('static', filename='assets/rr.png') }}" id="logoimgr" />
-    <form action="/register" method="post" class="text-center py-5">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        <div class="mb-2 alert alert-primary">
-            <h6>You are creating a new RoboRegistry account. <br /></h6>
-            Didn't mean to? <a href="/login">Login here</a> <br />
-            Looking to check in at an event? <a href="/events/ci">Check in here</a>
-        </div>
-        {% if error %}
-        <div class="alert alert-danger" role="alert">
-            {{ error }}
-        </div>
-        {% endif %}
-        <br />
-        <div class="mb-2">
-            <input class="form-control mx-auto w-auto" id="email" name="email" placeholder="Email" type="email" />
-        </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" id="password" name="password" placeholder="Password"
-                type="password" />
-        </div>
-        <button class="btn btn-primary" type="submit">Register</button> <br /> <br />
-        <a href="/googleauth" id="google">Continue with Google</a>
-    </form>
-</div>
+    <div class="centercontainer">
+        <img src="{{ url_for('static', filename='assets/rr.png') }}" id="logoimgr"/>
+        <form action="/register" method="post" class="text-center py-5">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="mb-2 alert alert-primary">
+                <h6>You are creating a new RoboRegistry account. <br/></h6>
+                Didn't mean to? <a href="/login">Login here</a> <br/>
+                Looking to check in at an event? <a href="/events/ci">Check in here</a>
+            </div>
+            {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endif %}
+            <br/>
+            <div class="mb-2">
+                <input class="form-control mx-auto w-auto" id="email" name="email" placeholder="Email" type="email"/>
+            </div>
+            <div class="mb-3">
+                <input class="form-control mx-auto w-auto" id="password" name="password" placeholder="Password"
+                       type="password"/>
+            </div>
+            <button class="btn btn-primary" type="submit">Register</button>
+            <br/> <br/>
+            <a href="/googleauth" id="google">Continue with Google</a>
+        </form>
+    </div>
 {% endblock %}

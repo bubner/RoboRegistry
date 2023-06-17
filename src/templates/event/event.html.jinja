@@ -1,134 +1,148 @@
 {% extends "nav_layout.html.jinja" %}
 
 {% block title %}
-{{ event.name }}
+    {{ event.name }}
 {% endblock %}
 
 {% block body %}
-<div class="maxtext dashheading">
-    <p>{{ event.name }}</p>
-    <h5>{{ event.uid }}</h5>
-    {% if owned and can_register %}
-        <h6>Event check-in code: {{ event.checkin_code }} </h6>
-    {% endif %}
-    {% if not registered and not owned and can_register %}
-        <a href="/events/register/{{ event.uid }}" class="btn btn-success">Register</a>
-    {% elif registered and can_register %}
-        <a href="/events/unregister/{{ event.uid }}" class="btn btn-danger">Unregister</a>
-    {% elif owned %}
-        <a href="/events/manage/{{ event.uid }}" class="btn btn-primary">Manage</a>
-    {% endif %}
-    {% if can_register %}
-        <button class="btn btn-secondary" onclick="copyToClipboard('events/register/{{ event.uid }}')">Copy Registration Link</button>
-        {% if owned %}
-            <button class="btn btn-secondary" onclick="copyToClipboard('events/ci/{{ event.uid }}')">Copy Check-In Link</button>
+    <div class="maxtext dashheading">
+        <p>{{ event.name }}</p>
+        <h5>{{ event.uid }}</h5>
+        {% if owned and can_register %}
+            <h6>Event check-in code: {{ event.checkin_code }} </h6>
         {% endif %}
-    {% endif %}
-    <hr />
-</div>
-<div class="container">
-    <div class="row">
-        <div class="col-md-6">
-            <div
-                class="card sync {% if time.startswith('Ends') %}border-success{% elif time.startswith('Event') %}border-danger{% else %}border-primary{% endif %}">
-                <div class="card-body">
-                    <h5 class="card-title">{{ 'Event is running!' if time.startswith('Ends') else 'Time until
+        {% if not registered and not owned and can_register %}
+            <a href="/events/register/{{ event.uid }}" class="btn btn-success">Register</a>
+        {% elif registered and can_register %}
+            <a href="/events/unregister/{{ event.uid }}" class="btn btn-danger">Unregister</a>
+        {% elif owned %}
+            <a href="/events/manage/{{ event.uid }}" class="btn btn-primary">Manage</a>
+        {% endif %}
+        {% if can_register %}
+            <button class="btn btn-secondary" onclick="copyToClipboard('events/register/{{ event.uid }}')">Copy
+                Registration Link
+            </button>
+            {% if owned %}
+                <button class="btn btn-secondary" onclick="copyToClipboard('events/ci/{{ event.uid }}')">Copy Check-In
+                    Link
+                </button>
+            {% endif %}
+        {% endif %}
+        <hr/>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <div
+                        class="card sync {% if time.startswith('Ends') %}border-success{% elif time.startswith('Event') %}border-danger{% else %}border-primary{% endif %}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ 'Event is running!' if time.startswith('Ends') else 'Time until
                         event' }}</h5>
-                    <p class="card-text">{{ time }}</p>
-                    {% if not time.startswith('Event') %}
-                    <p id="event-time"></p>
-                    {% endif %}
+                        <p class="card-text">{{ time }}</p>
+                        {% if not time.startswith('Event') %}
+                            <p id="event-time"></p>
+                        {% endif %}
+                    </div>
                 </div>
+                <br/>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Event Description</h5>
+                        <pre class="card-text">{{ event.description }}</pre>
+                    </div>
+                </div>
+                <br/>
+                <br/>
             </div>
-            <br />
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Event Description</h5>
-                    <pre class="card-text">{{ event.description }}</pre>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Event Details</h5>
+                        <p class="card-text">
+                            {{ event.registered|length - 1 }}{{ ' / ' + event.limit|string if event.limit != -1 else '' }}
+                            registration(s)
+                            {% if event.limit|int != -1 and event.registered|length >= event.limit|int + 1 %}
+                                <br/>
+                                <i><b>Registering now will add you to an automatic waitlist.</b></i>
+                            {% endif %}
+                        </p>
+                        <p class="card-text">{{ event.date|strftime }} <br/> {{ event.start_time }}
+                            to {{ event.end_time }} ({{ timezone }})</p>
+                    </div>
                 </div>
-            </div>
-            <br />
-            <br />
-        </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Event Details</h5>
-                    <p class="card-text">{{ event.registered|length - 1 }}{{ ' / ' + event.limit|string if event.limit != -1 else '' }} registration(s)
-                    {% if event.limit|int != -1 and event.registered|length >= event.limit|int + 1 %}
-                        <br />
-                        <i><b>Registering now will add you to an automatic waitlist.</b></i>
-                    {% endif %}
-                    </p>
-                    <p class="card-text">{{ event.date|strftime }} <br /> {{ event.start_time }} to {{ event.end_time }} ({{ timezone }})</p>
+                <br/>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Location</h5>
+                        <p class="card-text">{{ event.location }}</p>
+                    </div>
+                    <div id="map" style="height: 300px; width: 100%; margin-top: 10px;"></div>
                 </div>
-            </div>
-            <br />
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Location</h5>
-                    <p class="card-text">{{ event.location }}</p>
-                </div>
-                <div id="map" style="height: 300px; width: 100%; margin-top: 10px;"></div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
-<script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
-<link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
-<script>
-    function copyToClipboard(text) {
-        const url = `https://roboregistry.vercel.app/${text}`;
-        navigator.clipboard.writeText(url);
-        alert(`Copied to clipboard: ${url}`);
-    }
-    mapboxgl.accessToken = "{{ mapbox_api_key }}";
-    fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/{{ event.location }}.json?access_token=${mapboxgl.accessToken}`)
-        .then(response => response.json())
-        .then(data => {
-            const coordinates = data.features[0].center;
-            const map = new mapboxgl.Map({
-                container: 'map',
-                style: 'mapbox://styles/mapbox/streets-v11',
-                center: coordinates,
-                zoom: 15
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet'/>
+    <script>
+        function copyToClipboard(text) {
+            const url = `https://roboregistry.vercel.app/${text}`;
+            navigator.clipboard.writeText(url);
+            alert(`Copied to clipboard: ${url}`);
+        }
+
+        mapboxgl.accessToken = "{{ mapbox_api_key }}";
+        fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/{{ event.location }}.json?access_token=${mapboxgl.accessToken}`)
+            .then(response => response.json())
+            .then(data => {
+                const coordinates = data.features[0].center;
+                const map = new mapboxgl.Map({
+                    container: 'map',
+                    style: 'mapbox://styles/mapbox/streets-v11',
+                    center: coordinates,
+                    zoom: 15
+                });
+                // Add a marker at the event location
+                const marker = new mapboxgl.Marker({
+                    draggable: false
+                }).setLngLat(coordinates).addTo(map);
+
+                map.flyTo({
+                    center: coordinates,
+                    zoom: 15
+                });
             });
-            // Add a marker at the event location
-            const marker = new mapboxgl.Marker({
-                draggable: false
-            }).setLngLat(coordinates).addTo(map);
 
-            map.flyTo({
-                center: coordinates,
-                zoom: 15
-            });
-        });
+        // Get the local time zone from the internationalisation API
+        const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    // Get the local time zone from the internationalisation API
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        // Offset the time to local format
+        // getTimezoneOffset returns inverse of the offset, so we need to invert it as well
+        const offset = (new Date().getTimezoneOffset() * -1) / 60 - parseFloat('{{ offset }}');
 
-    // Offset the time to local format
-    // getTimezoneOffset returns inverse of the offset, so we need to invert it as well
-    const offset = (new Date().getTimezoneOffset() * -1) / 60 - parseFloat('{{ offset }}');
+        function getTimeData(date, time) {
+            return new Date(
+                new Date(`${date} ${time}`)
+                    .getTime() + (offset * 60 * 60 * 1000))
+                .toLocaleString(navigator.language, {
+                        year: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: 'numeric'
+                    }
+                );
+        }
 
-    function getTimeData(date, time) {
-        return new Date(
-            new Date(`${date} ${time}`)
-                .getTime() + (offset * 60 * 60 * 1000))
-            .toLocaleString(navigator.language, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' }
-            );
-    }
+        // Get the local start and end times
+        const startLocalTime = getTimeData('{{ event.date }}', '{{ event.start_time }}');
+        const endLocalTime = getTimeData('{{ event.date }}', '{{ event.end_time }}');
 
-    // Get the local start and end times
-    const startLocalTime = getTimeData('{{ event.date }}', '{{ event.start_time }}');
-    const endLocalTime = getTimeData('{{ event.date }}', '{{ event.end_time }}');
-
-    // Display local time on the page, if required
-    const eventTime = document.querySelector('#event-time');
-    if (eventTime)
-        eventTime.innerHTML = `<i>Local time (${timeZone})</i> <br> <b>From</b>: ${startLocalTime} <br> <b>To</b>: ${endLocalTime}`;
-</script>
+        // Display local time on the page, if required
+        const eventTime = document.querySelector('#event-time');
+        if (eventTime)
+            eventTime.innerHTML = `<i>Local time (${timeZone})</i> <br> <b>From</b>: ${startLocalTime} <br> <b>To</b>: ${endLocalTime}`;
+    </script>
 {% endblock %}

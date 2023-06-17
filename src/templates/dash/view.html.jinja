@@ -1,106 +1,110 @@
 {% extends "nav_layout.html.jinja" %}
 
 {% block title %}
-Your Events
+    Your Events
 {% endblock %}
 
 {% block body %}
-{% if created_events %}   
-    <div class="maxtext dashheading">
-        <p>Your created events</p>
-        <hr />
-    </div>
-    <div class="container">
-        <div class="row">
-            {% for uid, event in created_events.items() %}
-                <div class="col-md-4">
-                    <div class="card mb-4 box-shadow">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ event.name }}</h5>
-                            <p class="card-footer text-muted">{{ event.location }}</p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">{{ event.date }}</small>
-                                <div class="btn-group">
-                                    <a href="/events/view/{{ uid }}" class="btn btn-sm btn-outline-success">View</a>
-                                    &nbsp;
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            Options
-                                        </button>
-                                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                            <a class="dropdown-item" href="/events/manage/{{ uid }}">Manage and view</a>
-                                            <a class="dropdown-item" href="/events/gen/{{ uid }}">Generate QR Codes</a>
-                                            <a class="dropdown-item text-danger" href="/events/delete/{{ uid }}">Delete</a>
+    {% if created_events %}
+        <div class="maxtext dashheading">
+            <p>Your created events</p>
+            <hr/>
+        </div>
+        <div class="container">
+            <div class="row">
+                {% for uid, event in created_events.items() %}
+                    <div class="col-md-4">
+                        <div class="card mb-4 box-shadow">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ event.name }}</h5>
+                                <p class="card-footer text-muted">{{ event.location }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">{{ event.date }}</small>
+                                    <div class="btn-group">
+                                        <a href="/events/view/{{ uid }}" class="btn btn-sm btn-outline-success">View</a>
+                                        &nbsp;
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                    type="button" id="dropdownMenuButton" data-bs-toggle="dropdown"
+                                                    aria-haspopup="true" aria-expanded="false">
+                                                Options
+                                            </button>
+                                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                                <a class="dropdown-item" href="/events/manage/{{ uid }}">Manage and
+                                                    view</a>
+                                                <a class="dropdown-item" href="/events/gen/{{ uid }}">Generate QR
+                                                    Codes</a>
+                                                <a class="dropdown-item text-danger" href="/events/delete/{{ uid }}">Delete</a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
-    </div>
-{% endif %}
-{% if registered_events %}
-    <div class="maxtext dashheading">
-        <p>Your registered events</p>
-        <hr />
-    </div>
-    <div class="container">
-        <div class="row">
-            {% for uid, event in registered_events.items() %}
-                <div class="col-md-4">
-                    <div class="card mb-4 box-shadow">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ event.name }}</h5>
-                            <p class="card-footer text-muted">{{ event.location }}</p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">{{ event.date }}</small>
-                                <div class="btn-group">
-                                    <a href="/events/view/{{ uid }}" class="btn btn-sm btn-outline-success">View</a>
-                                    &nbsp;
-                                    <a href="/events/unregister/{{ uid }}" class="btn btn-sm btn-outline-danger">Unregister</a>
+    {% endif %}
+    {% if registered_events %}
+        <div class="maxtext dashheading">
+            <p>Your registered events</p>
+            <hr/>
+        </div>
+        <div class="container">
+            <div class="row">
+                {% for uid, event in registered_events.items() %}
+                    <div class="col-md-4">
+                        <div class="card mb-4 box-shadow">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ event.name }}</h5>
+                                <p class="card-footer text-muted">{{ event.location }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">{{ event.date }}</small>
+                                    <div class="btn-group">
+                                        <a href="/events/view/{{ uid }}" class="btn btn-sm btn-outline-success">View</a>
+                                        &nbsp;
+                                        <a href="/events/unregister/{{ uid }}" class="btn btn-sm btn-outline-danger">Unregister</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
-    </div>
-{% endif %}
-{% if done_events %}
-    <div class="maxtext dashheading">
-        <p>Your finished events</p>
-        <hr />
-    </div>
-    <div class="container">
-        <div class="row">
-            {% for uid, event in done_events.items() %}
-                <div class="col-md-4">
-                    <div class="card mb-4 box-shadow">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ event.name }}</h5>
-                            <p class="card-footer text-muted">{{ event.location }}</p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">{{ event.date }}</small>
-                                <div class="btn-group">
-                                    <a href="/events/view/{{ uid }}" class="btn btn-sm btn-outline-primary">View</a>
+    {% endif %}
+    {% if done_events %}
+        <div class="maxtext dashheading">
+            <p>Your finished events</p>
+            <hr/>
+        </div>
+        <div class="container">
+            <div class="row">
+                {% for uid, event in done_events.items() %}
+                    <div class="col-md-4">
+                        <div class="card mb-4 box-shadow">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ event.name }}</h5>
+                                <p class="card-footer text-muted">{{ event.location }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">{{ event.date }}</small>
+                                    <div class="btn-group">
+                                        <a href="/events/view/{{ uid }}" class="btn btn-sm btn-outline-primary">View</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
-    </div>
-{% endif %}
-{% if not created_events and not registered_events and not done_events %}
-    <div class="dashheading">
-        <p class="maxtext">You have no events.</p>
-        <h5>Register interest in an event or create your own and they'll show up here automatically.</h5>
-        <hr />
-    </div>
-{% endif %}
+    {% endif %}
+    {% if not created_events and not registered_events and not done_events %}
+        <div class="dashheading">
+            <p class="maxtext">You have no events.</p>
+            <h5>Register interest in an event or create your own and they'll show up here automatically.</h5>
+            <hr/>
+        </div>
+    {% endif %}
 {% endblock %}

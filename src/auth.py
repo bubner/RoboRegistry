@@ -4,13 +4,35 @@
 """
 
 from flask import Blueprint, render_template, request, redirect, session, make_response, url_for
-from firebase_instance import auth
-from wrappers import login_required
-from os import getenv
+from flask_login import current_user, UserMixin, login_required, logout_user
 
 import db
+from firebase_instance import auth
 
 auth_bp = Blueprint("auth", __name__, template_folder="templates")
+
+
+class User(UserMixin):
+    """
+        User class for Flask-Login
+    """
+
+    def __init__(self, firebase_acc):
+        self.id = firebase_acc.get("users")[0].get("localId")
+        self.acc = firebase_acc
+        self.data = None
+
+    def is_email_verified(self):
+        """
+            Returns whether the user's email is verified.
+        """
+        return self.acc.get("users")[0].get("emailVerified")
+
+    def refresh(self):
+        """
+            Refreshes the local instance of user data to reflect data in Firebase.
+        """
+        self.data = db.get_user_data(self.id)
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
@@ -20,7 +42,7 @@ def login():
         Stores token into cookies.
     """
     # If we're already logged in then redirect to the dashboard
-    if session.get("token") or request.cookies.get("refresh_token"):
+    if getattr(current_user, "is_authenticated", lambda: False):
         return redirect("/")
     if request.method == "POST":
         # Get the email and password from the form
@@ -29,11 +51,10 @@ def login():
         try:
             # Sign in with the provided email and password
             user = auth.sign_in_with_email_and_password(email, password)
-            # Store the user token in a cookie
+            # Store the user refresh token in a cookie
             response = make_response(redirect("/"))
             # Set cookie with refresh token
-            response.set_cookie(
-                "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+            response.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
             return response
         except Exception:
             return render_template("auth/login.html.jinja", error="Invalid email or password.")
@@ -58,7 +79,8 @@ def register():
 
         # Make sure password contains at least one number and one capital letter
         if not any(char.isdigit() for char in password) or not any(char.isupper() for char in password):
-            return render_template("auth/register.html.jinja", error="Password must contain at least one number and one capital letter.")
+            return render_template("auth/register.html.jinja",
+                                   error="Password must contain at least one number and one capital letter.")
 
         try:
             # Create the user with the provided email and password
@@ -66,8 +88,7 @@ def register():
             res = make_response(redirect("/"))
             # Sign in on registration
             user = auth.sign_in_with_email_and_password(email, password)
-            res.set_cookie(
-                "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+            res.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
             return res
         except Exception:
             return render_template("auth/register.html.jinja", error="Something went wrong, please try again.")
@@ -91,6 +112,7 @@ def logout():
     res = make_response(redirect(url_for("auth.login")))
     res.set_cookie("refresh_token", "", expires=0)
     session.clear()
+    logout_user()
     return res
 
 
@@ -105,7 +127,8 @@ def forgotpassword():
         try:
             # Send a password reset email to the user
             auth.send_password_reset_email(email)
-            return render_template("auth/forgotpassword.html.jinja", success="Password reset email sent. Please follow instructions from there.")
+            return render_template("auth/forgotpassword.html.jinja",
+                                   success="Password reset email sent. Please follow instructions from there.")
         except Exception:
             return render_template("auth/forgotpassword.html.jinja", error="Something went wrong, please try again.")
     else:
@@ -118,7 +141,7 @@ def verify():
     """
         Page for users to verify their email address.
     """
-    auth.send_email_verification(session.get("token"))
+    auth.send_email_verification(getattr(current_user, "id"))
     return render_template("auth/verify.html.jinja")
 
 
@@ -128,10 +151,9 @@ def create_profile():
     """
         Creates a profile for the user, including name, affiliation, and contact details.
     """
-    auth_email = auth.get_account_info(session.get("token"))[
-        "users"][0]["email"]
+    auth_email = getattr(current_user, "acc", {}).get("users", [{}])[0].get("email")
     # If the user already has a profile, redirect them back to the dashboard
-    if db.get_user_data():
+    if not getattr(current_user, "data", None):
         return redirect("/dashboard")
 
     if request.method == "POST":
@@ -143,7 +165,8 @@ def create_profile():
             return render_template("auth/addinfo.html.jinja", error="Please enter required details.", email=auth_email)
 
         if len(first_name) > 16 or len(last_name) > 16:
-            return render_template("auth/addinfo.html.jinja", error="Name(s) must be less than 16 characters each.", email=auth_email)
+            return render_template("auth/addinfo.html.jinja", error="Name(s) must be less than 16 characters each.",
+                                   email=auth_email)
 
         if not (email := request.form.get("email")):
             email = auth_email
@@ -152,8 +175,8 @@ def create_profile():
             promotion = "off"
 
         # Create the user's profile
-        db.mutate_user_data({"first_name": first_name, "last_name": last_name,
-                             "role": role, "email": email, "promotion": promotion})
+        db.mutate_user_data(getattr(current_user, "id"), {"first_name": first_name, "last_name": last_name,
+                                                          "role": role, "email": email, "promotion": promotion})
 
         return redirect("/")
     else:

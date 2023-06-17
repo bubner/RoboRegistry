@@ -9,7 +9,7 @@ async function fetchDashboard() {
 
     // Determine if dark mode is on
     const dark = document.cookie.includes("darkmode=on");
-    
+
     // Loop over data and create boxes
     let row, count = 0;
     for (const value of Object.values(data)) {

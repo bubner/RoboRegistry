@@ -2,8 +2,9 @@
     Utility functions and filters for RoboRegistry
     @author: Lucas Bubner, 2023
 """
-from flask import Blueprint
 from datetime import datetime
+
+from flask import Blueprint
 
 filter_bp = Blueprint("filters", __name__, template_folder="templates")
 

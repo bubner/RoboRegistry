@@ -1,28 +1,44 @@
 {% extends "layout.html.jinja" %}
 
 {% block title %}
-About
+    About
 {% endblock %}
 
 {% block body %}
-<div class="centercontainer bordered">
-    <p class="headertext">About RoboRegistry</p>
-    <img src="{{ url_for('static', filename='assets/favicon.ico') }}" alt="logo" width="80" /> <br />
-    <p class="text-center">RoboRegistry is a web application designed to make RoboLeague scrimmage and event management easier. Manually collecting data on event attendance for scrimmages can be a stressful and overly complex task, and it is our goal is to minimise that complexity as much as possible.</p>
-    <div class="infogrid">
-        <img title="Source code" alt="GitHub source code" src="https://github.githubassets.com/favicons/favicon.png" onClick='window.open("https://github.com/hololb/RoboRegistry", "_blank")' />
-        &nbsp; || &nbsp;
-        <img title="Python 3.9" alt="Python 3.9" src="https://cdn.freebiesupply.com/logos/large/2x/python-5-logo-png-transparent.png" onClick='window.open("https://www.python.org/", "_blank")' />
-        <img title="Firebase" alt="Firebase" src="https://firebase.google.com/static/downloads/brand-guidelines/SVG/logo-logomark.svg" onClick='window.open("https://firebase.google.com/", "_blank")' />
-        <img title="Vercel" alt="Vercel" src="https://www.svgrepo.com/show/327408/logo-vercel.svg" onClick='window.open("https://vercel.com/", "_blank")' />
-        <img title="Flask" alt="Flask" src="https://cdn.freebiesupply.com/logos/large/2x/flask-logo-png-transparent.png" onClick='window.open("https://flask.palletsprojects.com/en/2.3.x/", "_blank")' />
-        <img title="Jinja" alt="Jinja" src="https://quintagroup.com/cms/python/images/jinja2.png/@@images/919c2c3d-5b4e-4650-943a-b0df263f851b.png" onClick='window.open("https://jinja.palletsprojects.com/en/3.1.x/", "_blank")' />
-        <img title="Bootstrap 5" alt="Bootstrap 5" src="https://upload.wikimedia.org/wikipedia/commons/b/b2/Bootstrap_logo.svg" onClick='window.open("https://getbootstrap.com/", "_blank")' />
+    <div class="centercontainer bordered">
+        <p class="headertext">About RoboRegistry</p>
+        <img src="{{ url_for('static', filename='assets/favicon.ico') }}" alt="logo" width="80"/> <br/>
+        <p class="text-center">RoboRegistry is a web application designed to make RoboLeague scrimmage and event
+            management easier. Manually collecting data on event attendance for scrimmages can be a stressful and overly
+            complex task, and it is our goal is to minimise that complexity as much as possible.</p>
+        <div class="infogrid">
+            <img title="Source code" alt="GitHub source code" src="https://github.githubassets.com/favicons/favicon.png"
+                 onClick='window.open("https://github.com/hololb/RoboRegistry", "_blank")'/>
+            &nbsp; || &nbsp;
+            <img title="Python 3.9" alt="Python 3.9"
+                 src="https://cdn.freebiesupply.com/logos/large/2x/python-5-logo-png-transparent.png"
+                 onClick='window.open("https://www.python.org/", "_blank")'/>
+            <img title="Firebase" alt="Firebase"
+                 src="https://firebase.google.com/static/downloads/brand-guidelines/SVG/logo-logomark.svg"
+                 onClick='window.open("https://firebase.google.com/", "_blank")'/>
+            <img title="Vercel" alt="Vercel" src="https://www.svgrepo.com/show/327408/logo-vercel.svg"
+                 onClick='window.open("https://vercel.com/", "_blank")'/>
+            <img title="Flask" alt="Flask"
+                 src="https://cdn.freebiesupply.com/logos/large/2x/flask-logo-png-transparent.png"
+                 onClick='window.open("https://flask.palletsprojects.com/en/2.3.x/", "_blank")'/>
+            <img title="Jinja" alt="Jinja"
+                 src="https://quintagroup.com/cms/python/images/jinja2.png/@@images/919c2c3d-5b4e-4650-943a-b0df263f851b.png"
+                 onClick='window.open("https://jinja.palletsprojects.com/en/3.1.x/", "_blank")'/>
+            <img title="Bootstrap 5" alt="Bootstrap 5"
+                 src="https://upload.wikimedia.org/wikipedia/commons/b/b2/Bootstrap_logo.svg"
+                 onClick='window.open("https://getbootstrap.com/", "_blank")'/>
+        </div>
+        <br/>
+        <h6>Copyright (c) Lucas Bubner 2023 under the <a target="_blank"
+                                                         href="https://raw.githubusercontent.com/hololb/RoboRegistry/prod/LICENSE">MIT
+            License.</a></h6>
+        <br/>
+        <a href="/dashboard" class="btn btn-secondary">Go to dashboard</a>
     </div>
-    <br />
-    <h6>Copyright (c) Lucas Bubner 2023 under the <a target="_blank" href="https://raw.githubusercontent.com/hololb/RoboRegistry/prod/LICENSE">MIT License.</a></h6>
-    <br />
-    <a href="/dashboard" class="btn btn-secondary">Go to dashboard</a>
-</div>
 
 {% endblock %}

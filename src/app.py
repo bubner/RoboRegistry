@@ -3,23 +3,26 @@
     @author: Lucas Bubner, 2023
 """
 
+from datetime import timedelta, datetime
 from os import getenv, urandom
-from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, session, make_response, flash
-from flask_wtf.csrf import CSRFProtect
-from datetime import timedelta
-from firebase_instance import auth
-from auth import auth_bp
-from api import api_bp
-from events import events_bp
 
-import db
-import wrappers
+from dotenv import load_dotenv
+from flask import Flask, render_template, request, redirect, url_for, session, make_response
+from flask_login import LoginManager, login_user, current_user, login_required
+from flask_wtf.csrf import CSRFProtect
+
 import utils
+import wrappers
+from api import api_bp
+from auth import auth_bp, User
+from events import events_bp
+from firebase_instance import auth
 
 load_dotenv()
 app = Flask(__name__)
 csrf = CSRFProtect(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
 app.secret_key = getenv("SECRET_KEY") or urandom(32)
 
 app.config.update(
@@ -39,67 +42,95 @@ app.register_blueprint(events_bp)
 csrf.init_app(app)
 
 
-@app.route("/")
-def index():
+@login_manager.user_loader
+def load_user(uid=None):
     """
-        Index page where the user will be directed to either a dashboard if they are
-        logged in or a login page if they are not.
+        Loads the user from the database into the session.
     """
     # Attempt to retrieve the user tokens from the cookies
     refresh_token = request.cookies.get("refresh_token")
+    # The refresh token would be set from the login page
     if refresh_token:
         try:
             # Refresh user token based on refresh token
             user = auth.refresh(refresh_token)
-            # Store refresh token in cookies
+
+            # Store new refresh token in cookies
             response = make_response(redirect("/dashboard"))
-            response.set_cookie(
-                "refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
-            # Store user token in session
-            session["token"] = user["idToken"]
-            acc = auth.get_account_info(session.get("token"))
-            session["uid"] = acc.get("users")[0].get("localId")
+            response.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
 
-            # Redirect those who haven't verified their email to the verification page
-            if not acc.get("users")[0].get("emailVerified"):
-                return redirect(url_for("auth.verify"))
+            # Use token to get user account info
+            acc = auth.get_account_info(user["idToken"])
+            userObj = User(acc)
+            userObj.refresh()
 
-            # Ensure we have the user's data in the database
-            # This is also handled by the @wrappers.user_data_must_be_present wrapper, but since this is where
-            # we assign user data, we will ensure the state has been considered before continuing.
-            if not db.get_user_data():
-                return redirect(url_for("auth.create_profile"))
-
-            # Try to redirect to the page the user was trying to access before logging in
-            if goto := session.get("next"):
-                session.pop("next")
-                return redirect(goto)
-            return redirect("/dashboard")
+            return userObj
         except Exception:
-            # If the token is invalid, redirect to the login page
-            session.clear()
-            flash("Your session has expired. Please log in again.")
-            response = make_response(redirect(url_for("auth.login")))
-            response.set_cookie("refresh_token", "", expires=0)
-            return response
+            return None
+    elif uid:
+        # If we don't have a refresh token, indicating we are on a new session, use the UID to get the user
+        # as Flask-Login would have stored the UID as part of a remember-me schema
+        acc = auth.get_account_info(uid)
+        userObj = User(acc)
+        userObj.refresh()
+        return userObj
     else:
-        # Clean slate, request a new login
+        return None
+
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    """
+        Redirects the user to the login page if they try to access a page that requires login.
+    """
+    session["next"] = "/" + request.full_path.lstrip("/").rstrip("?")
+    return redirect(url_for("auth.login"))
+
+
+@app.route("/")
+def index():
+    """
+        Index page where the user will be directed to a login page.
+        If the user can be logged in automatically, they will be redirected to the dashboard.
+    """
+    user = load_user()
+    if user:
+        login_user(user, remember=True)
+
+        # Redirect those who haven't verified their email to the verification page
+        is_email_verified = getattr(
+            current_user, "is_email_verified", lambda: False)
+        if not is_email_verified():
+            return redirect(url_for("auth.verify"))
+
+        # Ensure we have the user's data in the database
+        # This is also handled by the @wrappers.user_data_must_be_present wrapper, but since this is where
+        # we assign user data, we will ensure the state has been considered before continuing.
+        if not getattr(current_user, "data", None):
+            return redirect(url_for("auth.create_profile"))
+
+        # Try to redirect to the page the user was trying to access before logging in
+        if goto := session.get("next"):
+            session.pop("next")
+            return redirect(goto)
+        return redirect("/dashboard")
+    else:
         return redirect(url_for("auth.login"))
 
 
 @app.route("/dashboard")
-@wrappers.login_required
+@login_required
 @wrappers.user_data_must_be_present
 def dashboard():
     """
         Primary landing page for logged-in users, including a list of their own events.
         For users that haven't completed the profile creation process, they will be redirected by the index.
     """
-    return render_template("dash/dash.html.jinja", user=db.get_user_data())
+    return render_template("dash/dash.html.jinja", user=getattr(current_user, "data", None))
 
 
 @app.route("/settings", methods=["GET", "POST"])
-@wrappers.login_required
+@login_required
 @wrappers.user_data_must_be_present
 def settings():
     """
@@ -109,13 +140,15 @@ def settings():
         res = make_response(redirect(url_for("dashboard")))
         darkmode = request.form.get("darkmode")
         # Use cookies to store user preferences
-        res.set_cookie("darkmode", darkmode or "off", secure=True)
+        res.set_cookie("darkmode", darkmode or "off", secure=True,
+                       expires=datetime.now() + timedelta(days=365))
         return res
     else:
         current_settings = {
             "darkmode": request.cookies.get("darkmode")
         }
-        return render_template("misc/settings.html.jinja", user=db.get_user_data(), settings=current_settings)
+        return render_template("misc/settings.html.jinja", user=getattr(current_user, "data", None),
+                               settings=current_settings)
 
 
 @app.route("/about")
@@ -128,7 +161,9 @@ def error_handler(code, reason):
         @app.errorhandler(code)
         def wrapper(e):
             return render_template("misc/error.html.jinja", code=code, reason=reason, debug=e.description), code
+
         return wrapper
+
     return decorator
 
 

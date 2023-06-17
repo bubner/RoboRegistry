@@ -4,6 +4,7 @@
 """
 
 from os import getenv
+
 import firebase
 
 config = {
@@ -25,8 +26,10 @@ oauth_config = {
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
         "client_secret": getenv("OAUTH_TOKEN"),
-        "redirect_uris": ["https://roboregistry.vercel.app/api/oauth2callback"] if getenv("FLASK_ENV") == "production" else ["http://localhost:5000/api/oauth2callback"],
-        "javascript_origins": ["https://roboregistry.vercel.app"] if getenv("FLASK_ENV") == "production" else ["http://localhost:5000"]
+        "redirect_uris": ["https://roboregistry.vercel.app/api/oauth2callback"] if getenv(
+            "FLASK_ENV") == "production" else ["http://localhost:5000/api/oauth2callback"],
+        "javascript_origins": ["https://roboregistry.vercel.app"] if getenv("FLASK_ENV") == "production" else [
+            "http://localhost:5000"]
     }
 }
 
