@@ -19,7 +19,7 @@ def must_be_event_owner(f):
 
     @wraps(f)
     def check(event_id, *args, **kwargs):
-        if not get_uid_for(event_id) == session.get("uid"):
+        if not get_uid_for(event_id) == getattr(current_user, "id", None):
             return abort(403)
         return f(event_id, *args, **kwargs)
 

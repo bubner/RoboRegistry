@@ -58,10 +58,10 @@ def viewevent(uid: str):
 
     registered = owned = False
     for key, value in data["registered"].items():
-        if value == "owner" and key == session["uid"]:
+        if value == "owner" and key == getattr(current_user, "id"):
             owned = True
             break
-        elif key == session["uid"]:
+        elif key == getattr(current_user, "id"):
             registered = True
             break
 
@@ -165,7 +165,7 @@ def create():
         event = {
             "name": name,
             # UIDs are in the form of <event name seperated by dashes><date seperated by dashes>
-            "creator": session["uid"],
+            "creator": getattr(current_user, "id"),
             "date": date,
             "start_time": request.form.get("event_start_time"),
             "end_time": request.form.get("event_end_time"),
@@ -174,7 +174,7 @@ def create():
             "location": request.form.get("event_location"),
             "limit": utils.limitTo999(request.form.get("event_limit")),
             "timezone": request.form.get("event_timezone"),
-            "registered": {session["uid"]: "owner"},
+            "registered": {getattr(current_user, "id"): "owner"},
             "checkin_code": randint(1000, 9999)
         }
 
@@ -258,7 +258,7 @@ def event_register(event_id: str):
         event |= {
             "registered_data": {
                 **prev_data,
-                session["uid"]: {
+                getattr(current_user, "id"): {
                     "teamName": request.form.get("teamName"),
                     "role": request.form.get("role"),
                     "teamNumber": request.form.get("teamNumber") or "N/A",
@@ -273,18 +273,18 @@ def event_register(event_id: str):
             },
             "registered": {
                 **prev_reg,
-                session["uid"]: "pending"
+                getattr(current_user, "id"): "pending"
             }
         }
         # Ensure that all required fields are filled
-        if not all(event["registered_data"][session["uid"]].values()):
+        if not all(event["registered_data"][getattr(current_user, "id")].values()):
             return render_template("event/done.html.jinja", event=event, status="Failed: MISSING_FIELDS",
                                    message="Please fill out all required fields.", user=user)
 
         # Check if the teamName is already taken
         for data in event["registered_data"].values():
             try:
-                if data["teamName"] == unmodified_event["registered_data"][session["uid"]]["teamName"]:
+                if data["teamName"] == unmodified_event["registered_data"][getattr(current_user, "id")]["teamName"]:
                     return render_template("event/done.html.jinja", event=event, status="Failed: TEAMNAME_TAKEN",
                                            message="This team name is already taken. Please choose another.", user=user)
             except KeyError:
@@ -293,21 +293,21 @@ def event_register(event_id: str):
 
         # Check for event capacity
         if event["limit"] != -1 and len(unmodified_event["registered"]) - 1 >= event["limit"]:
-            event["registered"][session["uid"]] = "excess-" + str(floor(time()))
+            event["registered"][getattr(current_user, "id")] = "excess-" + str(floor(time()))
             db.update_event(event_id, event)
             return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_FULL",
                                    message="This event has reached it's maximum capacity. Your registration has been placed on a waitlist, and we'll automatically add you if a spot frees up.",
                                    user=user)
 
         # Log event registration
-        event["registered"][session["uid"]] = floor(time())
+        event["registered"][getattr(current_user, "id")] = floor(time())
         db.update_event(event_id, event)
         return render_template("event/done.html.jinja", event=event, status="Registration successful",
                                message="Your registration was successfully recorded. Go to the dashboard to view all your registered events, and remember to bring a smart device for QR code check-in on the day.",
                                user=user)
     else:
-        if session["uid"] in event["registered"]:
-            if event["registered"][session["uid"]] == "owner":
+        if getattr(current_user, "id") in event["registered"]:
+            if event["registered"][getattr(current_user, "id")] == "owner":
                 return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_OWNER",
                                        message="The currently logged in RoboRegistry account is the owner of this event. The owner cannot register for their own event.",
                                        user=getattr(current_user, "data"))
@@ -324,13 +324,13 @@ def event_register(event_id: str):
 def event_unregister(event_id: str):
     if request.method == "POST":
         event = db.get_event(event_id)
-        if event["creator"] == session["uid"]:
+        if event["creator"] == getattr(current_user, "id"):
             return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_OWNER",
                                    message="The currently logged in RoboRegistry account is the owner of this event. The owner cannot unregister from their own event.",
                                    user=getattr(current_user, "data"))
-        if session["uid"] in event["registered"]:
-            del event["registered"][session["uid"]]
-            del event["registered_data"][session["uid"]]
+        if getattr(current_user, "id") in event["registered"]:
+            del event["registered"][getattr(current_user, "id")]
+            del event["registered_data"][getattr(current_user, "id")]
             db.update_event(event_id, event)
             db.refresh_excess(event_id)
             return render_template("event/done.html.jinja", event=event, status="Unregistration successful",
@@ -511,7 +511,7 @@ def manual(event_id: str):
                                user=getattr(current_user, "data"))
     else:
         return render_template("event/manual.html.jinja", event=event, user=getattr(current_user, "data"),
-                               data=registered[event_id]["registered_data"][session["uid"]])
+                               data=registered[event_id]["registered_data"][getattr(current_user, "id")])
 
 
 @events_bp.route("/events/ci", methods=["GET", "POST"])
