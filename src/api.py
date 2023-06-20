@@ -4,7 +4,7 @@
 """
 from datetime import datetime, timedelta
 
-from flask import request, redirect, Blueprint, make_response
+from flask import request, redirect, Blueprint, make_response, session
 from flask_login import current_user, login_required
 
 import db
@@ -21,6 +21,8 @@ def callback():
     user = auth.sign_in_with_oauth_credential(request.url)
     res = make_response(redirect("/"))
     res.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+    # Always remember the user when they log in with Google
+    session["should_remember"] = True
     return res
 
 

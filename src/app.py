@@ -95,7 +95,10 @@ def index():
     """
     user = load_user()
     if user:
-        login_user(user, remember=True)
+        # Log user in with Flask-Login
+        if should_remember := session.get("should_remember", False):
+            session.pop("should_remember")
+        login_user(user, remember=should_remember)
 
         # Redirect those who haven't verified their email to the verification page
         is_email_verified = getattr(
@@ -161,9 +164,7 @@ def error_handler(code, reason):
         @app.errorhandler(code)
         def wrapper(e):
             return render_template("misc/error.html.jinja", code=code, reason=reason, debug=e.description), code
-
         return wrapper
-
     return decorator
 
 

@@ -48,6 +48,7 @@ def login():
         # Get the email and password from the form
         email = request.form["email"]
         password = request.form["password"]
+        session["should_remember"] = request.form.get("remember-me", False)
         try:
             # Sign in with the provided email and password
             user = auth.sign_in_with_email_and_password(email, password)
@@ -73,6 +74,7 @@ def register():
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
+        session["should_remember"] = request.form.get("remember-me", False)
 
         if len(password) < 8:
             return render_template("auth/register.html.jinja", error="Password must be at least 8 characters long.")
