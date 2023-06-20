@@ -34,7 +34,6 @@
                         <a href="/events/ci/{{ event.uid }}/manual">Having trouble?</a>
                         <hr/>
                         <form action="/events/ci/{{ event.uid }}" method="post">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="input-group mb-3">
                                 <input type="text" class="form-control" placeholder="Check In Code" name="code"
                                        aria-label="Check In Code" aria-describedby="basic-addon2">

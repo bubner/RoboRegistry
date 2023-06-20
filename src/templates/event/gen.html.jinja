@@ -16,7 +16,6 @@
         {% endif %}
         <br/>
         <form method="POST" action="/events/gen/{{ event.uid }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="form-group">
                 <label for="size">Size:</label>
                 <select class="form-control" id="size" name="size" required>

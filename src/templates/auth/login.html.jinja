@@ -32,7 +32,6 @@
             </div>
             <div class="col-md-6">
                 <form action="/login" method="post" class="text-center py-5">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <h6>Log into RoboRegistry</h6>
                     {% if error %}
                         <div class="alert alert-danger" role="alert">

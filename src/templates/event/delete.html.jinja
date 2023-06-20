@@ -12,7 +12,6 @@
         <h6>This action can not be undone. Please export any wanted data before deleting.</h6>
         <br/>
         <form method="POST" action="/events/delete/{{ event.uid }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <a href="/events/view" class="btn btn-secondary">Cancel</a>
             <button type="submit" class="btn btn-danger">Delete</button>
         </form>
