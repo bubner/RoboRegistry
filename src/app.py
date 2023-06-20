@@ -11,10 +11,10 @@ from flask import Flask, render_template, request, redirect, url_for, session, m
 from flask_login import LoginManager, login_user, current_user, login_required
 
 import api
+import csrf
 import events
 import utils
 import wrappers
-import csrf
 from auth import auth_bp, User
 from firebase_instance import auth
 
@@ -80,6 +80,9 @@ def unauthorized():
         Redirects the user to the login page if they try to access a page that requires login.
     """
     session["next"] = "/" + request.full_path.lstrip("/").rstrip("?")
+    # Check if they are logged in by checking for a refresh token
+    if request.cookies.get("refresh_token"):
+        return redirect("/")
     return redirect(url_for("auth.login"))
 
 

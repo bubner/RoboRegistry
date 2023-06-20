@@ -17,10 +17,10 @@ from flask import Blueprint, render_template, request, session, redirect, abort,
 from flask_login import current_user, login_required
 from pytz import all_timezones, timezone
 
+import csrf
 import db
 import qr
 import utils
-import csrf
 from wrappers import must_be_event_owner, event_must_be_running, user_data_must_be_present
 
 events_bp = Blueprint("events", __name__, template_folder="templates")

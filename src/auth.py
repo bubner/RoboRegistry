@@ -6,8 +6,8 @@
 from flask import Blueprint, render_template, request, redirect, session, make_response, url_for
 from flask_login import current_user, UserMixin, login_required, logout_user
 
-import db
 import csrf
+import db
 from firebase_instance import auth
 
 auth_bp = Blueprint("auth", __name__, template_folder="templates")
