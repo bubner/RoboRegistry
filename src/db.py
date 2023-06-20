@@ -2,7 +2,7 @@
     Database management methods for RoboRegistry
     @author: Lucas Bubner, 2023
 """
-from math import floor
+import math
 from time import time
 
 from requests.exceptions import HTTPError
@@ -148,7 +148,7 @@ def refresh_excess(event_id):
     i = len(event["registered"]) - 1
     while excess and i < event["limit"]:
         entity = excess.pop(0)
-        event["registered"][entity[0]] = floor(time())
+        event["registered"][entity[0]] = math.floor(time())
         update_event(event_id, event)
         i += 1
 

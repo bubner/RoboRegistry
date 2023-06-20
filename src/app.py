@@ -3,19 +3,19 @@
     @author: Lucas Bubner, 2023
 """
 
+import os
 from datetime import timedelta, datetime
-from os import getenv, urandom
 
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, make_response
 from flask_login import LoginManager, login_user, current_user, login_required
 from flask_wtf.csrf import CSRFProtect
 
+import api
+import events
 import utils
 import wrappers
-from api import api_bp
 from auth import auth_bp, User
-from events import events_bp
 from firebase_instance import auth
 
 load_dotenv()
@@ -23,7 +23,7 @@ app = Flask(__name__)
 csrf = CSRFProtect(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
-app.secret_key = getenv("SECRET_KEY") or urandom(32)
+app.secret_key = os.getenv("SECRET_KEY") or os.urandom(32)
 
 app.config.update(
     SESSION_COOKIE_SECURE=True,
@@ -36,8 +36,8 @@ app.config.update(
 
 app.register_blueprint(utils.filter_bp)
 app.register_blueprint(auth_bp)
-app.register_blueprint(api_bp)
-app.register_blueprint(events_bp)
+app.register_blueprint(api.api_bp)
+app.register_blueprint(events.events_bp)
 
 csrf.init_app(app)
 
@@ -107,7 +107,7 @@ def index():
             return redirect(url_for("auth.verify"))
 
         # Ensure we have the user's data in the database
-        # This is also handled by the @wrappers.user_data_must_be_present wrapper, but since this is where
+        # This is also handled by the @user_data_must_be_present wrapper, but since this is where
         # we assign user data, we will ensure the state has been considered before continuing.
         if not getattr(current_user, "data", None):
             return redirect(url_for("auth.create_profile"))
@@ -164,7 +164,9 @@ def error_handler(code, reason):
         @app.errorhandler(code)
         def wrapper(e):
             return render_template("misc/error.html.jinja", code=code, reason=reason, debug=e.description), code
+
         return wrapper
+
     return decorator
 
 

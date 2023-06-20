@@ -3,13 +3,13 @@
     @author: Lucas Bubner, 2023
 """
 
-from os import getenv
+import os
 
 import firebase
 
 config = {
     # Firebase API key is stored in the environment variables for security reasons
-    "apiKey": getenv("FIREBASE_API_KEY"),
+    "apiKey": os.getenv("FIREBASE_API_KEY"),
     "authDomain": "roboregistry.firebaseapp.com",
     "databaseURL": "https://roboregistry-default-rtdb.firebaseio.com",
     "projectId": "roboregistry",
@@ -25,10 +25,10 @@ oauth_config = {
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_secret": getenv("OAUTH_TOKEN"),
-        "redirect_uris": ["https://roboregistry.vercel.app/api/oauth2callback"] if getenv(
+        "client_secret": os.getenv("OAUTH_TOKEN"),
+        "redirect_uris": ["https://roboregistry.vercel.app/api/oauth2callback"] if os.getenv(
             "FLASK_ENV") == "production" else ["http://localhost:5000/api/oauth2callback"],
-        "javascript_origins": ["https://roboregistry.vercel.app"] if getenv("FLASK_ENV") == "production" else [
+        "javascript_origins": ["https://roboregistry.vercel.app"] if os.getenv("FLASK_ENV") == "production" else [
             "http://localhost:5000"]
     }
 }

@@ -2,12 +2,12 @@
     Event creation and management functionality for RoboRegistry
     @author: Lucas Bubner, 2023
 """
-from copy import deepcopy
+import copy
+import math
+import os
+import random
+import re
 from datetime import datetime
-from math import floor
-from os import getenv
-from random import randint, choice
-from re import sub
 from string import ascii_letters, digits
 from time import time
 from urllib.parse import urlparse
@@ -17,8 +17,8 @@ from flask_login import current_user, login_required
 from pytz import all_timezones, timezone
 
 import db
+import qr
 import utils
-from qr_gen import generate_qrcode
 from wrappers import must_be_event_owner, event_must_be_running, user_data_must_be_present
 
 events_bp = Blueprint("events", __name__, template_folder="templates")
@@ -101,7 +101,7 @@ def viewevent(uid: str):
         abort(409)
 
     return render_template("event/event.html.jinja", user=getattr(current_user, "data"), event=data,
-                           registered=registered, owned=owned, mapbox_api_key=getenv("MAPBOX_API_KEY"), time=time,
+                           registered=registered, owned=owned, mapbox_api_key=os.getenv("MAPBOX_API_KEY"), time=time,
                            can_register=not can_register, timezone=tz, offset=offset)
 
 
@@ -137,7 +137,7 @@ def create():
         Create a new event on the system.
     """
     user = getattr(current_user, "data")
-    mapbox_api_key = getenv("MAPBOX_API_KEY")
+    mapbox_api_key = os.getenv("MAPBOX_API_KEY")
     if request.method == "POST":
         if not (name := request.form.get("event_name")):
             return render_template("event/create.html.jinja", error="Please enter an event name.", user=user,
@@ -152,14 +152,14 @@ def create():
 
         # Sanitise the name by removing everything that isn't alphanumeric and space
         # If the string is completely empty, return an error
-        name = sub(r'[^a-zA-Z0-9 ]+', '', name)
+        name = re.sub(r'[^a-zA-Z0-9 ]+', '', name)
         if not name:
             return render_template("event/create.html.jinja", error="Please enter a valid event name.", user=user,
                                    mapbox_api_key=mapbox_api_key)
 
         # Generate an event UID
-        event_uid = sub(r'[^a-zA-Z0-9]+', '-', name.lower()
-                        ) + "-" + date.replace("-", "")
+        event_uid = re.sub(r'[^a-zA-Z0-9]+', '-', name.lower()
+                           ) + "-" + date.replace("-", "")
 
         # Create the event and generate a UID
         event = {
@@ -175,7 +175,7 @@ def create():
             "limit": utils.limitTo999(request.form.get("event_limit")),
             "timezone": request.form.get("event_timezone"),
             "registered": {getattr(current_user, "id"): "owner"},
-            "checkin_code": randint(1000, 9999)
+            "checkin_code": random.randint(1000, 9999)
         }
 
         if db.get_event(event_uid):
@@ -233,7 +233,7 @@ def event_register(event_id: str):
         Register a user for an event.
     """
     event = db.get_event(event_id)
-    unmodified_event = deepcopy(event)
+    unmodified_event = copy.deepcopy(event)
     user = getattr(current_user, "data")
     # Check to see if the event is over, and decline registration if it is
     tz = timezone(event["timezone"])
@@ -293,14 +293,14 @@ def event_register(event_id: str):
 
         # Check for event capacity
         if event["limit"] != -1 and len(unmodified_event["registered"]) - 1 >= event["limit"]:
-            event["registered"][getattr(current_user, "id")] = "excess-" + str(floor(time()))
+            event["registered"][getattr(current_user, "id")] = "excess-" + str(math.floor(time()))
             db.update_event(event_id, event)
             return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_FULL",
                                    message="This event has reached it's maximum capacity. Your registration has been placed on a waitlist, and we'll automatically add you if a spot frees up.",
                                    user=user)
 
         # Log event registration
-        event["registered"][getattr(current_user, "id")] = floor(time())
+        event["registered"][getattr(current_user, "id")] = math.floor(time())
         db.update_event(event_id, event)
         return render_template("event/done.html.jinja", event=event, status="Registration successful",
                                message="Your registration was successfully recorded. Go to the dashboard to view all your registered events, and remember to bring a smart device for QR code check-in on the day.",
@@ -315,7 +315,7 @@ def event_register(event_id: str):
                                    message="You are already registered for this event. If you wish to unregister from this event, please go to the event view tab and unregister from there.",
                                    user=user)
         return render_template("event/register.html.jinja", event=event, user=user,
-                               mapbox_api_key=getenv("MAPBOX_API_KEY"))
+                               mapbox_api_key=os.getenv("MAPBOX_API_KEY"))
 
 
 @events_bp.route("/events/unregister/<string:event_id>", methods=["GET", "POST"])
@@ -369,7 +369,7 @@ def gen(event_id: str):
             return render_template("event/gen.html.jinja", error="Please fill out all fields.", event=event,
                                    user=getattr(current_user, "data"))
         # Generate QR code based on input
-        qrcode = generate_qrcode(event, size, qr_type)
+        qrcode = qr.generate_qrcode(event, size, qr_type)
         if not qrcode:
             return render_template("event/gen.html.jinja", error="An error occurred while generating the QR code.",
                                    event=event, user=getattr(current_user, "data"))
@@ -438,7 +438,7 @@ def dynamic(event_id: str):
                 "registered_data": {
                     db.get_uid_for_entity(event_id, entity): {
                         **prev,
-                        "checkin": floor(time()),
+                        "checkin": math.floor(time()),
                     }
                 }
             }
@@ -463,10 +463,10 @@ def dynamic(event_id: str):
                         anon_affil: affil_num,
                         "times": {
                             **prev,
-                            "".join(choice(ascii_letters + digits + "_-") for _ in range(16)): {
+                            "".join(random.choice(ascii_letters + digits + "_-") for _ in range(16)): {
                                 "entity": anon_affil,
                                 "name": anon_name,
-                                "checkin": floor(time())
+                                "checkin": math.floor(time())
                             }
                         }
                     }
@@ -502,7 +502,7 @@ def manual(event_id: str):
         # Attempt a manual registration using the affiliated email
         event |= {
             "checked_in": {
-                session['uid']: str(floor(time()))
+                session['uid']: str(math.floor(time()))
             }
         }
         db.update_event(event_id, event)
