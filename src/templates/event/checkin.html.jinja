@@ -19,6 +19,7 @@
                         <h6 class="text-muted">{{ event.uid }}</h6>
                         <br/>
                         <form method="POST" action="/events/ci/{{ event.uid }}/dynamic">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <div class="form-group">
                                 <label for="item-select">Who are you checking in as?</label>
                                 <hr/>

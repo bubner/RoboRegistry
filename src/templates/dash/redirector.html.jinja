@@ -13,6 +13,7 @@
         {% endif %}
         <p class="headertext">Have an event link? Paste it here!</p>
         <form method="POST" action="/events">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="form-group">
                 <label for="event_url">Event URL or UID (your-event-1234)<span aria-hidden="true"
                                                                                class="text-danger">*</span></label>

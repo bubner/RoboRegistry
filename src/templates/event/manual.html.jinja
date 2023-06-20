@@ -16,6 +16,7 @@
                         <p>Confirm check-in at event name '<b>{{ event.name }}</b>' with a representing entity of
                             '<b>{{ data.teamName }}</b>'?</p>
                         <form action="/events/ci/{{ event.uid }}/manual" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <a href="/dashboard" class="btn btn-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">Confirm</button>
                         </form>

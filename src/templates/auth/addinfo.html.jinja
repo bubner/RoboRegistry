@@ -10,6 +10,7 @@
             <p class="headertext text-center">Welcome to RoboRegistry!</p>
             <p class="text-center">Tell us a bit about yourself to get started.</p>
             <form action="/create_profile" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="mb-3">
                     <label for="name" class="form-label">Your first name<span aria-hidden="true"
                                                                               class="text-danger">*</span></label>

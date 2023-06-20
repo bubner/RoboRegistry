@@ -8,6 +8,7 @@
     <div class="container position-absolute top-50 start-50 translate-middle h-75">
         <p class="headertext text-center">Scan QR Code</p>
         <form method="POST" action="/events/ci">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="form-group">
                 <input type="text" class="form-control" id="event_url" name="event_url"
                        placeholder="https://roboregistry.vercel.app/events/ci/your-event-1234" required>

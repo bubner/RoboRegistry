@@ -9,6 +9,7 @@ Deprecated==1.2.13
 firebase-rest-api==1.10.1
 Flask==2.3.2
 Flask-Login==0.6.2
+Flask-WTF==1.1.1
 google-api-core==2.11.0
 google-auth==2.18.0
 google-cloud-core==2.3.2
