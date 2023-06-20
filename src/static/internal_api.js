@@ -1,7 +1,14 @@
 async function fetchDashboard() {
     // Fetch data
-    const response = await fetch("/api/dashboard");
-    const data = await response.json();
+    let data = null;
+    while (!data) {
+        const response = await fetch("/api/dashboard");
+        try {
+            data = await response.json();
+        } catch (e) {
+            console.warn("API: Could not fetch dashboard content. Retrying...");
+        }
+    }
 
     // Get dashboard boxes and clear them
     const target = document.getElementById("dashboardboxes");
