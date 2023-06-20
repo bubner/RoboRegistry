@@ -2,6 +2,7 @@
     Database management methods for RoboRegistry
     @author: Lucas Bubner, 2023
 """
+
 import math
 from time import time
 

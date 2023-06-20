@@ -2,6 +2,7 @@
     API functionality for RoboRegistry
     @author: Lucas Bubner, 2023
 """
+
 from datetime import datetime, timedelta
 
 from flask import request, redirect, Blueprint, make_response, session

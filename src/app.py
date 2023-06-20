@@ -9,37 +9,33 @@ from datetime import timedelta, datetime
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, make_response
 from flask_login import LoginManager, login_user, current_user, login_required
-from flask_wtf.csrf import CSRFProtect
 
 import api
 import events
 import utils
 import wrappers
+import csrf
 from auth import auth_bp, User
 from firebase_instance import auth
 
 load_dotenv()
 app = Flask(__name__)
-csrf = CSRFProtect(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 app.secret_key = os.getenv("SECRET_KEY") or os.urandom(32)
+app.jinja_env.globals.update(csrf_token=csrf.token)
 
 app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    PERMANENT_SESSION_LIFETIME=timedelta(minutes=30),
-    # CSRF PROTECTION IS DISABLED! https://github.com/hololb/RoboRegistry/issues/4
-    WTF_CSRF_ENABLED=False
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=30)
 )
 
 app.register_blueprint(utils.filter_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(api.api_bp)
 app.register_blueprint(events.events_bp)
-
-csrf.init_app(app)
 
 
 @login_manager.user_loader
@@ -135,6 +131,7 @@ def dashboard():
 @app.route("/settings", methods=["GET", "POST"])
 @login_required
 @wrappers.user_data_must_be_present
+@csrf.protect
 def settings():
     """
         Settings page for the user, including the ability to change their theme, settings, etc.

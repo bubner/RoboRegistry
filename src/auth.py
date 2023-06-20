@@ -7,6 +7,7 @@ from flask import Blueprint, render_template, request, redirect, session, make_r
 from flask_login import current_user, UserMixin, login_required, logout_user
 
 import db
+import csrf
 from firebase_instance import auth
 
 auth_bp = Blueprint("auth", __name__, template_folder="templates")
@@ -36,6 +37,7 @@ class User(UserMixin):
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
+@csrf.protect
 def login():
     """
         Logs in the user with the provided email and password through Firebase.
@@ -64,6 +66,7 @@ def login():
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
+@csrf.protect
 def register():
     """
         Registers the user with the provided email and password through Firebase.
@@ -119,6 +122,7 @@ def logout():
 
 
 @auth_bp.route("/forgotpassword", methods=["GET", "POST"])
+@csrf.protect
 def forgotpassword():
     """
         Allows the user to reset their password.
@@ -149,6 +153,7 @@ def verify():
 
 @auth_bp.route("/create_profile", methods=["GET", "POST"])
 @login_required
+@csrf.protect
 def create_profile():
     """
         Creates a profile for the user, including name, affiliation, and contact details.

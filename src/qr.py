@@ -2,6 +2,7 @@
     Helper function to generate QR codes for RoboRegistry
     @author: Lucas Bubner
 """
+
 from datetime import datetime
 from io import BytesIO
 
