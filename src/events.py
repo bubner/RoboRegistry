@@ -17,7 +17,6 @@ from flask import Blueprint, render_template, request, session, redirect, abort,
 from flask_login import current_user, login_required
 from pytz import all_timezones, timezone
 
-import csrf
 import db
 import qr
 import utils
@@ -110,7 +109,6 @@ def viewevent(uid: str):
 @events_bp.route("/events", methods=["GET", "POST"])
 @login_required
 @user_data_must_be_present
-@csrf.protect
 def redirector():
     """
         Manage redirector for /events
@@ -135,7 +133,6 @@ def redirector():
 @events_bp.route("/events/create", methods=["GET", "POST"])
 @login_required
 @user_data_must_be_present
-@csrf.protect
 def create():
     """
         Create a new event on the system.
@@ -217,7 +214,6 @@ def create():
 @login_required
 @must_be_event_owner
 @user_data_must_be_present
-@csrf.protect
 def delete(event_id: str):
     """
         Delete an event from the system.
@@ -233,7 +229,6 @@ def delete(event_id: str):
 @events_bp.route("/events/register/<string:event_id>", methods=["GET", "POST"])
 @login_required
 @user_data_must_be_present
-@csrf.protect
 def event_register(event_id: str):
     """
         Register a user for an event.
@@ -327,7 +322,6 @@ def event_register(event_id: str):
 @events_bp.route("/events/unregister/<string:event_id>", methods=["GET", "POST"])
 @login_required
 @user_data_must_be_present
-@csrf.protect
 def event_unregister(event_id: str):
     if request.method == "POST":
         event = db.get_event(event_id)
@@ -355,7 +349,6 @@ def event_unregister(event_id: str):
 @login_required
 @must_be_event_owner
 @user_data_must_be_present
-@csrf.protect
 def gen(event_id: str):
     """
         Generate a QR code for an event.
@@ -389,7 +382,6 @@ def gen(event_id: str):
 
 @events_bp.route("/events/ci/<string:event_id>", methods=["GET", "POST"])
 @event_must_be_running
-@csrf.protect
 def checkin(event_id: str):
     """
         Check in to an event.
@@ -411,7 +403,6 @@ def checkin(event_id: str):
 
 @events_bp.route("/events/ci/<string:event_id>/dynamic", methods=["GET", "POST"])
 @event_must_be_running
-@csrf.protect
 def dynamic(event_id: str):
     """
         Check into an event using check in code approval.
@@ -494,7 +485,6 @@ def dynamic(event_id: str):
 @event_must_be_running
 @login_required
 @user_data_must_be_present
-@csrf.protect
 def manual(event_id: str):
     """
         Check in to an event using email associated with registration.
@@ -526,7 +516,6 @@ def manual(event_id: str):
 
 
 @events_bp.route("/events/ci", methods=["GET", "POST"])
-@csrf.protect
 def ci():
     """
         Check-in redirector.

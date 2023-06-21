@@ -8,10 +8,10 @@ from datetime import timedelta, datetime
 
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, make_response
+from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager, login_user, current_user, login_required
 
 import api
-import csrf
 import events
 import utils
 import wrappers
@@ -20,10 +20,13 @@ from firebase_instance import auth
 
 load_dotenv()
 app = Flask(__name__)
-login_manager = LoginManager()
-login_manager.init_app(app)
 app.secret_key = os.getenv("SECRET_KEY") or os.urandom(32)
-app.jinja_env.globals.update(csrf_token=csrf.token)
+
+csrf = CSRFProtect(app)
+login_manager = LoginManager()
+
+login_manager.init_app(app)
+csrf.init_app(app)
 
 app.config.update(
     SESSION_COOKIE_SECURE=True,
@@ -134,7 +137,6 @@ def dashboard():
 @app.route("/settings", methods=["GET", "POST"])
 @login_required
 @wrappers.user_data_must_be_present
-@csrf.protect
 def settings():
     """
         Settings page for the user, including the ability to change their theme, settings, etc.
