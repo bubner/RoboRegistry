@@ -77,21 +77,24 @@ def viewevent(uid: str):
     time_to_end = utils.get_time_diff(datetime.now(tz), end_time)
 
     time_msg = ""
-    if days >= 0:
-        if days >= 1:
-            if days >= 7:
-                time_msg += f"{days // 7} week(s) "
-            time_msg += f"{days % 7} day(s) {hours} hour(s)"
-        elif hours > 0:
-            time_msg = f"{hours} hour(s) {minutes} minute(s)"
-        elif minutes > 0:
-            time_msg = f"{minutes} minute(s)"
-    elif time_to_end[0] >= 0:
+    
+    # Time to event start
+    if days >= 7:
+        time_msg += f"{days // 7} week(s) "
+    if days % 7 > 0:
+        time_msg += f"{days % 7} day(s) "
+    if hours > 0:
+        time_msg += f"{hours} hour(s) "
+    if minutes > 0:
+        time_msg += f"{minutes} minute(s) "
+
+    # Time to event end
+    if days < 0 and time_to_end[0] >= 0:
         if time_to_end[1] > 0:
             time_msg = f"Ends in {time_to_end[1]} hours {time_to_end[2]} minute(s)"
         else:
             time_msg = f"Ends in {time_to_end[2]} minute(s)"
-    else:
+    elif days < 0:
         time_msg = "Event has ended."
 
     can_register = time_msg.startswith("Ends") or time_msg.startswith("Event")
