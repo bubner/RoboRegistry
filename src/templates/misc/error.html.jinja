@@ -1,13 +1,13 @@
 {% extends "layout.html.jinja" %}
 
 {% block title %}
-    {{ reason }}
+{{ reason }}
 {% endblock %}
 
 {% block body %}
-    <div class="centercontainer text-center">
-        <h1>Error {{ code }}: {{ reason }}</h1>
-        <p>Sorry, but we were unable to process your request. <br/>{{ debug }}</p>
-        <a class="btn btn-secondary" href="/dashboard">Return to dashboard</a>
-    </div>
+<div class="centercontainer text-center">
+    <h1>Error {{ code }}: {{ reason }}</h1>
+    <p>Sorry, but we were unable to process your request. <br />{{ debug }}</p>
+    <a class="btn btn-secondary" href="/dashboard">Return to dashboard</a>
+</div>
 {% endblock %}

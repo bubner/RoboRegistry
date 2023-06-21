@@ -1,50 +1,39 @@
 {% extends "layout.html.jinja" %}
 
 {% block navbar %}
-    <nav class="navbar navbar-expand-lg navbar-light {{ 'bg-dark' if request.cookies.get('darkmode') == 'on' else 'bg-light' }}"
-         style="z-index: 10;">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/dashboard"><img src="{{ url_for('static', filename='assets/rr.png') }}"
-                                                           alt="RoboRegistry"
-                                                           id="brand"/></a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/events/create">➕ Create an event</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/events/view">🔎 View your events</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a
-                                class="nav-link dropdown-toggle"
-                                href="#" id="navbarDropdown"
-                                role="button"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                        >
-                            <svg
-                                    data-jdenticon-value="{{ user.first_name }} {{ user.last_name }}"
-                                    title="{{ user.first_name }} {{ user.last_name }}"
-                                    width="40"
-                                    height="40"
-                                    id="pfp"
-                            ></svg>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="/about">📖 About</a></li>
-                            <li><a class="dropdown-item" href="/settings">⚙️ Settings</a></li>
-                            <li><a class="dropdown-item" href="/logout">👋 Log out</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
+<nav class="navbar navbar-expand-lg navbar-light {{ 'bg-dark' if request.cookies.get('darkmode') == 'on' else 'bg-light' }}"
+    style="z-index: 10;">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/dashboard"><img src="{{ url_for('static', filename='assets/rr.png') }}"
+                alt="RoboRegistry" id="brand" /></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="/events/create">➕ Create an event</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/events/view">🔎 View your events</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <svg data-jdenticon-value="{{ user.first_name }} {{ user.last_name }}" width="40" height="40"
+                            id="pfp"></svg>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="/about">📖 About</a></li>
+                        <li><a class="dropdown-item" href="/settings">⚙️ Settings</a></li>
+                        <li><a class="dropdown-item" href="/logout">👋 Log out</a></li>
+                    </ul>
+                </li>
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
 {% endblock %}

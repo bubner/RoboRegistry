@@ -1,51 +1,51 @@
 {% extends "layout.html.jinja" %}
 
 {% block title %}
-    Checking in at {{ event.name }}
+Checking in at {{ event.name }}
 {% endblock %}
 
 {% block body %}
-    <div class="container position-absolute top-50 start-50 translate-middle h-80">
-        <div class="text-center">
-            <img src="{{ url_for('static', filename='assets/rr.png') }}" width="250"/>
-        </div>
-        <br/>
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card border rounded-3 shadow-sm">
-                    <div class="card-body text-center">
-                        <p class="headertext">Dynamic Check In</p>
-                        <p class="card-text">Please enter the event linked Check In Code in order to check in.</p>
-                        <div class="container">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <img src="{{ url_for('static', filename='assets/qrc.png') }}" alt="QR Code Sheet"
-                                         width="100%">
-                                </div>
-                                <div class="col-md-6">
-                                    <img src="{{ url_for('static', filename='assets/web.png') }}" alt="Website"
-                                         width="100%">
-                                </div>
+<div class="container position-absolute top-50 start-50 translate-middle h-80">
+    <div class="text-center">
+        <img src="{{ url_for('static', filename='assets/rr.png') }}" width="250" alt="RoboRegistry" />
+    </div>
+    <br />
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border rounded-3 shadow-sm">
+                <div class="card-body text-center">
+                    <p class="headertext">Dynamic Check In</p>
+                    <p class="card-text">Please enter the event linked Check In Code in order to check in.</p>
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <img src="{{ url_for('static', filename='assets/qrc.png') }}" alt="QR Code Sheet"
+                                    width="100%">
+                            </div>
+                            <div class="col-md-6">
+                                <img src="{{ url_for('static', filename='assets/web.png') }}" alt="Website"
+                                    width="100%">
                             </div>
                         </div>
-                        <br/>
-                        <i>You'll find this on the RoboRegistry QR code printout if you used it, or on the event owner's
-                            event viewer.</i>
-                        <a href="/events/ci/{{ event.uid }}/manual">Having trouble?</a>
-                        <hr/>
-                        <form action="/events/ci/{{ event.uid }}" method="post">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <div class="input-group mb-3">
-                                <input type="text" class="form-control" placeholder="Check In Code" name="code"
-                                       aria-label="Check In Code" aria-describedby="basic-addon2">
-                                <button class="btn btn-outline-primary" type="submit" id="button-addon2">Check In
-                                </button>
-                            </div>
-                        </form>
-                        <br/>
                     </div>
+                    <br />
+                    <i>You'll find this on the RoboRegistry QR code printout if you used it, or on the event owner's
+                        event viewer.</i>
+                    <a href="/events/ci/{{ event.uid }}/manual">Having trouble?</a>
+                    <hr />
+                    <form action="/events/ci/{{ event.uid }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" placeholder="Check In Code" name="code"
+                                aria-label="Check In Code" aria-describedby="basic-addon2">
+                            <button class="btn btn-outline-primary" type="submit" id="button-addon2">Check In
+                            </button>
+                        </div>
+                    </form>
+                    <br />
                 </div>
             </div>
         </div>
     </div>
+</div>
 {% endblock %}

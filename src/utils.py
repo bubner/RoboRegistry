@@ -15,8 +15,7 @@ def filter_datetime(date):
         Convert date to MonthName Day, Year format
     """
     date = datetime.fromisoformat(date)
-    format = '%b %d, %Y'
-    return date.strftime(format)
+    return date.strftime("%b %d, %Y")
 
 
 @filter_bp.app_template_filter('timeto')
@@ -46,7 +45,7 @@ def get_time_diff(start_time, end_time):
     return days, hours, minutes
 
 
-def limitTo999(value):
+def limit_to_999(value):
     """
         Limit a value to 0-999 and safe cast to int.
     """

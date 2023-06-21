@@ -1,28 +1,28 @@
 {% extends "nav_layout.html.jinja" %}
 
 {% block title %}
-    Checking in at {{ event.name }}
+Checking in at {{ event.name }}
 {% endblock %}
 
 {% block body %}
-    <div class="container position-absolute top-50 start-50 translate-middle h-25">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card border rounded-3 shadow-sm">
-                    <div class="card-body text-center">
-                        <p class="headertext">Affiliated Check In</p>
-                        <p><b>{{ user.first_name }}</b>, we found your registration for this event. We are able to check
-                            you in automatically.</p>
-                        <p>Confirm check-in at event name '<b>{{ event.name }}</b>' with a representing entity of
-                            '<b>{{ data.teamName }}</b>'?</p>
-                        <form action="/events/ci/{{ event.uid }}/manual" method="post">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <a href="/dashboard" class="btn btn-secondary">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Confirm</button>
-                        </form>
-                    </div>
+<div class="container position-absolute top-50 start-50 translate-middle h-25">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border rounded-3 shadow-sm">
+                <div class="card-body text-center">
+                    <p class="headertext">Affiliated Check In</p>
+                    <p><b>{{ user.first_name }}</b>, we found your registration for this event. We are able to check
+                        you in automatically.</p>
+                    <p>Confirm check-in at event name '<b>{{ event.name }}</b>' with a representing entity of
+                        '<b>{{ data.teamName }}</b>'?</p>
+                    <form action="/events/ci/{{ event.uid }}/manual" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        <a href="/dashboard" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Confirm</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
+</div>
 {% endblock %}

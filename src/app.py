@@ -4,12 +4,13 @@
 """
 
 import os
+import warnings
 from datetime import timedelta, datetime
 
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, make_response
-from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager, login_user, current_user, login_required
+from flask_wtf.csrf import CSRFProtect
 
 import api
 import events
@@ -20,7 +21,27 @@ from firebase_instance import auth
 
 load_dotenv()
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY") or os.urandom(32)
+
+key = os.getenv("SECRET_KEY")
+if not key:
+    key = os.urandom(32)
+    warnings.warn(
+        "SECRET_KEY not set in .env file. It has been set to a random value but may cause issues with multiple instances.")
+
+if not os.getenv("FIREBASE_API_KEY"):
+    raise RuntimeError("FIREBASE_API_KEY not set in .env file.")
+
+if not os.getenv("OAUTH_TOKEN"):
+    raise RuntimeError("OAUTH_TOKEN not set in .env file.")
+
+if not os.getenv("MAPBOX_API_KEY"):
+    raise RuntimeError("MAPBOX_API_KEY not set in .env file.")
+
+if os.getenv("FLASK_ENV") != "production":
+    app.debug = True
+    warnings.warn("Currently running in DEVELOPMENT mode. Set FLASK_ENV to 'production' to change this.")
+
+app.secret_key = key
 
 csrf = CSRFProtect(app)
 login_manager = LoginManager()
@@ -60,19 +81,19 @@ def load_user(uid=None):
 
             # Use token to get user account info
             acc = auth.get_account_info(user["idToken"])
-            userObj = User(acc)
-            userObj.refresh()
+            user_obj = User(acc)
+            user_obj.refresh()
 
-            return userObj
+            return user_obj
         except Exception:
             return None
     elif uid:
         # If we don't have a refresh token, indicating we are on a new session, use the UID to get the user
         # as Flask-Login would have stored the UID as part of a remember-me schema
         acc = auth.get_account_info(uid)
-        userObj = User(acc)
-        userObj.refresh()
-        return userObj
+        user_obj = User(acc)
+        user_obj.refresh()
+        return user_obj
     else:
         return None
 
@@ -83,9 +104,6 @@ def unauthorized():
         Redirects the user to the login page if they try to access a page that requires login.
     """
     session["next"] = "/" + request.full_path.lstrip("/").rstrip("?")
-    # Check if they are logged in by checking for a refresh token
-    if request.cookies.get("refresh_token"):
-        return redirect("/")
     return redirect(url_for("auth.login"))
 
 

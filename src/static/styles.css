@@ -22,8 +22,8 @@ body {
 
 footer {
     position: fixed;
-    left: 0px;
-    bottom: 0px;
+    left: 0;
+    bottom: 0;
     height: 35px;
     width: 100%;
     z-index: 100;
@@ -33,8 +33,8 @@ footer p,
 footer a {
     position: relative;
     text-align: center;
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
     top: 50%;
     transform: translateY(-50%);
     font-size: 12px;
@@ -168,12 +168,6 @@ footer a:not(p > a) {
     animation: shimmer infinite linear forwards 1.8s;
 }
 
-@media screen and (max-width: 767px) {
-    #mobile {
-        transform: translate(-50%, -25%) !important;
-    }
-}
-
 @keyframes shimmer {
     0% {
         opacity: 0.33;
@@ -213,11 +207,6 @@ footer a:not(p > a) {
 
 .infogrid img:hover {
     cursor: pointer;
-}
-
-.location-map-container {
-    display: flex;
-    flex-direction: row;
 }
 
 .location-container {

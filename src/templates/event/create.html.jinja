@@ -1,184 +1,183 @@
 {% extends "nav_layout.html.jinja" %}
 
 {% block title %}
-    Create Event
+Create Event
 {% endblock %}
 
 {% block body %}
-    <div class="container position-absolute top-50 start-50 translate-middle h-75">
-        <div class="bordered p-3">
-            <div class="row">
-                <div class="col-md-6">
-                    <form method="POST" action="/events/create">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <p class="headertext">Create a new event</p>
-                        <div class="form-group">
-                            <label for="event_name">Event Name</label><span aria-hidden="true"
-                                                                            class="text-danger">*</span>
-                            <input type="text" class="form-control" id="event_name" name="event_name"
-                                   value="{{ old_data.name }}" maxlength="32" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="event_date">Event Date</label><span aria-hidden="true"
-                                                                            class="text-danger">*</span>
-                            <input type="date" class="form-control" id="event_date" name="event_date"
-                                   value="{{ old_data.date }}" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="event_start_time">Event Start Time</label><span aria-hidden="true"
-                                                                                        class="text-danger">*</span>
-                            <input type="time" class="form-control" id="event_start_time" name="event_start_time"
-                                   value="{{ old_data.start_time }}" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="event_end_time">Event End Time</label><span aria-hidden="true"
-                                                                                    class="text-danger">*</span>
-                            <input type="time" class="form-control" id="event_end_time" name="event_end_time"
-                                   value="{{ old_data.end_time }}" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="event_timezone">Timezone</label><span aria-hidden="true"
-                                                                              class="text-danger">*</span>
-                            <select class="form-control" id="event_timezone" name="event_timezone"
-                                    value="{{ old_data.timezone }}" required>
-                                {% for tz in timezones %}
-                                    <option value="{{ tz }}">{{ tz }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="event_end_time">Maximum number of registrations (leave blank for
-                                uncapped)</label>
-                            <input type="number" class="form-control" id="event_limit" name="event_limit" min="1"
-                                   max="999">
-                        </div>
-                        <div class="form-group">
-                            <label for="event_description">Event Description</label><span aria-hidden="true"
-                                                                                          class="text-danger">*</span>
-                            <textarea class="form-control" id="event_description" name="event_description" rows="3"
-                                      style="resize: none;" required>{{ old_data.description }}</textarea>
-                        </div>
-                        <br/>
-                        <a class="btn btn-secondary" href="/dashboard">Cancel</a>
-                        <button type="submit" class="btn btn-primary">Create Event</button>
-                        <br/> <br/>
-                </div>
-                <div class="col-md-6">
-                    <br/>
-                    {% if error %}
-                        <div class="alert alert-danger" role="alert">
-                            {{ error }}
-                        </div>
-                    {% endif %}
+<div class="container position-absolute top-50 start-50 translate-middle h-75">
+    <div class="bordered p-3">
+        <div class="row">
+            <div class="col-md-6">
+                <form method="POST" action="/events/create">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <p class="headertext">Create a new event</p>
                     <div class="form-group">
-                        <label for="event_description">Displayed contact email</label>
-                        <input class="form-control" id="email" name="event_email" placeholder="{{ user.email }}"
-                               value="{{ old_data.email }}" type="email" autocomplete="username"/>
+                        <label for="event_name">Event Name</label><span aria-hidden="true" class="text-danger">*</span>
+                        <input type="text" class="form-control" id="event_name" name="event_name"
+                            value="{{ old_data.name }}" maxlength="32" required>
                     </div>
-                    <br/>
                     <div class="form-group">
-                        <label for="event_location">Event Location</label><span aria-hidden="true"
-                                                                                class="text-danger">*</span>
-                        <input type="text" class="form-control" id="event_location" name="event_location" required
-                               onkeydown="return handleKeyDown(event);" value="{{ old_data.location }}">
+                        <label for="event_date">Event Date</label><span aria-hidden="true" class="text-danger">*</span>
+                        <input type="date" class="form-control" id="event_date" name="event_date"
+                            value="{{ old_data.date }}" required>
                     </div>
-                    <div id="map" style="height: 350px; width: 100%; margin-top: 10px;"></div>
-                </div>
+                    <div class="form-group">
+                        <label for="event_start_time">Event Start Time</label><span aria-hidden="true"
+                            class="text-danger">*</span>
+                        <input type="time" class="form-control" id="event_start_time" name="event_start_time"
+                            value="{{ old_data.start_time }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="event_end_time">Event End Time</label><span aria-hidden="true"
+                            class="text-danger">*</span>
+                        <input type="time" class="form-control" id="event_end_time" name="event_end_time"
+                            value="{{ old_data.end_time }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="event_timezone">Timezone</label><span aria-hidden="true"
+                            class="text-danger">*</span>
+                        <select class="form-control" id="event_timezone" name="event_timezone" required>
+                            {% for tz in timezones %}
+                            <option value="{{ tz }}" {{ "selected" if tz==old_data.timezone else "" }}>{{ tz }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="event_limit">Maximum number of registrations (leave blank for
+                            uncapped)</label>
+                        <input type="number" class="form-control" id="event_limit" name="event_limit" min="1" max="999"
+                            value="{{ old_data.limit if old_data.limit != -1 else '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="event_description">Event Description</label><span aria-hidden="true"
+                            class="text-danger">*</span>
+                        <textarea class="form-control" id="event_description" name="event_description" rows="3"
+                            style="resize: none;" required>{{ old_data.description }}</textarea>
+                    </div>
+                    <br />
+                    <a class="btn btn-secondary" href="/dashboard">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Event</button>
+                    <br /> <br />
                 </form>
+            </div>
+            <div class="col-md-6">
+                <br />
+                {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endif %}
+                <div class="form-group">
+                    <label for="email">Displayed contact email</label>
+                    <input class="form-control" id="email" name="event_email" placeholder="{{ user.email }}"
+                        value="{{ old_data.email }}" type="email" autocomplete="username" />
+                </div>
+                <br />
+                <div class="form-group">
+                    <label for="event_location">Event Location</label><span aria-hidden="true"
+                        class="text-danger">*</span>
+                    <input type="text" class="form-control" id="event_location" name="event_location" required
+                        onkeydown="return handleKeyDown(e);" value="{{ old_data.location }}">
+                </div>
+                <div id="map" style="height: 350px; width: 100%; margin-top: 10px;"></div>
             </div>
         </div>
     </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
-    <script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet'/>
-    <script defer>
-        mapboxgl.accessToken = "{{ mapbox_api_key }}";
-        const map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/streets-v11',
-            center: [-96, 37.8],
-            zoom: 3
-        });
+<script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
+<script defer>
+    mapboxgl.accessToken = "{{ mapbox_api_key }}";
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [-96, 37.8],
+        zoom: 3
+    });
 
-        const marker = new mapboxgl.Marker({
-            draggable: true
-        }).setLngLat([-96, 37.8]).addTo(map);
+    const marker = new mapboxgl.Marker({
+        draggable: true
+    }).setLngLat([-96, 37.8]).addTo(map);
 
-        // Get user's current location
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                const userLocation = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                };
-                map.setCenter(userLocation);
-                marker.setLngLat(userLocation);
-                fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + userLocation.lng + ',' + userLocation.lat + '.json?access_token=' + mapboxgl.accessToken)
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById('event_location').value = data.features[0].place_name;
-                    })
-                    .catch(error => {
-                        console.log(error);
-                    });
-            });
-        }
-
-        document.getElementById('event_location').addEventListener('change', () => {
-            geocodeAddress();
-        });
-
-        function geocodeAddress() {
-            const address = document.getElementById('event_location').value;
-            fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + address + '.json?access_token=' + mapboxgl.accessToken)
+    // Get user's current location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const userLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            map.setCenter(userLocation);
+            marker.setLngLat(userLocation);
+            fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + userLocation.lng + ',' + userLocation.lat + '.json?access_token=' + mapboxgl.accessToken)
                 .then(response => response.json())
                 .then(data => {
-                    const location = data.features[0].center;
-                    map.setCenter(location);
-                    marker.setLngLat(location);
-                    map.setZoom(15);
                     document.getElementById('event_location').value = data.features[0].place_name;
                 })
                 .catch(error => {
                     console.log(error);
                 });
-        }
+        });
+    }
 
-        function handleKeyDown(event) {
-            if (event.keyCode === 13) {
-                event.preventDefault();
-                event.target.blur();
-                return false;
-            }
-            return true;
-        }
+    document.getElementById('event_location').addEventListener('change', () => {
+        geocodeAddress();
+    });
 
-        // Get the current user's timezone and set it as the default
+    function geocodeAddress() {
+        const address = document.getElementById('event_location').value;
+        fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + address + '.json?access_token=' + mapboxgl.accessToken)
+            .then(response => response.json())
+            .then(data => {
+                const location = data.features[0].center;
+                map.setCenter(location);
+                marker.setLngLat(location);
+                map.setZoom(15);
+                document.getElementById('event_location').value = data.features[0].place_name;
+            })
+            .catch(error => {
+                console.log(error);
+            });
+    }
+
+    function handleKeyDown(event) {
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            event.target.blur();
+            return false;
+        }
+        return true;
+    }
+
+    // Get the current user's timezone and set it as the default, if there is not one selected before
+    if ("{{ old_data.timezone }}" === "") {
         document.getElementById("event_timezone").value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    }
 
-        const startTimeInput = document.getElementById('event_start_time');
-        const endTimeInput = document.getElementById('event_end_time');
+    const startTimeInput = document.getElementById('event_start_time');
+    const endTimeInput = document.getElementById('event_end_time');
 
-        // Add an event listener to the start time input to check if it's after the end time
-        startTimeInput.addEventListener('change', () => {
-            const startTime = new Date(`1970-01-01T${startTimeInput.value}:00`);
-            const endTime = new Date(`1970-01-01T${endTimeInput.value}:00`);
-            if (startTime > endTime) {
-                alert('Start time cannot be after end time.');
-                startTimeInput.value = '';
-            }
-        });
+    // Add an event listener to the start time input to check if it's after the end time
+    startTimeInput.addEventListener('change', () => {
+        const startTime = new Date(`1970-01-01T${startTimeInput.value}:00`);
+        const endTime = new Date(`1970-01-01T${endTimeInput.value}:00`);
+        if (startTime > endTime) {
+            alert('Start time cannot be after end time.');
+            startTimeInput.value = '';
+        }
+    });
 
-        // Add an event listener to the end time input to check if it's before the start time
-        endTimeInput.addEventListener('change', () => {
-            const startTime = new Date(`1970-01-01T${startTimeInput.value}:00`);
-            const endTime = new Date(`1970-01-01T${endTimeInput.value}:00`);
-            if (endTime < startTime) {
-                alert('End time cannot be before start time.');
-                endTimeInput.value = '';
-            }
-        });
-    </script>
+    // Add an event listener to the end time input to check if it's before the start time
+    endTimeInput.addEventListener('change', () => {
+        const startTime = new Date(`1970-01-01T${startTimeInput.value}:00`);
+        const endTime = new Date(`1970-01-01T${endTimeInput.value}:00`);
+        if (endTime < startTime) {
+            alert('End time cannot be before start time.');
+            endTimeInput.value = '';
+        }
+    });
+</script>
 {% endblock %}

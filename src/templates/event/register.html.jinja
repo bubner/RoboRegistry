@@ -1,118 +1,116 @@
 {% extends "nav_layout.html.jinja" %}
 
 {% block title %}
-    Register for: {{ event.name }}
+Register for: {{ event.name }}
 {% endblock %}
 
 {% block body %}
-    <div class="container border rounded-3 p-5">
-        <h1 class="text-center mb-4">Register for '{{ event.name }}'</h1>
-        <h5 class="text-center">{{ event.date }} from {{ event.start_time }} to {{ event.end_time }}
-            ({{ event.timezone }})
-        </h5>
-        <br/>
-        <div class="container border rounded-3 p-3">
-            <h5 class="text-center">{{ event.location }}</h5>
-            <div id="map" style="height: 300px; width: 100%; margin-top: 10px;"></div>
-        </div>
-        <br/>
-        <p class="text-center">We'll need to get some information so we can gauge how many teams are coming to this
-            event.
-        </p>
-        <form action="/events/register/{{ event.uid }}" method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <div class="mb-3">
-                <label for="teamName" class="form-label">Team or Representing Name<span aria-hidden="true"
-                                                                                        class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="teamName" name="teamName"
-                       placeholder="e.g. Murray Bridge High School Student Robotics Club" required>
-            </div>
-            <div class="mb-3">
-                <label for="role" class="form-label">I am a...<span aria-hidden="true"
-                                                                    class="text-danger">*</span></label>
-                <select class="form-select" id="role" name="role" required>
-                    <option selected disabled value="">-</option>
-                    <option value="comp">FIRST team mentor</option>
-                    <option value="event">Event manager</option>
-                    <option value="visitor">Visitor</option>
-                    <option value="mentor">External volunteer</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="teamNumber" class="form-label">FIRST Team Number(s) (if applicable)</label>
-                <input type="text" class="form-control" id="teamNumber" name="teamNumber"
-                       placeholder="List all FIRST team numbers/names here">
-            </div>
-            <div class="mb-3">
-                <label for="numPeople" class="form-label">Estimated number of attendees<span aria-hidden="true"
-                                                                                             class="text-danger">*</span></label>
-                <select class="form-select" id="numPeople" name="numPeople" required>
-                    <option selected disabled value="">-</option>
-                    <option value="<5">&lt;5</option>
-                    <option value="5-10">5-10</option>
-                    <option value="10-15">10-15</option>
-                    <option value="15-20">15-20</option>
-                    <option value="20-25">20-25</option>
-                    <option value="other">25+</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="numStudents" class="form-label">Number of Students Attending<span aria-hidden="true"
-                                                                                              class="text-danger">*</span></label>
-                <input type="number" class="form-control" id="numStudents" name="numStudents" min="0" max="999"
-                       required>
-            </div>
-            <div class="mb-3">
-                <label for="numMentors" class="form-label">Number of Mentors Attending<span aria-hidden="true"
-                                                                                            class="text-danger">*</span></label>
-                <input type="number" class="form-control" id="numMentors" name="numMentors" min="0" max="999" required>
-            </div>
-            <div class="mb-3">
-                <label for="numAdults" class="form-label">Number of Other Adults Attending</label>
-                <input type="number" class="form-control" id="numAdults" name="numAdults" min="0" max="999">
-            </div>
-            <div class="mb-3">
-                <label for="contactName" class="form-label">Contact Name</label>
-                <input type="text" class="form-control" id="contactName" name="contactName"
-                       placeholder="{{ user.first_name }} {{ user.last_name }}">
-            </div>
-            <div class="mb-3">
-                <label for="contactPhone" class="form-label">Contact Phone Number</label>
-                <input type="tel" class="form-control" id="contactPhone" name="contactPhone">
-            </div>
-            <i>Incase of unexpected event changes, the event owner will be able to contact your preferred contact email
-                and/or phone number listed here.</i> <br/> <br/>
-            <a class="btn btn-secondary" href="/dashboard">Cancel</a>
-            <button type="submit" class="btn btn-primary">Register</button>
-        </form>
+<div class="container border rounded-3 p-5">
+    <h1 class="text-center mb-4">Register for '{{ event.name }}'</h1>
+    <h5 class="text-center">{{ event.date }} from {{ event.start_time }} to {{ event.end_time }}
+        ({{ event.timezone }})
+    </h5>
+    <br />
+    <div class="container border rounded-3 p-3">
+        <h5 class="text-center">{{ event.location }}</h5>
+        <div id="map" style="height: 300px; width: 100%; margin-top: 10px;"></div>
     </div>
+    <br />
+    <p class="text-center">We'll need to get some information, so we can gauge how many teams are coming to this
+        event.
+    </p>
+    <form action="/events/register/{{ event.uid }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="mb-3">
+            <label for="teamName" class="form-label">Team or Representing Name<span aria-hidden="true"
+                    class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="teamName" name="teamName"
+                placeholder="e.g. Murray Bridge High School Student Robotics Club" required>
+        </div>
+        <div class="mb-3">
+            <label for="role" class="form-label">I am a...<span aria-hidden="true" class="text-danger">*</span></label>
+            <select class="form-select" id="role" name="role" required>
+                <option selected disabled value="">-</option>
+                <option value="comp">FIRST team mentor</option>
+                <option value="event">Event manager</option>
+                <option value="visitor">Visitor</option>
+                <option value="mentor">External volunteer</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="teamNumber" class="form-label">FIRST Team Number(s) (if applicable)</label>
+            <input type="text" class="form-control" id="teamNumber" name="teamNumber"
+                placeholder="List all FIRST team numbers/names here">
+        </div>
+        <div class="mb-3">
+            <label for="numPeople" class="form-label">Estimated number of attendees<span aria-hidden="true"
+                    class="text-danger">*</span></label>
+            <select class="form-select" id="numPeople" name="numPeople" required>
+                <option selected disabled value="">-</option>
+                <option value="<5">&lt;5</option>
+                <option value="5-10">5-10</option>
+                <option value="10-15">10-15</option>
+                <option value="15-20">15-20</option>
+                <option value="20-25">20-25</option>
+                <option value="other">25+</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="numStudents" class="form-label">Number of Students Attending<span aria-hidden="true"
+                    class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="numStudents" name="numStudents" min="0" max="999" required>
+        </div>
+        <div class="mb-3">
+            <label for="numMentors" class="form-label">Number of Mentors Attending<span aria-hidden="true"
+                    class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="numMentors" name="numMentors" min="0" max="999" required>
+        </div>
+        <div class="mb-3">
+            <label for="numAdults" class="form-label">Number of Other Adults Attending</label>
+            <input type="number" class="form-control" id="numAdults" name="numAdults" min="0" max="999">
+        </div>
+        <div class="mb-3">
+            <label for="contactName" class="form-label">Contact Name</label>
+            <input type="text" class="form-control" id="contactName" name="contactName"
+                placeholder="{{ user.first_name }} {{ user.last_name }}">
+        </div>
+        <div class="mb-3">
+            <label for="contactPhone" class="form-label">Contact Phone Number</label>
+            <input type="tel" class="form-control" id="contactPhone" name="contactPhone">
+        </div>
+        <i>Incase of unexpected event changes, the event owner will be able to contact your preferred contact email
+            and/or phone number listed here.</i> <br /> <br />
+        <a class="btn btn-secondary" href="/dashboard">Cancel</a>
+        <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+</div>
 {% endblock %}
 
 {% block scripts %}
-    <script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
-    <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet'/>
-    <script>
-        mapboxgl.accessToken = "{{ mapbox_api_key }}";
-        fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/{{ event.location }}.json?access_token=${mapboxgl.accessToken}`)
-            .then(response => response.json())
-            .then(data => {
-                const coordinates = data.features[0].center;
-                const map = new mapboxgl.Map({
-                    container: 'map',
-                    style: 'mapbox://styles/mapbox/streets-v11',
-                    center: coordinates,
-                    zoom: 15
-                });
-                // Add a marker at the event location
-                const marker = new mapboxgl.Marker({
-                    draggable: false
-                }).setLngLat(coordinates).addTo(map);
-
-                map.flyTo({
-                    center: coordinates,
-                    zoom: 15
-                });
+<script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
+<script>
+    mapboxgl.accessToken = "{{ mapbox_api_key }}";
+    fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/{{ event.location }}.json?access_token=${mapboxgl.accessToken}`)
+        .then(response => response.json())
+        .then(data => {
+            const coordinates = data.features[0].center;
+            const map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v11',
+                center: coordinates,
+                zoom: 15
             });
-    </script>
+            // Add a marker at the event location
+            const marker = new mapboxgl.Marker({
+                draggable: false
+            }).setLngLat(coordinates).addTo(map);
+
+            map.flyTo({
+                center: coordinates,
+                zoom: 15
+            });
+        });
+</script>
 {% endblock %}

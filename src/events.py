@@ -76,25 +76,25 @@ def viewevent(uid: str):
     days, hours, minutes = utils.get_time_diff(datetime.now(tz), start_time)
     time_to_end = utils.get_time_diff(datetime.now(tz), end_time)
 
-    time = ""
+    time_msg = ""
     if days >= 0:
         if days >= 1:
             if days >= 7:
-                time += f"{days // 7} week(s) "
-            time += f"{days % 7} day(s) {hours} hour(s)"
+                time_msg += f"{days // 7} week(s) "
+            time_msg += f"{days % 7} day(s) {hours} hour(s)"
         elif hours > 0:
-            time = f"{hours} hour(s) {minutes} minute(s)"
+            time_msg = f"{hours} hour(s) {minutes} minute(s)"
         elif minutes > 0:
-            time = f"{minutes} minute(s)"
+            time_msg = f"{minutes} minute(s)"
     elif time_to_end[0] >= 0:
         if time_to_end[1] > 0:
-            time = f"Ends in {time_to_end[1]} hours {time_to_end[2]} minute(s)"
+            time_msg = f"Ends in {time_to_end[1]} hours {time_to_end[2]} minute(s)"
         else:
-            time = f"Ends in {time_to_end[2]} minute(s)"
+            time_msg = f"Ends in {time_to_end[2]} minute(s)"
     else:
-        time = "Event has ended."
+        time_msg = "Event has ended."
 
-    can_register = time.startswith("Ends") or time.startswith("Event")
+    can_register = time_msg.startswith("Ends") or time_msg.startswith("Event")
     tz = timezone(data["timezone"])
     offset = tz.utcoffset(datetime.now()).total_seconds() / 3600
 
@@ -102,7 +102,8 @@ def viewevent(uid: str):
         abort(409)
 
     return render_template("event/event.html.jinja", user=getattr(current_user, "data"), event=data,
-                           registered=registered, owned=owned, mapbox_api_key=os.getenv("MAPBOX_API_KEY"), time=time,
+                           registered=registered, owned=owned, mapbox_api_key=os.getenv("MAPBOX_API_KEY"),
+                           time=time_msg,
                            can_register=not can_register, timezone=tz, offset=offset)
 
 
@@ -173,7 +174,7 @@ def create():
             "description": request.form.get("event_description"),
             "email": request.form.get("event_email") or user["email"],
             "location": request.form.get("event_location"),
-            "limit": utils.limitTo999(request.form.get("event_limit")),
+            "limit": utils.limit_to_999(request.form.get("event_limit")),
             "timezone": request.form.get("event_timezone"),
             "registered": {getattr(current_user, "id"): "owner"},
             "checkin_code": random.randint(1000, 9999)
@@ -264,9 +265,9 @@ def event_register(event_id: str):
                     "role": request.form.get("role"),
                     "teamNumber": request.form.get("teamNumber") or "N/A",
                     "numPeople": request.form.get("numPeople"),
-                    "numStudents": utils.limitTo999(request.form.get("numStudents")),
-                    "numMentors": utils.limitTo999(request.form.get("numMentors")),
-                    "numAdults": utils.limitTo999(request.form.get("numAdults")) or "0",
+                    "numStudents": utils.limit_to_999(request.form.get("numStudents")),
+                    "numMentors": utils.limit_to_999(request.form.get("numMentors")),
+                    "numAdults": utils.limit_to_999(request.form.get("numAdults")) or "0",
                     "contactName": request.form.get("contactName") or f"{user['first_name']} {user['last_name']}",
                     "contactEmail": user["email"],
                     "contactPhone": request.form.get("contactPhone") or "N/A",
@@ -532,11 +533,11 @@ def ci():
 
 
 @events_bp.route("/events/manage/<string:event_id>", methods=["GET", "POST"])
-@user_data_must_be_present
 @login_required
+@user_data_must_be_present
 def manage(event_id: str):
     """
-        Manage an view an event's data.
+        Manage and view an event's data.
     """
     event = db.get_event(event_id)
     return render_template("event/manage.html.jinja", event=event, user=getattr(current_user, "data"))
