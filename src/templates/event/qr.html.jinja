@@ -10,7 +10,9 @@ Scan QR
     <form method="POST" action="/events/ci">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <div class="form-group">
-            <input type="text" class="form-control" id="event_url" name="event_url" placeholder="https://roboregistry.vercel.app/events/ci/your-event-1234" required>
+            <label for="event_url" class="form-label visually-hidden">Event URL</label>
+            <input type="text" class="form-control" id="event_url" name="event_url"
+                placeholder="https://roboregistry.vercel.app/events/ci/your-event-1234" required>
         </div>
         <div id="reader"></div>
         <br />

@@ -10,25 +10,28 @@ Registration
         <p class="headertext text-center">Welcome to RoboRegistry!</p>
         <p class="text-center">Tell us a bit about yourself to get started.</p>
         <form action="/create_profile" method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <div class="mb-3">
-                <label for="name" class="form-label">Your first name<span aria-hidden="true"
+                <label for="first_name" class="form-label">Your first name<span aria-hidden="true"
                         class="text-danger">*</span></label>
-                <input class="form-control" id="first_name" name="first_name" placeholder="First name" type="text" required />
+                <input class="form-control" id="first_name" name="first_name" placeholder="First name" type="text"
+                    required />
             </div>
             <div class="mb-3">
-                <label for="name" class="form-label">Your last name<span aria-hidden="true"
+                <label for="last_name" class="form-label">Your last name<span aria-hidden="true"
                         class="text-danger">*</span></label>
-                <input class="form-control" id="last_name" name="last_name" placeholder="Last name" type="text" required />
+                <input class="form-control" id="last_name" name="last_name" placeholder="Last name" type="text"
+                    required />
             </div>
             <div class="mb-3">
-                <label for="name" class="form-label">Your affiliation (school/club/team)<span aria-hidden="true"
+                <label for="affiliation" class="form-label">Your affiliation (school/club/team)<span aria-hidden="true"
                         class="text-danger">*</span></label>
-                <input class="form-control" id="affiliation" name="name" placeholder="Your represented school or public entity" type="text" required />
+                <input class="form-control" id="affiliation" name="affiliation"
+                    placeholder="Your represented school or public entity" type="text" required />
             </div>
             <div class="mb-3">
                 <label for="email" class="form-label">Preferred contact email</label>
-                <input class="form-control" id="email" name="email" placeholder="{{email}}" type="email" />
+                <input class="form-control" id="email" name="email" placeholder="{{ email }}" type="email" />
             </div>
             <div class="mb-3 form-check">
                 <input type="checkbox" class="form-check-input" id="consent" name="consent">
@@ -45,7 +48,9 @@ Registration
                 </select>
             </div>
             <div class="text-center">
-                <button class="btn btn-secondary" onclick="event.preventDefault(); window.location.href='/logout'">Sign out</button>
+                <button class="btn btn-secondary" onclick="event.preventDefault(); window.location.href='/logout'">
+                    Sign out
+                </button>
                 <button class="btn btn-primary" type="submit">Complete registration</button>
             </div>
             <br />

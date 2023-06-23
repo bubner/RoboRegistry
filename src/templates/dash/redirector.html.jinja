@@ -7,20 +7,22 @@ Redirector
 {% block body %}
 <div class="centercontainer bordered">
     {% if error %}
-        <div class="alert alert-danger" role="alert">
-            {{ error }}
-        </div>
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
     {% endif %}
     <p class="headertext">Have an event link? Paste it here!</p>
     <form method="POST" action="/events">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <div class="form-group">
-            <label for="event_url">Event URL or UID (your-event-1234)<span aria-hidden="true" class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="event_url" name="event_url" placeholder="https://roboregistry.vercel.app/events/register/your-event-1234" required>
+            <label for="event_url">Event URL or UID (your-event-1234)<span aria-hidden="true"
+                    class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="event_url" name="event_url"
+                placeholder="https://roboregistry.vercel.app/events/register/your-event-1234" required>
         </div>
         <br />
         <div class="text-center">
-            <a href="/dashboard" class="btn btn-secondary">Nevermind</a>
+            <a href="/dashboard" class="btn btn-secondary">Never mind</a>
             <button type="submit" class="btn btn-success">Go</button>
         </div>
     </form>

@@ -9,20 +9,24 @@
     <p>{{ event.name }}</p>
     <h5>{{ event.uid }}</h5>
     {% if owned and can_register %}
-        <h6>Event check-in code: {{ event.checkin_code }} </h6>
+    <h6>Event check-in code: {{ event.checkin_code }} </h6>
     {% endif %}
     {% if not registered and not owned and can_register %}
-        <a href="/events/register/{{ event.uid }}" class="btn btn-success">Register</a>
+    <a href="/events/register/{{ event.uid }}" class="btn btn-success">Register</a>
     {% elif registered and can_register %}
-        <a href="/events/unregister/{{ event.uid }}" class="btn btn-danger">Unregister</a>
+    <a href="/events/unregister/{{ event.uid }}" class="btn btn-danger">Unregister</a>
     {% elif owned %}
-        <a href="/events/manage/{{ event.uid }}" class="btn btn-primary">Manage</a>
+    <a href="/events/manage/{{ event.uid }}" class="btn btn-primary">Manage</a>
     {% endif %}
     {% if can_register %}
-        <button class="btn btn-secondary" onclick="copyToClipboard('events/register/{{ event.uid }}')">Copy Registration Link</button>
-        {% if owned %}
-            <button class="btn btn-secondary" onclick="copyToClipboard('events/ci/{{ event.uid }}')">Copy Check-In Link</button>
-        {% endif %}
+    <button class="btn btn-secondary" onclick="copyToClipboard('events/register/{{ event.uid }}')">Copy
+        Registration Link
+    </button>
+    {% if owned %}
+    <button class="btn btn-secondary" onclick="copyToClipboard('events/ci/{{ event.uid }}')">Copy Check-In
+        Link
+    </button>
+    {% endif %}
     {% endif %}
     <hr />
 </div>
@@ -54,13 +58,16 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Event Details</h5>
-                    <p class="card-text">{{ event.registered|length - 1 }}{{ ' / ' + event.limit|string if event.limit != -1 else '' }} registration(s)
-                    {% if event.limit|int != -1 and event.registered|length >= event.limit|int + 1 %}
+                    <p class="card-text">
+                        {{ event.registered|length - 1 }}{{ ' / ' + event.limit|string if event.limit != -1 else '' }}
+                        registration(s)
+                        {% if event.limit|int != -1 and event.registered|length >= event.limit|int + 1 %}
                         <br />
                         <i><b>Registering now will add you to an automatic waitlist.</b></i>
-                    {% endif %}
+                        {% endif %}
                     </p>
-                    <p class="card-text">{{ event.date|strftime }} <br /> {{ event.start_time }} to {{ event.end_time }} ({{ timezone }})</p>
+                    <p class="card-text">{{ event.date|strftime }} <br /> {{ event.start_time }}
+                        to {{ event.end_time }} ({{ timezone }})</p>
                 </div>
             </div>
             <br />
@@ -85,6 +92,7 @@
         navigator.clipboard.writeText(url);
         alert(`Copied to clipboard: ${url}`);
     }
+
     mapboxgl.accessToken = "{{ mapbox_api_key }}";
     fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/{{ event.location }}.json?access_token=${mapboxgl.accessToken}`)
         .then(response => response.json())
@@ -118,7 +126,13 @@
         return new Date(
             new Date(`${date} ${time}`)
                 .getTime() + (offset * 60 * 60 * 1000))
-            .toLocaleString(navigator.language, { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' }
+            .toLocaleString(navigator.language, {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric'
+            }
             );
     }
 

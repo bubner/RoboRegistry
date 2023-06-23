@@ -1,7 +1,14 @@
 async function fetchDashboard() {
     // Fetch data
-    const response = await fetch("/api/dashboard");
-    const data = await response.json();
+    let data = null;
+    while (!data) {
+        const response = await fetch("/api/dashboard");
+        try {
+            data = await response.json();
+        } catch (e) {
+            console.warn("API: Could not fetch dashboard content. Retrying...");
+        }
+    }
 
     // Get dashboard boxes and clear them
     const target = document.getElementById("dashboardboxes");
@@ -9,7 +16,7 @@ async function fetchDashboard() {
 
     // Determine if dark mode is on
     const dark = document.cookie.includes("darkmode=on");
-    
+
     // Loop over data and create boxes
     let row, count = 0;
     for (const value of Object.values(data)) {

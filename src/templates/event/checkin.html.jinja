@@ -7,7 +7,7 @@ Checking in at {{ event.name }}
 {% block body %}
 <div class="container position-absolute top-50 start-50 translate-middle h-75">
     <div class="text-center">
-        <img src="{{ url_for('static', filename='assets/rr.png') }}" width="250"/>
+        <img src="{{ url_for('static', filename='assets/rr.png') }}" width="250" alt="RoboRegistry" />
     </div>
     <br />
     <div class="row justify-content-center">
@@ -19,7 +19,7 @@ Checking in at {{ event.name }}
                     <h6 class="text-muted">{{ event.uid }}</h6>
                     <br />
                     <form method="POST" action="/events/ci/{{ event.uid }}/dynamic">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                         <div class="form-group">
                             <label for="item-select">Who are you checking in as?</label>
                             <hr />
@@ -27,14 +27,15 @@ Checking in at {{ event.name }}
                                 <option value="anon">Guest / Anonymous</option>
                                 <option value="" disabled selected>---</option>
                                 {% for item in registered %}
-                                    <option value="{{ item }}">{{ item }}</option>
+                                <option value="{{ item }}">{{ item }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <br />
                         <div id="visit-reason" style="display: none;">
                             <div class="form-group">
-                                <label for="visit-reason-select">I am</label><span aria-hidden="true" class="text-danger">*</span>
+                                <label for="visit-reason-select">I am</label><span aria-hidden="true"
+                                    class="text-danger">*</span>
                                 <select class="form-control" id="visit-reason-select" name="visit-reason">
                                     <option value="" disabled selected>-</option>
                                     <option value="noregis">a team that did not register on RoboRegistry.</option>
@@ -46,7 +47,8 @@ Checking in at {{ event.name }}
                             </div>
                             <br />
                             <div class="form-group">
-                                <label for="name-input">Name</label><span aria-hidden="true" class="text-danger">*</span>
+                                <label for="name-input">Name</label><span aria-hidden="true"
+                                    class="text-danger">*</span>
                                 <input type="text" class="form-control" id="name-input" name="anon-name">
                             </div>
                         </div>
@@ -65,6 +67,7 @@ Checking in at {{ event.name }}
 <script defer>
     const itemSelect = document.getElementById("item-select");
     const visitReasonDiv = document.getElementById("visit-reason");
+
     function anon() {
         if (itemSelect.value === "anon") {
             visitReasonDiv.style.display = "block";
@@ -72,8 +75,11 @@ Checking in at {{ event.name }}
             visitReasonDiv.style.display = "none";
         }
     }
+
     itemSelect.addEventListener("change", () => anon());
     // Janky fix for the default value being set to guest on page load
-    document.addEventListener("DOMContentLoaded", () => { setTimeout(() => anon(), 500) });
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => anon(), 500)
+    });
 </script>
 {% endblock %}

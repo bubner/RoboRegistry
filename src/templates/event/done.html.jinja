@@ -7,7 +7,8 @@ Event Register
 {% block body %}
 <div class="centercontainer">
     <div class="bordered p-3 text-center">
-        <h6>RoboRegistry Event '{{ event.name }}' ({{ event.uid }}) for user '{{ user.first_name }} {{ user.last_name }}'</h6>
+        <h6>RoboRegistry Event '{{ event.name }}' ({{ event.uid }}) for user
+            '{{ user.first_name }} {{ user.last_name }}'</h6>
         <p class="headertext">{{ status }}</p>
         <p>{{ message }}</p>
         <a class="btn btn-success" href="/dashboard">Return to home page</a>

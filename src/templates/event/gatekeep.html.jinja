@@ -7,7 +7,7 @@ Checking in at {{ event.name }}
 {% block body %}
 <div class="container position-absolute top-50 start-50 translate-middle h-80">
     <div class="text-center">
-        <img src="{{ url_for('static', filename='assets/rr.png') }}" width="250"/>
+        <img src="{{ url_for('static', filename='assets/rr.png') }}" width="250" alt="RoboRegistry" />
     </div>
     <br />
     <div class="row justify-content-center">
@@ -19,22 +19,27 @@ Checking in at {{ event.name }}
                     <div class="container">
                         <div class="row">
                             <div class="col-md-6">
-                                <img src="{{ url_for('static', filename='assets/qrc.png') }}" alt="QR Code Sheet" width="100%">
+                                <img src="{{ url_for('static', filename='assets/qrc.png') }}" alt="QR Code Sheet"
+                                    width="100%">
                             </div>
                             <div class="col-md-6">
-                                <img src="{{ url_for('static', filename='assets/web.png') }}" alt="Website" width="100%">
+                                <img src="{{ url_for('static', filename='assets/web.png') }}" alt="Website"
+                                    width="100%">
                             </div>
                         </div>
                     </div>
                     <br />
-                    <i>You'll find this on the RoboRegistry QR code printout if you used it, or on the event owner's event viewer.</i>
+                    <i>You'll find this on the RoboRegistry QR code printout if you used it, or on the event owner's
+                        event viewer.</i>
                     <a href="/events/ci/{{ event.uid }}/manual">Having trouble?</a>
                     <hr />
                     <form action="/events/ci/{{ event.uid }}" method="post">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                         <div class="input-group mb-3">
-                            <input type="text" class="form-control" placeholder="Check In Code" name="code" aria-label="Check In Code" aria-describedby="basic-addon2">
-                            <button class="btn btn-outline-primary" type="submit" id="button-addon2">Check In</button>
+                            <input type="text" class="form-control" placeholder="Check In Code" name="code"
+                                aria-label="Check In Code" aria-describedby="basic-addon2">
+                            <button class="btn btn-outline-primary" type="submit" id="button-addon2">Check In
+                            </button>
                         </div>
                     </form>
                     <br />
