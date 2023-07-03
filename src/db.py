@@ -6,6 +6,7 @@
 import math
 from time import time
 
+from flask import session
 from requests.exceptions import HTTPError
 
 from firebase_instance import db
@@ -16,7 +17,7 @@ def get_user_data(uid) -> dict:
         Gets a user's info from the database.
     """
     try:
-        data = db.child("users").child(uid).get().val()
+        data = db.child("users").child(uid).get(session.get("id_token")).val()
     except KeyError:
         return {}
     if not data:
@@ -35,7 +36,7 @@ def get_uid_for(event_id) -> str:
     """
         Find the event creator for an event.
     """
-    return str(db.child("events").child(event_id).child("creator").get().val())
+    return str(db.child("events").child(event_id).child("creator").get(session.get("id_token")).val())
 
 
 def add_event(uid, event):
@@ -57,7 +58,7 @@ def get_event(event_id):
         Gets an event from a creator from the database.
     """
     try:
-        event = db.child("events").child(event_id).get().val()
+        event = db.child("events").child(event_id).get(session.get("id_token")).val()
         event = dict(event)
         event["uid"] = event_id
     except (HTTPError, TypeError):
@@ -86,7 +87,7 @@ def get_user_events(creator) -> tuple[dict, dict]:
         @return: (registered_events, owned_events)
     """
     try:
-        events = db.child("events").get().val()
+        events = db.child("events").get(session.get("id_token")).val()
         registered_events = {}
         owned_events = {}
         for event_id, event_data in dict(events).items():
@@ -113,7 +114,7 @@ def is_event_owner(uid, event_id):
     """
         Check if a user owns an event by checking if an event exists under their name.
     """
-    event = db.child("events").child(event_id).child("creator").get().val()
+    event = db.child("events").child(event_id).child("creator").get(session.get("id_token")).val()
     return event == uid
 
 
@@ -121,7 +122,7 @@ def delete_event(uid, event_id):
     """
         Deletes an event from the database.
     """
-    if db.child("events").child(event_id).child("creator").get().val() != uid:
+    if db.child("events").child(event_id).child("creator").get(session.get("id_token")).val() != uid:
         return
     db.child("events").child(event_id).remove()
 

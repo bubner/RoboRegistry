@@ -75,12 +75,11 @@ def load_user(uid=None):
             # Refresh user token based on refresh token
             user = auth.refresh(refresh_token)
 
-            # Store new refresh token in cookies
-            response = make_response(redirect("/dashboard"))
-            response.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+            # Store new ID token in the session
+            session["id_token"] = user["idToken"]
 
             # Use token to get user account info
-            acc = auth.get_account_info(user["idToken"])
+            acc = auth.get_account_info(session["id_token"])
             user_obj = User(acc)
             user_obj.refresh()
 
