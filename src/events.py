@@ -32,7 +32,7 @@ def viewall():
     """
         View all personally affiliated events.
     """
-    registered_events, created_events = db.get_my_events(getattr(current_user, "id"))
+    registered_events, created_events = db.get_my_events()
     done_events = {}
     deletions = []
     # Remove registered events that have already occurred, and add them to a seperate list
@@ -182,6 +182,7 @@ def create():
             "registered": {getattr(current_user, "id"): "owner"},
             "checkin_code": random.randint(1000, 9999)
         }
+        print(event)
 
         if db.get_event(event_uid):
             return render_template("event/create.html.jinja", error="An event with that name and date already exists.",
@@ -223,7 +224,7 @@ def delete(event_id: str):
         Delete an event from the system.
     """
     if request.method == "POST":
-        db.delete_event(getattr(current_user, "uid", None), event_id)
+        db.delete_event(event_id)
         return redirect("/events/view")
     else:
         return render_template("event/delete.html.jinja", event=db.get_event(event_id),
@@ -494,7 +495,7 @@ def manual(event_id: str):
         Check in to an event using email associated with registration.
     """
     event = db.get_event(event_id)
-    registered, owned = db.get_my_events(getattr(current_user, "id", None))
+    registered, owned = db.get_my_events()
     if event_id in owned.keys():
         return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_OWNER",
                                message="The currently logged in RoboRegistry account is the owner of this event. The owner cannot check in to their own event.",
@@ -538,6 +539,7 @@ def ci():
 @events_bp.route("/events/manage/<string:event_id>", methods=["GET", "POST"])
 @login_required
 @user_data_must_be_present
+@must_be_event_owner
 def manage(event_id: str):
     """
         Manage and view an event's data.

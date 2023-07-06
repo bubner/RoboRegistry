@@ -34,7 +34,7 @@ def api_dashboard():
         Calculates and returns the user's dashboard information in JSON format.
     """
     # Get user registered events
-    registered_events, created_events = db.get_my_events(getattr(current_user, "id"))
+    registered_events, created_events = db.get_my_events()
     should_display = []
     for uid in created_events:
         # Check if the date of an event is in the next two weeks

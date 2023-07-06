@@ -7,6 +7,7 @@ import math
 from time import time
 
 from flask import session
+from flask_login import current_user
 from requests.exceptions import HTTPError
 
 from firebase_instance import db
@@ -25,11 +26,11 @@ def get_user_data(uid) -> dict:
     return dict(data)
 
 
-def mutate_user_data(uid, info: dict) -> None:
+def mutate_user_data(info: dict) -> None:
     """
-        Appends data for a user to the database.
+        Appends user data in the database.
     """
-    db.child("users").child(uid).update(info)
+    db.child("users").child(getattr(current_user, "id")).update(info, session.get("id_token"))
 
 
 def get_uid_for(event_id) -> str:
@@ -43,14 +44,14 @@ def add_event(uid, event):
     """
         Adds an event to the database.
     """
-    db.child("events").child(uid).set(event)
+    db.child("events").child(uid).set(event, session.get("id_token"))
 
 
 def update_event(event_id, event):
     """
         Updates an event in the database.
     """
-    db.child("events").child(event_id).update(event)
+    db.child("events").child(event_id).update(event, session.get("id_token"))
 
 
 def get_event(event_id):
@@ -67,6 +68,13 @@ def get_event(event_id):
     return event
 
 
+def get_event_data(event_id):
+    """
+        Get registered data for an event.
+    """
+    # TODO
+
+
 def get_uid_for_entity(event_id, entity_id) -> str:
     """
         Find the entity creator for an entity.
@@ -81,7 +89,7 @@ def get_uid_for_entity(event_id, entity_id) -> str:
     return ""
 
 
-def get_user_events(creator) -> tuple[dict, dict]:
+def get_my_events() -> tuple[dict, dict]:
     """
         Gets a user's events from the database.
         @return: (registered_events, owned_events)
@@ -91,8 +99,8 @@ def get_user_events(creator) -> tuple[dict, dict]:
         registered_events = {}
         owned_events = {}
         for event_id, event_data in dict(events).items():
-            if creator in event_data["registered"]:
-                if event_data["creator"] == creator:
+            if getattr(current_user, "id") in event_data["registered"]:
+                if event_data["creator"] == getattr(current_user, "id"):
                     owned_events[event_id] = event_data
                     continue
                 registered_events[event_id] = event_data
@@ -102,36 +110,30 @@ def get_user_events(creator) -> tuple[dict, dict]:
     return registered_events, owned_events
 
 
-def get_my_events(uid) -> tuple[dict, dict]:
-    """
-        Get personally associated events from the database.
-        @return: (registered_events, owned_events)
-    """
-    return get_user_events(uid)
-
-
-def is_event_owner(uid, event_id):
+def is_event_owner(event_id):
     """
         Check if a user owns an event by checking if an event exists under their name.
     """
     event = db.child("events").child(event_id).child("creator").get(session.get("id_token")).val()
-    return event == uid
+    return event == getattr(current_user, "id")
 
 
-def delete_event(uid, event_id):
+def delete_event(event_id):
     """
         Deletes an event from the database.
     """
-    if db.child("events").child(event_id).child("creator").get(session.get("id_token")).val() != uid:
+    if db.child("events").child(event_id).child("creator").get(session.get("id_token")).val() != getattr(current_user, "id"):
         return
     db.child("events").child(event_id).remove()
 
 
-def delete_all_user_events(uid):
+def delete_all_user_events():
     """
-        Deletes all events from a user.
+        Deletes all owned events from a user.
     """
-    db.child("events").child(uid).remove()
+    events = get_my_events()[1]
+    for event_id in events:
+        delete_event(event_id)
 
 
 def refresh_excess(event_id):
@@ -159,6 +161,6 @@ logged_out_data = {
     "first_name": "Guest",
     "last_name": "User",
     "email": "guest@user.com",
-    "promotion": "off",
+    "promotion": False,
     "role": "guest"
 }

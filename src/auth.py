@@ -173,12 +173,12 @@ def create_profile():
         if not (email := request.form.get("email")):
             email = auth_email
 
-        if not (promotion := request.form.get("consent")):
-            promotion = "off"
+        promotion = request.form.get("consent")
+        promotion = promotion == "on"
 
         # Create the user's profile
-        db.mutate_user_data(getattr(current_user, "id"), {"first_name": first_name, "last_name": last_name,
-                                                          "role": role, "email": email, "promotion": promotion})
+        db.mutate_user_data({"first_name": first_name.strip(), "last_name": last_name.strip(),
+                             "role": role, "email": email, "promotion": promotion})
 
         return redirect("/")
     else:

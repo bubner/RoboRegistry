@@ -37,9 +37,9 @@ if not os.getenv("OAUTH_TOKEN"):
 if not os.getenv("MAPBOX_API_KEY"):
     raise RuntimeError("MAPBOX_API_KEY not set in .env file.")
 
-if os.getenv("FLASK_ENV") != "production":
+if os.getenv("FLASK_ENV") == "development":
     app.debug = True
-    warnings.warn("Currently running in DEVELOPMENT mode. Set FLASK_ENV to 'production' to change this.")
+    warnings.warn("Currently running in DEVELOPMENT mode. Unset FLASK_ENV from 'development' to disable.")
 
 app.secret_key = key
 
