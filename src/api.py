@@ -9,6 +9,7 @@ from flask import request, redirect, Blueprint, make_response, session
 from flask_login import current_user, login_required
 
 import db
+import scrape
 from firebase_instance import auth
 
 api_bp = Blueprint("api", __name__, template_folder="templates")
@@ -77,3 +78,17 @@ def api_dashboard():
             }
         ]
     return should_display
+
+@api_bp.route("/api/get_team_data/<int:team_number>")
+def get(team_number: int):
+    """
+        Get data for a FTC/FTC/FLL team number.
+    """
+    data = scrape.get(team_number)
+    return {
+        "team_number": team_number,
+        "valid": data.get("valid"),
+        "season": data.get("season"),
+        "data": data.get("data") or {}
+    }
+    
