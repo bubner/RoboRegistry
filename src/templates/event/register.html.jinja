@@ -16,32 +16,61 @@ Register for: {{ event.name }}
         <div id="map" style="height: 300px; width: 100%; margin-top: 10px;"></div>
     </div>
     <br />
-    <p class="text-center">We'll need to get some information, so we can gauge how many teams are coming to this
+    <p class="text-center">We'll need to get some information, so we can gauge how many people are coming to this
         event.
     </p>
     <form action="/events/register/{{ event.uid }}" method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <div class="mb-3">
-            <label for="teamName" class="form-label">Team or Representing Name<span aria-hidden="true"
+            <label for="teamName" class="form-label">Club or Representing Name<span aria-hidden="true"
                     class="text-danger">*</span></label>
             <input type="text" class="form-control" id="teamName" name="teamName"
-                placeholder="e.g. Murray Bridge High School Student Robotics Club" required>
+                placeholder="e.g. FIRST, Murray Bridge High School, General Public" required>
         </div>
         <div class="mb-3">
-            <label for="role" class="form-label">I am a...<span aria-hidden="true" class="text-danger">*</span></label>
+            <label for="role" class="form-label">I am registering...<span aria-hidden="true"
+                    class="text-danger">*</span></label>
             <select class="form-select" id="role" name="role" required>
-                <option selected disabled value="">-</option>
-                <option value="comp">FIRST team mentor</option>
-                <option value="event">Event manager</option>
-                <option value="visitor">Visitor</option>
-                <option value="mentor">External volunteer</option>
-                <option value="other">Other</option>
+                <option value="comp" selected>FIRST team(s) (registered or unregistered)</option>
+                <option value="event">as an Event manager</option>
+                <option value="mentor">as an External volunteer or mentor</option>
+                <option value="visitor">as a Visitor</option>
+                <option value="other">as Other</option>
             </select>
         </div>
         <div class="mb-3">
-            <label for="teamNumber" class="form-label">FIRST Team Number(s) (if applicable)</label>
-            <input type="text" class="form-control" id="teamNumber" name="teamNumber"
-                placeholder="List all FIRST team numbers/names here">
+            <button type="button" id="addteams" class="btn btn-outline-primary w-100" data-bs-toggle="modal"
+                data-bs-target="#modal">
+                Add FIRST Team Numbers
+            </button>
+            <div class="modal fade" id="modal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalLabel">FIRST Team Numbers</h5>
+                        </div>
+                        <div class="modal-body">
+                            <form id="addteamnumber">
+                                <div class="input-group mb-3">
+                                    <input type="text" id="tnum" class="form-control" placeholder="Enter team number"
+                                        aria-label="Enter text" aria-describedby="add-button">
+                                    <button class="btn btn-outline-secondary" type="submit" id="add-button">Add</button>
+                                </div>
+                            </form>
+                            <div class="text-center">
+                                <ul class="list-unstyled" id="team-list">
+                                    <li>Populate with your FIRST team number(s)</li>
+                                    <li>If your team is not registered, you'll need to enter a name.</li>
+                                    <hr />
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="mb-3">
             <label for="numPeople" class="form-label">Estimated number of attendees<span aria-hidden="true"
@@ -79,10 +108,14 @@ Register for: {{ event.name }}
             <label for="contactPhone" class="form-label">Contact Phone Number</label>
             <input type="tel" class="form-control" id="contactPhone" name="contactPhone">
         </div>
-        <i>Incase of unexpected event changes, the event owner will be able to contact your preferred contact email
+        <i>Incase of unexpected event changes, the event owner can choose to contact your preferred contact email
             and/or phone number listed here.</i> <br /> <br />
         <a class="btn btn-secondary" href="/dashboard">Cancel</a>
-        <button type="submit" class="btn btn-primary">Register</button>
+        <button id="registernow" type="submit" class="btn btn-primary" style="display: inline;">Register</button>
+        <div id="waitmsg" style="display: none;">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+            <span class="text-muted">Waiting for 'Add FIRST Team Numbers'</span>
+        </div>
     </form>
 </div>
 {% endblock %}
@@ -90,7 +123,8 @@ Register for: {{ event.name }}
 {% block scripts %}
 <script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
 <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
-<script>
+<script src="{{ url_for('static', filename='internal_api.js') }}"></script>
+<script defer>
     mapboxgl.accessToken = "{{ mapbox_api_key }}";
     fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/{{ event.location }}.json?access_token=${mapboxgl.accessToken}`)
         .then(response => response.json())
@@ -112,5 +146,77 @@ Register for: {{ event.name }}
                 zoom: 15
             });
         });
+
+    document.getElementById("role").addEventListener("change", () => {
+        const display = document.getElementById("role").value == "comp" ? "block" : "none";
+        document.getElementById("addteams").style.display = display;
+        document.getElementById("numPeople").style.display = display;
+        document.getElementById("numStudents").style.display = display;
+        document.getElementById("numMentors").style.display = display;
+        document.getElementById("numAdults").style.display = display;
+        // Change labels as well
+        document.getElementById("numPeople").previousElementSibling.style.display = display;
+        document.getElementById("numStudents").previousElementSibling.style.display = display;
+        document.getElementById("numMentors").previousElementSibling.style.display = display;
+        document.getElementById("numAdults").previousElementSibling.style.display = display;
+    });
+
+    document.getElementById("add-button").addEventListener("click", (e) => handleAddTeamNumber(e));
+    document.getElementById("addteamnumber").addEventListener("submit", (e) => handleAddTeamNumber(e));
+
+    function handleAddTeamNumber(e) {
+        e.preventDefault();
+        let teamNumber = document.getElementById("tnum").value;
+        teamNumber = parseInt(teamNumber);
+
+        if (isNaN(teamNumber) || teamNumber < 10 || teamNumber > 99999) {
+            alert("Invalid!");
+            return;
+        }
+
+        const teamList = document.getElementById("team-list");
+        const newTeam = document.createElement("li");
+
+        // Check for duplicates
+        for (let i = 0; i < teamList.children.length; i++) {
+            if (teamList.children[i].innerText.split(":")[0] == teamNumber) {
+                alert("Team number already added to the list!");
+                return;
+            }
+        }
+
+        newTeam.innerText = teamNumber;
+        newTeam.classList.add("list-group-item", "d-flex", "justify-content-evenly", "align-items-center");
+        newTeam.innerHTML = `
+            <label for="${teamNumber}">${teamNumber}</label> <span id='${teamNumber}'><div class="spinner-border spinner-border-sm" role="status"></div> Querying</span>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeTeam(this)">Remove</button>
+        `;
+        teamList.appendChild(newTeam);
+        
+        // Disable submitting
+        document.getElementById("add-button").disabled = true;
+        document.getElementById("tnum").disabled = true;
+        document.getElementById("registernow").disabled = true;
+        document.getElementById("waitmsg").style.display = "inline";
+
+        // internal_api.js
+        setTeamData(teamNumber).then(() => {
+            document.getElementById("add-button").disabled = false;
+            document.getElementById("tnum").disabled = false;
+            document.getElementById("registernow").disabled = false;
+            document.getElementById("waitmsg").style.display = "none";
+        });
+    }
+
+    function removeTeam(e) {
+        if (!confirm("Are you sure you want to remove this team number?")) return;
+        e.parentElement.remove();
+        controller.abort();
+        document.getElementById("add-button").disabled = false;
+        document.getElementById("tnum").disabled = false;
+        document.getElementById("registernow").disabled = false;
+        document.getElementById("waitmsg").style.display = "none";
+    }
+
 </script>
 {% endblock %}

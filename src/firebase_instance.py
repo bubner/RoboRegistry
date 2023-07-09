@@ -26,8 +26,8 @@ oauth_config = {
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
         "client_secret": os.getenv("OAUTH_TOKEN"),
-        "redirect_uris": ["http://localhost:5000/api/oauth2callback"] if os.getenv("FLASK_ENV") == "development" else ["https://roboregistry.vercel.app/api/oauth2callback"],
-        "javascript_origins": ["http://localhost:5000"] if os.getenv("FLASK_ENV") == "development" else ["https://roboregistry.vercel.app"]
+        "redirect_uris": ["http://localhost:5000/api/oauth2callback"] if os.getenv("FLASK_ENV") == 'development' else ["https://roboregistry.vercel.app/api/oauth2callback"],
+        "javascript_origins": ["http://localhost:5000"] if os.getenv("FLASK_ENV") == 'development' else ["https://roboregistry.vercel.app"]
     }
 }
 

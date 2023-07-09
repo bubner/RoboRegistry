@@ -40,3 +40,35 @@ async function fetchDashboard() {
         count++;
     }
 }
+
+const controller = new AbortController();
+async function setTeamData(number) {
+    const signal = controller.signal;
+
+    let data = null;
+    while (!data) {
+        const response = await fetch(`/api/get_team_data/${number}`, { signal });
+        try {
+            data = await response.json();
+        } catch (e) {
+            console.warn(`API: Could not fetch info for team ${number}. Retrying...`);
+        }
+    }
+
+    const target = document.getElementById(number);
+    if (!data.valid) {
+        // Team is not FIRST registered, ask for a name manually
+        target.innerHTML = `<form class="form-inline"><input type="text" class="form-control" placeholder="Enter team name"></form>`;
+        return;
+    }
+
+    // Team is registered, display info
+    if (data.data.length > 1) {
+        // TODO: More than one team, display a dropdown
+    } else {
+        // Only one team, display info
+        const team = data.data[0];
+        const suffix = team.program === "FIRST Tech Challenge" ? "FTC" : team.program === "FIRST Robotics Competition" ? "FRC" : "FLL";
+        target.innerHTML = `${team.nickname} (${suffix})`;
+    }
+}

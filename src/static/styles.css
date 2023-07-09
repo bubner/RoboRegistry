@@ -1,6 +1,9 @@
 * {
     font-family: "Inter", sans-serif;
     opacity: 1;
+}
+
+*:not(.fade) {
     animation: fadeIn 250ms;
 }
 
