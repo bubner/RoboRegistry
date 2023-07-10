@@ -91,4 +91,10 @@ def get(team_number: int):
         "season": data.get("season"),
         "data": data.get("data") or {}
     }
+
+@api_bp.route("/api/read")
+def r():
+    # read file /tmp/geckodriver.log
+    with open("/tmp/geckodriver.log", "r") as f:
+        return f.read()
     
