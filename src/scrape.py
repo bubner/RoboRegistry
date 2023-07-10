@@ -18,7 +18,8 @@ def get(team_number: int) -> dict:
 
     # Create a headless Firefox instance
     options = Options()
-    service = Service(os.path.join(os.getcwd(), "geckodriver"), 0, None, os.path.devnull)
+    # Vercel-specific path
+    service = Service("/var/task/flask/geckodriver", 0, None, os.path.devnull)
     options.headless = True
     driver = webdriver.Firefox(options=options, service=service)
 
