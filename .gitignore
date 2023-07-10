@@ -12,4 +12,3 @@ build/
 src/.env
 .idea
 .vscode
-src/geckodriver.log

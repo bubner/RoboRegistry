@@ -2,9 +2,12 @@
     Web scraper for FTC team number data.
     @author: Lucas Bubner, 2023
 """
+import os
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
 from datetime import datetime
 
 def get(team_number: int) -> dict:
@@ -15,8 +18,9 @@ def get(team_number: int) -> dict:
 
     # Create a headless Firefox instance
     options = Options()
+    service = Service("geckodriver", 0, None, os.path.devnull)
     options.headless = True
-    driver = webdriver.Firefox(options=options)
+    driver = webdriver.Firefox(options=options, service=service)
 
     # Try with last year's season
     usingThisYear = False
