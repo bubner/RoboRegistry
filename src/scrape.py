@@ -18,8 +18,7 @@ def get(team_number: int) -> dict:
 
     # Create a headless Firefox instance
     options = Options()
-    # service = Service(os.path.join(os.getcwd(), "geckodriver"), 0, None, os.path.devnull)
-    service = Service(os.path.join(os.getcwd(), "geckodriver"), 0, None, "/tmp/geckodriver.log")
+    service = Service(os.path.join(os.getcwd(), "geckodriver"), 0, None, os.path.devnull)
     options.headless = True
     driver = webdriver.Firefox(options=options, service=service)
 
