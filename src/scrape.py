@@ -18,7 +18,7 @@ def get(team_number: int) -> dict:
 
     # Create a headless Firefox instance
     options = Options()
-    service = Service("geckodriver", 0, None, os.path.devnull)
+    service = Service(os.path.join(os.getcwd(), "geckodriver"), 0, None, os.path.devnull)
     options.headless = True
     driver = webdriver.Firefox(options=options, service=service)
 
@@ -81,6 +81,7 @@ def get(team_number: int) -> dict:
         teamdata.update({"rookie_year": int(rookie_year.strip())})
         extracted_data.append(teamdata)
 
+    driver.close()
     tdata.update({"data": extracted_data})
     return tdata
 
