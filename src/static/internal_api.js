@@ -47,7 +47,8 @@ async function setTeamData(number) {
 
     let data = null;
     while (!data) {
-        const response = await fetch(`/api/get_team_data/${number}`, { signal });
+        // TODO: Fetch data from API
+        const response = await fetch(`?`, { signal });
         try {
             data = await response.json();
         } catch (e) {
