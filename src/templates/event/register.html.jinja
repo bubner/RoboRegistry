@@ -179,7 +179,7 @@ Register for: {{ event.name }}
 
         // Check for duplicates
         for (let i = 0; i < teamList.children.length; i++) {
-            if (teamList.children[i].innerText.split(":")[0] == teamNumber) {
+            if (teamList.children[i].innerText.split()[0] == teamNumber) {
                 alert("Team number already added to the list!");
                 return;
             }
@@ -200,18 +200,60 @@ Register for: {{ event.name }}
         document.getElementById("waitmsg").style.display = "inline";
 
         // internal_api.js
-        setTeamData(teamNumber).then(() => {
-            document.getElementById("add-button").disabled = false;
-            document.getElementById("tnum").disabled = false;
-            document.getElementById("registernow").disabled = false;
-            document.getElementById("waitmsg").style.display = "none";
+        api.getTeamData(teamNumber).then((data) => {
+            try {
+                const target = document.getElementById(teamNumber);
+                
+                // Handle invalid or timed out requests
+                if (!data || !data.valid) {
+                    target.innerHTML = `<form class="form-inline"><input type="text" class="form-control" placeholder="Enter team name" required></form>`;
+                    return;
+                }
+
+                // Handle rendering of data
+                let value = "";
+                if (data.data.length > 1) {
+                    // More than one team, we need to ask the user which one they want
+                    value = `<select class="form-select" id="selector-${teamNumber}">`;
+                    for (const team of data.data) {
+                        value += `<option value="${team.nickname}">${team.nickname}</option>`;
+                    }
+                    value += '<option value="other">Other</option></select>';
+                } else {
+                    // Only one team, we can skip straight to rendering
+                    const team = data.data[0] || {};
+                    value = `<form class="form-inline"><input type="text" class="form-control" placeholder="Enter team name" value="${team.nickname || ""}" required></form>`;
+                }
+
+                target.innerHTML = value;
+
+                if (data.data.length <= 1) return;
+                document.getElementById(`selector-${teamNumber}`).addEventListener("change", () => {
+                    const value = document.getElementById(`selector-${teamNumber}`).value;
+                    if (value == "other") {
+                        if (confirm("Use a custom team name?")) {
+                            // Act as if there is no team
+                            target.innerHTML = `<form class="form-inline"><input type="text" class="form-control" placeholder="Enter team name" required></form>`;
+                        } else {
+                            // Reset to first team
+                            document.getElementById(`selector-${teamNumber}`).value = data.data[0].nickname;
+                        }
+                    }
+                });
+            } finally {
+                // Restore form action
+                document.getElementById("add-button").disabled = false;
+                document.getElementById("tnum").disabled = false;
+                document.getElementById("registernow").disabled = false;
+                document.getElementById("waitmsg").style.display = "none";
+            }
         });
     }
 
     function removeTeam(e) {
         if (!confirm("Are you sure you want to remove this team number?")) return;
         e.parentElement.remove();
-        controller.abort();
+        api.abortCurrentRequest();
         document.getElementById("add-button").disabled = false;
         document.getElementById("tnum").disabled = false;
         document.getElementById("registernow").disabled = false;
