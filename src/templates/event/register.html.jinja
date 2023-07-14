@@ -50,13 +50,11 @@ Register for: {{ event.name }}
                             <h5 class="modal-title" id="modalLabel">FIRST Team Numbers</h5>
                         </div>
                         <div class="modal-body">
-                            <form id="addteamnumber">
-                                <div class="input-group mb-3">
-                                    <input type="text" id="tnum" class="form-control" placeholder="Enter team number"
-                                        aria-label="Enter text" aria-describedby="add-button">
-                                    <button class="btn btn-outline-secondary" type="submit" id="add-button">Add</button>
-                                </div>
-                            </form>
+                            <div class="input-group mb-3">
+                                <input type="text" id="tnum" class="form-control" placeholder="Enter team number"
+                                    aria-label="Enter text" aria-describedby="add-button">
+                                <button class="btn btn-outline-secondary" type="submit" id="add-button">Add</button>
+                            </div>
                             <div class="text-center">
                                 <ul class="list-unstyled" id="team-list">
                                     <li>Populate with your FIRST team number(s)</li>
@@ -162,7 +160,10 @@ Register for: {{ event.name }}
     });
 
     document.getElementById("add-button").addEventListener("click", (e) => handleAddTeamNumber(e));
-    document.getElementById("addteamnumber").addEventListener("submit", (e) => handleAddTeamNumber(e));
+    document.getElementById("tnum").addEventListener("onkeydown", (e) => {
+        if (e.key == "Enter")
+            handleAddTeamNumber(e);
+    });
 
     function handleAddTeamNumber(e) {
         e.preventDefault();
@@ -179,7 +180,7 @@ Register for: {{ event.name }}
 
         // Check for duplicates
         for (let i = 0; i < teamList.children.length; i++) {
-            if (teamList.children[i].innerText.split()[0] == teamNumber) {
+            if (teamList.children[i].innerText.includes(teamNumber)) {
                 alert("Team number already added to the list!");
                 return;
             }

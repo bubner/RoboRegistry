@@ -3,13 +3,11 @@
     @author: Lucas Bubner, 2023
 """
 
-import copy
 import math
 import os
 import random
 import re
 from datetime import datetime
-from string import ascii_letters, digits
 from time import time
 from urllib.parse import urlparse
 
@@ -182,7 +180,6 @@ def create():
             "registered": {getattr(current_user, "id"): "owner"},
             "checkin_code": random.randint(1000, 9999)
         }
-        print(event)
 
         if db.get_event(event_uid):
             return render_template("event/create.html.jinja", error="An event with that name and date already exists.",
@@ -239,75 +236,58 @@ def event_register(event_id: str):
         Register a user for an event.
     """
     event = db.get_event(event_id)
-    unmodified_event = copy.deepcopy(event)
+    if not event:
+        abort(404)
     user = getattr(current_user, "data")
+
     # Check to see if the event is over, and decline registration if it is
     tz = timezone(event["timezone"])
-    tz.localize(datetime.strptime(
-        event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
+    tz.localize(datetime.strptime(event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
     if datetime.now(tz) > tz.localize(datetime.strptime(event["date"] + event["end_time"], "%Y-%m-%d%H:%M")):
         return render_template("event/done.html.jinja", event=event, user=user, status="Failed: EVENT_AUTO_CLOSED",
                                message="This event has already ended. Registation has been automatically disabled.")
 
     if request.method == "POST":
-        # Store registered users data
-        try:
-            prev_reg = event["registered"]
-        except KeyError:
-            prev_reg = {}
-
-        try:
-            prev_data = event["registered_data"]
-        except KeyError:
-            prev_data = {}
-
-        event |= {
-            "registered_data": {
-                **prev_data,
-                getattr(current_user, "id"): {
-                    "teamName": request.form.get("teamName"),
-                    "role": request.form.get("role"),
-                    "teamNumber": request.form.get("teamNumber") or "N/A",
-                    "numPeople": request.form.get("numPeople"),
-                    "numStudents": utils.limit_to_999(request.form.get("numStudents")),
-                    "numMentors": utils.limit_to_999(request.form.get("numMentors")),
-                    "numAdults": utils.limit_to_999(request.form.get("numAdults")) or "0",
-                    "contactName": request.form.get("contactName") or f"{user['first_name']} {user['last_name']}",
-                    "contactEmail": user["email"],
-                    "contactPhone": request.form.get("contactPhone") or "N/A",
-                }
-            },
-            "registered": {
-                **prev_reg,
-                getattr(current_user, "id"): "pending"
-            }
+        private_data = {
+            "teamName": request.form.get("teamName"),
+            "role": request.form.get("role"),
+            "teamNumber": request.form.get("teamNumber") or "N/A",
+            "numPeople": request.form.get("numPeople"),
+            "numStudents": utils.limit_to_999(request.form.get("numStudents")),
+            "numMentors": utils.limit_to_999(request.form.get("numMentors")),
+            "numAdults": utils.limit_to_999(request.form.get("numAdults")) or "0",
+            "contactName": request.form.get("contactName") or f"{user['first_name']} {user['last_name']}",
+            "contactEmail": user["email"],
+            "contactPhone": request.form.get("contactPhone") or "N/A",
         }
+
         # Ensure that all required fields are filled
-        if not all(event["registered_data"][getattr(current_user, "id")].values()):
+        if not all(private_data.values()):
             return render_template("event/done.html.jinja", event=event, status="Failed: MISSING_FIELDS",
                                    message="Please fill out all required fields.", user=user)
 
         # Check if the teamName is already taken
-        for data in event["registered_data"].values():
-            try:
-                if data["teamName"] == unmodified_event["registered_data"][getattr(current_user, "id")]["teamName"]:
-                    return render_template("event/done.html.jinja", event=event, status="Failed: TEAMNAME_TAKEN",
-                                           message="This team name is already taken. Please choose another.", user=user)
-            except KeyError:
-                # Will throw an error if un_event["registered_data"] does not exist. We can ignore this as we can't use .get()
-                pass
-
-        # Check for event capacity
-        if event["limit"] != -1 and len(unmodified_event["registered"]) - 1 >= event["limit"]:
-            event["registered"][getattr(current_user, "id")] = "excess-" + str(math.floor(time()))
-            db.update_event(event_id, event)
-            return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_FULL",
-                                   message="This event has reached it's maximum capacity. Your registration has been placed on a waitlist, and we'll automatically add you if a spot frees up.",
-                                   user=user)
+        if db.verify_unique(event_id, private_data["teamName"]):
+            return render_template("event/done.html.jinja", event=event, status="Failed: TEAMNAME_TAKEN",
+                                    message="This team name is already taken. Please choose another.", user=user)
 
         # Log event registration
-        event["registered"][getattr(current_user, "id")] = math.floor(time())
-        db.update_event(event_id, event)
+        public_data = {
+            "registered_time": math.floor(time()),
+        }
+
+        # Check for event capacity
+        if event["limit"] != -1 and len(event["registered"]) >= event["limit"]:
+            public_data |= {
+                # TODO: Make a method in which this waitlist attribute is checked/removed
+                "waitlist": True
+            }
+            db.add_entry(event_id, public_data, private_data)
+            return render_template("event/done.html.jinja", event=event, status="EVENT_FULL",
+                                   message="This event has reached it's maximum capacity. Your registration has been recorded, and we'll automatically add you if a spot frees up.",
+                                   user=user)
+
+        db.add_entry(event_id, public_data, private_data)
         return render_template("event/done.html.jinja", event=event, status="Registration successful",
                                message="Your registration was successfully recorded. Go to the dashboard to view all your registered events, and remember to bring a smart device for QR code check-in on the day.",
                                user=user)
@@ -335,10 +315,7 @@ def event_unregister(event_id: str):
                                    message="The currently logged in RoboRegistry account is the owner of this event. The owner cannot unregister from their own event.",
                                    user=getattr(current_user, "data"))
         if getattr(current_user, "id") in event["registered"]:
-            del event["registered"][getattr(current_user, "id")]
-            del event["registered_data"][getattr(current_user, "id")]
-            db.update_event(event_id, event)
-            db.refresh_excess(event_id)
+            db.unregister(event_id)
             return render_template("event/done.html.jinja", event=event, status="Unregistration successful",
                                    message="Your registration was successfully removed.",
                                    user=getattr(current_user, "data"))
@@ -412,6 +389,8 @@ def dynamic(event_id: str):
     """
         Check into an event using check in code approval.
     """
+    # FIXME: Horrible code, commented out needs to be fixed
+    raise NotImplementedError
     event = db.get_event(event_id)
     code = session.get("checkin")
     if not code or code != event.get("checkin_code") or not event:
@@ -419,11 +398,11 @@ def dynamic(event_id: str):
         return redirect("/events/ci/" + event_id)
 
     registered = []
-    if event.get("registered_data"):
-        for registration in event["registered_data"].values():
-            if not registration.get("checkin"):
-                registered.append(
-                    f"{registration['teamName'].upper()}, behalf of {registration['contactName']}")
+    # if event.get("registered_data"):
+    #     for registration in event["registered_data"].values():
+    #         if not registration.get("checkin"):
+    #             registered.append(
+    #                 f"{registration['teamName'].upper()}, behalf of {registration['contactName']}")
     if request.method == "POST":
         # Get the entity of which we are checking in
         entity = request.form.get("entity")
@@ -434,51 +413,51 @@ def dynamic(event_id: str):
                                    message="You have provided insufficient data! If trouble persists, try registration email check-in or asking the event owner to record you as attended manually.",
                                    user=getattr(current_user, "data") or db.logged_out_data)
         # Put check-in data into the event data
-        if not anon_affil:
-            try:
-                prev = event["registered_data"][db.get_uid_for_entity(
-                    event_id, entity)]
-            except KeyError:
-                prev = {}
-            event |= {
-                "registered_data": {
-                    db.get_uid_for_entity(event_id, entity): {
-                        **prev,
-                        "checkin": math.floor(time()),
-                    }
-                }
-            }
-        else:
-            try:
-                # Attempt to increment the number of times this entity has checked in
-                affil_num = event["registered_data"]["anon_data"][anon_affil] + 1
-            except KeyError:
-                affil_num = 1
-            try:
-                prev = event["registered_data"]["anon_data"]["times"]
-            except KeyError:
-                prev = {}
-            try:
-                prev_data = event["registered_data"]
-            except KeyError:
-                prev_data = {}
-            event |= {
-                "registered_data": {
-                    **prev_data,
-                    "anon_data": {
-                        anon_affil: affil_num,
-                        "times": {
-                            **prev,
-                            "".join(random.choice(ascii_letters + digits + "_-") for _ in range(16)): {
-                                "entity": anon_affil,
-                                "name": anon_name,
-                                "checkin": math.floor(time())
-                            }
-                        }
-                    }
-                }
-            }
-        db.update_event(event_id, event)
+        # if not anon_affil:
+        #     try:
+        #         prev = event["registered_data"][db.get_uid_for_entity(
+        #             event_id, entity)]
+        #     except KeyError:
+        #         prev = {}
+        #     event |= {
+        #         "registered_data": {
+        #             db.get_uid_for_entity(event_id, entity): {
+        #                 **prev,
+        #                 "checkin": math.floor(time()),
+        #             }
+        #         }
+        #     }
+        # else:
+        #     try:
+        #         # Attempt to increment the number of times this entity has checked in
+        #         affil_num = event["registered_data"]["anon_data"][anon_affil] + 1
+        #     except KeyError:
+        #         affil_num = 1
+        #     try:
+        #         prev = event["registered_data"]["anon_data"]["times"]
+        #     except KeyError:
+        #         prev = {}
+        #     try:
+        #         prev_data = event["registered_data"]
+        #     except KeyError:
+        #         prev_data = {}
+        #     event |= {
+        #         "registered_data": {
+        #             **prev_data,
+        #             "anon_data": {
+        #                 anon_affil: affil_num,
+        #                 "times": {
+        #                     **prev,
+        #                     "".join(random.choice(ascii_letters + digits + "_-") for _ in range(16)): {
+        #                         "entity": anon_affil,
+        #                         "name": anon_name,
+        #                         "checkin": math.floor(time())
+        #                     }
+        #                 }
+        #             }
+        #         }
+        #     }
+        # db.update_event(event_id, event)
         return render_template("event/done.html.jinja", event=event, status="Check in successful",
                                message="Your check in has been recorded successfully by dynamic self check-in. You can safely close this tab.",
                                user=getattr(current_user, "data") or db.logged_out_data)
@@ -506,12 +485,7 @@ def manual(event_id: str):
                                user=getattr(current_user, "data"))
     if request.method == "POST":
         # Attempt a manual registration using the affiliated email
-        event |= {
-            "checked_in": {
-                session['uid']: str(math.floor(time()))
-            }
-        }
-        db.update_event(event_id, event)
+        db.check_in(event_id)
         return render_template("event/done.html.jinja", event=event, status="Check in successful",
                                message="Your check in has been recorded successfully by registered email verification. You can safely close this tab.",
                                user=getattr(current_user, "data"))
@@ -545,4 +519,5 @@ def manage(event_id: str):
         Manage and view an event's data.
     """
     event = db.get_event(event_id)
-    return render_template("event/manage.html.jinja", event=event, user=getattr(current_user, "data"))
+    data = db.get_event_data(event_id)
+    return render_template("event/manage.html.jinja", event=event, data=data, user=getattr(current_user, "data"))

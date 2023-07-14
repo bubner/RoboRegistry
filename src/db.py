@@ -47,11 +47,37 @@ def add_event(uid, event):
     db.child("events").child(uid).set(event, session.get("id_token"))
 
 
-def update_event(event_id, event):
+def add_entry(event_id, public_data, private_data):
     """
-        Updates an event in the database.
+        Updates an event in the database to reflect a new registration.
     """
-    db.child("events").child(event_id).update(event, session.get("id_token"))
+    public_data |= {
+        "entity": f"{private_data['contactName']} | {private_data['teamName'].upper()}",
+        "checkin_data": {
+            "checked_in": False,
+            "time": 0
+        }
+    }
+    db.child("events").child(event_id).child("registered").child(getattr(current_user, "id")).set(public_data, session.get("id_token"))
+    db.child("registered_data").child(event_id).child(getattr(current_user, "id")).set(private_data, session.get("id_token"))
+
+
+def remove_entry(event_id):
+    """
+        Removes an event registration from the database.
+    """
+    db.child("events").child(event_id).child("registered").child(getattr(current_user, "id")).remove(session.get("id_token"))
+    db.child("registered_data").child(event_id).child(getattr(current_user, "id")).remove(session.get("id_token"))
+
+
+def check_in(event_id):
+    """
+        Checks a user into an event.
+    """
+    db.child("events").child(event_id).child("registered").child(getattr(current_user, "id")).child("checkin_data").set({
+        "checked_in": True,
+        "time": math.floor(time())
+    }, session.get("id_token"))
 
 
 def get_event(event_id):
@@ -68,23 +94,53 @@ def get_event(event_id):
     return event
 
 
+def unregister(event_id):
+    """
+        Unregister from an event.
+    """
+    # TODO, ensure to account for excess overflow being updated etc..
+    raise NotImplementedError
+
+
+def verify_unique(event_id, teamname) -> bool:
+    """
+        Verify a team name is not already registered for an event.
+    """
+    all_registrations = db.child("events").child(event_id).child("registered").get(session.get("id_token")).val()
+    try:
+        all_registrations = dict(all_registrations)
+    except TypeError:
+        # No registrations, has to be unique
+        return True
+    for registration in all_registrations.values():
+        if registration["entity"].split(" | ")[1].upper() == teamname.upper():
+            return False
+    return True
+
+
 def get_event_data(event_id):
     """
         Get registered data for an event.
+        May only be accessed by the event owner.
     """
-    # TODO
+    try:
+        event_data = db.child("registered_data").child(event_id).get(session.get("id_token")).val()
+    except (HTTPError, TypeError):
+        # Event does not exist or cannot be accessed
+        return {}
+    return event_data
 
 
-def get_uid_for_entity(event_id, entity_id) -> str:
+def get_uid_for_entity(event_id, entity) -> str:
     """
         Find the entity creator for an entity.
     """
-    # entity_id has the structure of '{TEAMNAME}, behalf of {CONTACTNAME}'
+    # entity has the structure of '{CONTACTNAME} | {TEAMNAME}'
     event = get_event(event_id)
     if not event:
         return ""
-    for uid, entity in event["registered_data"].items():
-        if f"{entity['teamName'].upper()}, behalf of {entity['contactName']}" == entity_id:
+    for uid, data in event["registered"].items():
+        if data["entity"] == entity:
             return uid
     return ""
 
@@ -110,20 +166,13 @@ def get_my_events() -> tuple[dict, dict]:
     return registered_events, owned_events
 
 
-def is_event_owner(event_id):
-    """
-        Check if a user owns an event by checking if an event exists under their name.
-    """
-    event = db.child("events").child(event_id).child("creator").get(session.get("id_token")).val()
-    return event == getattr(current_user, "id")
-
-
 def delete_event(event_id):
     """
         Deletes an event from the database.
     """
     if db.child("events").child(event_id).child("creator").get(session.get("id_token")).val() != getattr(current_user, "id"):
         return
+    db.child("registered_data").child(event_id).remove()
     db.child("events").child(event_id).remove()
 
 
@@ -134,27 +183,6 @@ def delete_all_user_events():
     events = get_my_events()[1]
     for event_id in events:
         delete_event(event_id)
-
-
-def refresh_excess(event_id):
-    event = get_event(event_id)
-
-    # Get all excess
-    excess = []
-    for uid, entity in event["registered"].items():
-        if str(entity).startswith("excess"):
-            excess.append((uid, entity))
-
-    # Sort excess by unix time appended to the end by {n}-{unix}
-    excess.sort(key=lambda x: int(x[1].split("-")[-1]))
-
-    # Get the oldest excess, and update it to be no longer excess if the event is not full
-    i = len(event["registered"]) - 1
-    while excess and i < event["limit"]:
-        entity = excess.pop(0)
-        event["registered"][entity[0]] = math.floor(time())
-        update_event(event_id, event)
-        i += 1
 
 
 logged_out_data = {
