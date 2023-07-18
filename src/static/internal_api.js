@@ -1,3 +1,8 @@
+/**
+ * Internal API access for RoboRegistry with abort controller and timeout.
+ * @author Lucas Bubner, 2023
+ */
+
 class API {
     constructor() {
         this.controller = new AbortController();
@@ -39,4 +44,5 @@ class API {
     }
 }
 
+// Allow access to the API from anywhere
 const api = new API();

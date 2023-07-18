@@ -64,22 +64,5 @@ Checking in at {{ event.name }}
 {% endblock %}
 
 {% block scripts %}
-<script defer>
-    const itemSelect = document.getElementById("item-select");
-    const visitReasonDiv = document.getElementById("visit-reason");
-
-    function anon() {
-        if (itemSelect.value === "anon") {
-            visitReasonDiv.style.display = "block";
-        } else {
-            visitReasonDiv.style.display = "none";
-        }
-    }
-
-    itemSelect.addEventListener("change", () => anon());
-    // Janky fix for the default value being set to guest on page load
-    document.addEventListener("DOMContentLoaded", () => {
-        setTimeout(() => anon(), 500)
-    });
-</script>
+<script src="{{ url_for('static', filename='checkin_man.js') }}"></script>
 {% endblock %}

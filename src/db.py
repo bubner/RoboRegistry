@@ -44,7 +44,10 @@ def add_event(uid, event):
     """
         Adds an event to the database.
     """
-    db.child("events").child(uid).set(event, session.get("id_token"))
+    toadd = {
+        uid: {**event}
+    }
+    db.child("events").update(toadd, session.get("id_token"))
 
 
 def add_entry(event_id, public_data, private_data):
@@ -155,10 +158,10 @@ def get_my_events() -> tuple[dict, dict]:
         registered_events = {}
         owned_events = {}
         for event_id, event_data in dict(events).items():
-            if getattr(current_user, "id") in event_data["registered"]:
-                if event_data["creator"] == getattr(current_user, "id"):
-                    owned_events[event_id] = event_data
-                    continue
+            if event_data["creator"] == getattr(current_user, "id"):
+                owned_events[event_id] = event_data
+                continue
+            if event_data.get("registered") and getattr(current_user, "id") in event_data["registered"]:
                 registered_events[event_id] = event_data
     except (HTTPError, TypeError):
         # Events do not exist

@@ -56,13 +56,16 @@ def viewevent(uid: str):
         abort(404)
 
     registered = owned = False
-    for key, value in data["registered"].items():
-        if value == "owner" and key == getattr(current_user, "id"):
-            owned = True
-            break
-        elif key == getattr(current_user, "id"):
-            registered = True
-            break
+
+    # Check if the current user is registered for the event
+    if data.get("registered"):
+        for key in data["registered"].keys():
+            if key == getattr(current_user, "id"):
+                registered = True
+                break
+
+    # Check for ownership
+    owned = data.get("creator") == getattr(current_user, "id")
 
     # Calculate time to event
     tz = timezone(data["timezone"])
@@ -71,40 +74,27 @@ def viewevent(uid: str):
     end_time = tz.localize(datetime.strptime(
         f"{data['date']} {data['end_time']}", "%Y-%m-%d %H:%M"))
 
-    days, hours, minutes = utils.get_time_diff(datetime.now(tz), start_time)
+    time_to_start = utils.get_time_diff(datetime.now(tz), start_time)
     time_to_end = utils.get_time_diff(datetime.now(tz), end_time)
 
-    time_msg = ""
-    
-    # Time to event start
-    if days >= 7:
-        time_msg += f"{days // 7} week(s) "
-    if days % 7 > 0:
-        time_msg += f"{days % 7} day(s) "
-    if hours > 0:
-        time_msg += f"{hours} hour(s) "
-    if minutes > 0:
-        time_msg += f"{minutes} minute(s) "
+    # Determine if a user can register
+    can_register = start_time > datetime.now(tz)
 
-    # Time to event end
-    if days < 0 and time_to_end[0] >= 0:
-        if time_to_end[1] > 0:
-            time_msg = f"Ends in {time_to_end[1]} hours {time_to_end[2]} minute(s)"
-        else:
-            time_msg = f"Ends in {time_to_end[2]} minute(s)"
-    elif days < 0:
-        time_msg = "Event has ended."
-
-    can_register = time_msg.startswith("Ends") or time_msg.startswith("Event")
     tz = timezone(data["timezone"])
     offset = tz.utcoffset(datetime.now()).total_seconds() / 3600
 
-    if not data:
-        abort(409)
+    if data.get("registered"):
+        # Summate the number of teams registered
+        team_regis_count = sum([v.get("role") == "comp" for v in data["registered"].values()])
+    else:
+        # Cannot be any registered teams if there are no registered users
+        team_regis_count = 0
 
-    return render_template("event/event.html.jinja", user=getattr(current_user, "data"), event=data,
+    is_running = start_time < datetime.now(tz) < end_time
+
+    return render_template("event/event.html.jinja", user=getattr(current_user, "data"), event=data, team_regis_count=team_regis_count,
                            registered=registered, owned=owned, mapbox_api_key=os.getenv("MAPBOX_API_KEY"),
-                           time=time_msg,
+                           time_to_start=time_to_start, time_to_end=time_to_end, is_running=is_running,
                            can_register=not can_register, timezone=tz, offset=offset)
 
 
@@ -177,7 +167,6 @@ def create():
             "location": request.form.get("event_location"),
             "limit": utils.limit_to_999(request.form.get("event_limit")),
             "timezone": request.form.get("event_timezone"),
-            "registered": {getattr(current_user, "id"): "owner"},
             "checkin_code": random.randint(1000, 9999)
         }
 
@@ -250,7 +239,6 @@ def event_register(event_id: str):
     if request.method == "POST":
         private_data = {
             "teamName": request.form.get("teamName"),
-            "role": request.form.get("role"),
             "teamNumber": request.form.get("teamNumber") or "N/A",
             "numPeople": request.form.get("numPeople"),
             "numStudents": utils.limit_to_999(request.form.get("numStudents")),
@@ -274,6 +262,7 @@ def event_register(event_id: str):
         # Log event registration
         public_data = {
             "registered_time": math.floor(time()),
+            "role": request.form.get("role")
         }
 
         # Check for event capacity

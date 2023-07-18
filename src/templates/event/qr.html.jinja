@@ -25,15 +25,6 @@ Scan QR
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='html5-qrcode.min.js') }}"></script>
-<script defer>
-    const scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-    scanner.render(onScanSuccess);
-
-    function onScanSuccess(qrCodeMessage) {
-        document.getElementById("event_url").value = qrCodeMessage;
-        scanner.clear();
-        document.querySelector("form").submit();
-    }
-</script>
+<script src="{{ url_for('static', filename='libs/html5-qrcode.min.js') }}"></script>
+<script src="{{ url_for('static', filename='qr_man.js') }}"></script>
 {% endblock %}
