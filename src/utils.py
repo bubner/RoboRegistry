@@ -61,3 +61,19 @@ def limit_to_999(value):
     except ValueError:
         return None
     return min(value, 999)
+
+
+def validate_form(form_data, role):
+    """
+        Ensure all fields for registration are valid.
+    """
+    # repName, contactName, contactEmail, role required
+    if not all(form_data.get(field) for field in ("repName", "contactName", "contactEmail")) or not role:
+        return False
+    # numPeople, numStudents, numMentors, teams required if role is "comp"
+    if role == "comp" and not all(form_data.get(field) for field in ("numPeople", "numStudents", "numMentors", "teams")):
+        return False
+    # All values in teams must be non-empty
+    if form_data.get("teams") and any(not team for team in form_data.get("teams")):
+        return False
+    return True

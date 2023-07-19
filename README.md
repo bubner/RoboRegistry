@@ -1,6 +1,7 @@
 # FLL/FTC/FRC Event Attendance Registrar
 ### https://roboregistry.vercel.app/
 ##### Automated Registry for Recording and Tracking FIRST Scrimmage Attendance
+[![CodeFactor](https://www.codefactor.io/repository/github/hololb/roboregistry/badge)](https://www.codefactor.io/repository/github/hololb/roboregistry)
 ___
 
 RoboRegistry is a digital registrar designed to hold information regarding schools and teams participating in a FIRST scrimmage event. The primary goal of this application is to avoid the need for manual data collection by exporting and using data to determine event statistics, all from one centralised place.

@@ -95,7 +95,7 @@ def viewevent(uid: str):
     return render_template("event/event.html.jinja", user=getattr(current_user, "data"), event=data, team_regis_count=team_regis_count,
                            registered=registered, owned=owned, mapbox_api_key=os.getenv("MAPBOX_API_KEY"),
                            time_to_start=time_to_start, time_to_end=time_to_end, is_running=is_running,
-                           can_register=not can_register, timezone=tz, offset=offset)
+                           can_register=can_register, timezone=tz, offset=offset)
 
 
 @events_bp.route("/events", methods=["GET", "POST"])
@@ -237,36 +237,40 @@ def event_register(event_id: str):
                                message="This event has already ended. Registation has been automatically disabled.")
 
     if request.method == "POST":
+        role = request.form.get("role")
         private_data = {
-            "teamName": request.form.get("teamName"),
-            "teamNumber": request.form.get("teamNumber") or "N/A",
+            "repName": request.form.get("repName"),
+            "teams": request.form.get("teams"),
+            # Bug: numPeople is always null, and is not present in the form data
             "numPeople": request.form.get("numPeople"),
             "numStudents": utils.limit_to_999(request.form.get("numStudents")),
             "numMentors": utils.limit_to_999(request.form.get("numMentors")),
-            "numAdults": utils.limit_to_999(request.form.get("numAdults")) or "0",
+            "numAdults": utils.limit_to_999(request.form.get("numAdults")),
             "contactName": request.form.get("contactName") or f"{user['first_name']} {user['last_name']}",
             "contactEmail": user["email"],
-            "contactPhone": request.form.get("contactPhone") or "N/A",
+            "contactPhone": request.form.get("contactPhone"),
         }
 
         # Ensure that all required fields are filled
-        if not all(private_data.values()):
+        if not utils.validate_form(private_data, role):
             return render_template("event/done.html.jinja", event=event, status="Failed: MISSING_FIELDS",
                                    message="Please fill out all required fields.", user=user)
+        
+        return request.form
 
         # Check if the teamName is already taken
-        if db.verify_unique(event_id, private_data["teamName"]):
+        if not db.verify_unique(event_id, private_data["teamName"]):
             return render_template("event/done.html.jinja", event=event, status="Failed: TEAMNAME_TAKEN",
                                     message="This team name is already taken. Please choose another.", user=user)
 
         # Log event registration
         public_data = {
             "registered_time": math.floor(time()),
-            "role": request.form.get("role")
+            "role": role
         }
 
         # Check for event capacity
-        if event["limit"] != -1 and len(event["registered"]) >= event["limit"]:
+        if event.get("registered") and event["limit"] != -1 and len(event["registered"]) >= event["limit"]:
             public_data |= {
                 # TODO: Make a method in which this waitlist attribute is checked/removed
                 "waitlist": True
@@ -281,7 +285,7 @@ def event_register(event_id: str):
                                message="Your registration was successfully recorded. Go to the dashboard to view all your registered events, and remember to bring a smart device for QR code check-in on the day.",
                                user=user)
     else:
-        if getattr(current_user, "id") in event["registered"]:
+        if event.get("registered") and getattr(current_user, "id") in event["registered"]:
             if event["registered"][getattr(current_user, "id")] == "owner":
                 return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_OWNER",
                                        message="The currently logged in RoboRegistry account is the owner of this event. The owner cannot register for their own event.",

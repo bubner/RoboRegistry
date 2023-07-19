@@ -12,7 +12,5 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     itemSelect.addEventListener("change", toggleAnon);
-    document.addEventListener("DOMContentLoaded", () => {
-        setTimeout(toggleAnon, 500);
-    });
+    setTimeout(toggleAnon, 500);
 });
