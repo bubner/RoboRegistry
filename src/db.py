@@ -6,6 +6,8 @@
 import math
 from time import time
 
+from datetime import datetime
+from pytz import timezone
 from flask import session
 from flask_login import current_user
 from requests.exceptions import HTTPError
@@ -55,7 +57,7 @@ def add_entry(event_id, public_data, private_data):
         Updates an event in the database to reflect a new registration.
     """
     public_data |= {
-        "entity": f"{private_data['contactName']} | {private_data['teamName'].upper()}",
+        "entity": f"{private_data['contactName']} | {private_data['repName'].upper()}",
         "checkin_data": {
             "checked_in": False,
             "time": 0
@@ -97,15 +99,23 @@ def get_event(event_id):
     return event
 
 
-def unregister(event_id):
+def unregister(event_id) -> bool:
     """
         Unregister from an event.
     """
-    # TODO, ensure to account for excess overflow being updated etc..
-    raise NotImplementedError
+    # Disallow unregistration if event has already started/ended
+    event = get_event(event_id)
+    tz = timezone(event["timezone"])
+    tz.localize(datetime.strptime(event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
+    if datetime.now(tz) > tz.localize(datetime.strptime(event["date"] + event["end_time"], "%Y-%m-%d%H:%M")):
+        return False
+    
+    db.child("events").child(event_id).child("registered").child(getattr(current_user, "id")).remove(session.get("id_token"))
+    db.child("registered_data").child(event_id).child(getattr(current_user, "id")).remove(session.get("id_token"))
+    return True
 
 
-def verify_unique(event_id, teamname) -> bool:
+def verify_unique(event_id, repname) -> bool:
     """
         Verify a team name is not already registered for an event.
     """
@@ -116,7 +126,7 @@ def verify_unique(event_id, teamname) -> bool:
         # No registrations, has to be unique
         return True
     for registration in all_registrations.values():
-        if registration["entity"].split(" | ")[1].upper() == teamname.upper():
+        if registration["entity"].split(" | ")[1].upper() == repname.upper():
             return False
     return True
 
@@ -138,7 +148,7 @@ def get_uid_for_entity(event_id, entity) -> str:
     """
         Find the entity creator for an entity.
     """
-    # entity has the structure of '{CONTACTNAME} | {TEAMNAME}'
+    # entity has the structure of '{CONTACTNAME} | {REPNAME}'
     event = get_event(event_id)
     if not event:
         return ""

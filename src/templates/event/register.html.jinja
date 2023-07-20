@@ -10,15 +10,14 @@ Register for: {{ event.name }}
     <h5 class="text-center">{{ event.date }} from {{ event.start_time }} to {{ event.end_time }}
         ({{ event.timezone }})
     </h5>
-    <br />
+    <a href="/events/view/{{ event.uid }}" class="btn btn-outline-success w-100 mt-3">View Event Page</a>
+    <br /> <br />
     <div class="container border rounded-3 p-3">
         <h5 class="text-center">{{ event.location }}</h5>
         <div id="map" style="height: 300px; width: 100%; margin-top: 10px;"></div>
     </div>
     <br />
-    <p class="text-center">We'll need to get some information, so we can gauge how many people are coming to this
-        event.
-    </p>
+    <p class="text-center">Please fill in the form below to register for this event, either as a visitor or team.</p>
     <form id="regis" action="/events/register/{{ event.uid }}" method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <div class="mb-3">
@@ -75,13 +74,13 @@ Register for: {{ event.name }}
                     class="text-danger">*</span></label>
             <select class="form-select" id="numPeople" name="numPeople" required>
                 <option value="" selected disabled>-</option>
-                <option value="lt">&lt;5</option>
-                <option value="ftt">5-10</option>
-                <option value="ttf">10-15</option>
-                <option value="ftt">15-20</option>
-                <option value="ttt">20-25</option>
-                <option value="gt">25+</option>
-            </select>
+                <option value="lt5">&lt;5</option>
+                <option value="5t10">5-10</option>
+                <option value="10t15">10-15</option>
+                <option value="15t20">15-20</option>
+                <option value="20t25">20-25</option>
+                <option value="gt25">25+</option>
+            </select> 
         </div>
         <div class="mb-3">
             <label for="numStudents" class="form-label">Number of Students Attending<span aria-hidden="true"
@@ -122,6 +121,8 @@ Register for: {{ event.name }}
 <script>
     const MAPBOX_API_KEY = "{{ mapbox_api_key }}";
     const EVENT_LOCATION = "{{ event.location }}";
+    const EVENT_LIMIT = parseInt("{{ event.limit }}");
+    const EVENT_REGISTRATIONS = parseInt("{{ event.registered|length }}");
 </script>
 <script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
 <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />

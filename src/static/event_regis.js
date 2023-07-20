@@ -29,6 +29,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 zoom: 15,
             });
         });
+    
+    // Check to see if the event is full
+    if (EVENT_LIMIT != -1 && EVENT_REGISTRATIONS >= EVENT_LIMIT) {
+        document.getElementById("role").value = "visitor";
+        handleRoleChange();
+        document.getElementById("role").addEventListener("change", (e) => {
+            if (e.target.value != "comp") return;
+            alert("This event has reached team registration limit! You will need to contact the event owner.");
+            e.target.value = "visitor";
+        });
+        return;
+    }
 
     document.getElementById("role").addEventListener("change", () => handleRoleChange());
     setTimeout(handleRoleChange, 500);
@@ -40,15 +52,38 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Some form data is generated dynamically, hijack form submission to include this data
+    document.getElementById("regis").addEventListener("formdata", (e) => addFormData(e));
     document.getElementById("regis").addEventListener("submit", (e) => submitForm(e));
 });
 
-function submitForm(e) {
+function addFormData(e) {
     // Don't bother adding data if there is no data to add
     if (document.getElementById("role").value != "comp") return;
+    const formData = e.formData;
 
-    e.preventDefault();
-    const formData = new FormData(e.target);
+    const teams = document.querySelectorAll(".team");
+
+    const teamNames = [];
+    const teamNumbers = [];
+    for (const team of teams) {
+        // If using a dropdown selector, a duplicate team name may be present in the form of "selector-<team number>"
+        if (team.parentElement.id.startsWith("selector-")) continue;
+        teamNames.push(team.value);
+        teamNumbers.push(parseInt(team.parentElement.id));
+    }
+
+    // Combine team names and numbers into an object
+    const teamData = {};
+    for (let i = 0; i < teamNames.length; i++) {
+        teamData[teamNumbers[i]] = teamNames[i];
+    }
+
+    // Append to form data and continue submission
+    formData.set("teams", JSON.stringify(teamData));
+}
+
+function submitForm(e) {
+    if (document.getElementById("role").value != "comp") return;
 
     const teams = document.querySelectorAll(".team");
     const teamSelectionModal = new bootstrap.Modal(document.getElementById("modal"));
@@ -56,53 +91,24 @@ function submitForm(e) {
     if (teams.length === 0) {
         teamSelectionModal.show();
         alert("Please add at least one team!");
+        e.preventDefault();
         return;
     }
 
-    const teamNames = [];
-    const teamNumbers = [];
     for (const team of teams) {
-        try {
-            if (!team.value) throw new Error;
-            teamNames.push(team.value);
-            teamNumbers.push(team.parentElement.id);
-        } catch (e) {
-            teamSelectionModal.show();
-            alert(`Missing name for team number ${team.parentElement.id}!`);
+        if (team.value) continue;
+        e.preventDefault();
+        teamSelectionModal.show();
+        alert(`Missing name for team number ${team.parentElement.id}!`);
 
-            // Highlight the box until the issue is corrected
-            team.classList.add("border-danger");
-            const revert = () => team.classList.remove("border-danger");
-            team.addEventListener("input", () => {
-                revert();
-                team.removeEventListener("input", revert);
-            });
-
-            return;
-        }
+        // Highlight the box until the issue is corrected
+        team.classList.add("border-danger");
+        const revert = () => team.classList.remove("border-danger");
+        team.addEventListener("input", () => {
+            revert();
+            team.removeEventListener("input", revert);
+        });
     }
-
-    // Combine team names and numbers into an object
-    const teamData = {};
-    for (let i = 0; i < teamNames.length; i++) {
-        // FIXME: Errors with selector team names, debug soon
-        teamData[teamNumbers[i]] = teamNames[i];
-    }
-
-    // Append to form data and mock a form submission
-    formData.append("teams", JSON.stringify(teamData));
-
-    const mockForm = e.target.cloneNode(true);
-    const mockInput = document.createElement("input");
-
-    mockInput.type = "hidden";
-    mockInput.name = "teams";
-    mockInput.value = JSON.stringify(teamData);
-
-    mockForm.appendChild(mockInput);
-    document.body.appendChild(mockForm);
-
-    mockForm.submit();
 }
 
 function removeTeam(e) {
@@ -158,11 +164,12 @@ function handleAddTeamNumber(e) {
     }
 
     const teamList = document.getElementById("team-list");
+    const currentTeams = document.querySelectorAll("#team-list li label");
     const newTeam = document.createElement("li");
 
     // Check for duplicates
-    for (let i = 0; i < teamList.children.length; i++) {
-        if (teamList.children[i].textContent.trim() === teamNumber) {
+    for (let i = 0; i < currentTeams.length; i++) {
+        if (currentTeams[i].innerText == teamNumber) {
             alert("Team number already added to the list!");
             return;
         }

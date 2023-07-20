@@ -237,12 +237,10 @@ def event_register(event_id: str):
                                message="This event has already ended. Registation has been automatically disabled.")
 
     if request.method == "POST":
-        return request.form
         role = request.form.get("role")
         private_data = {
             "repName": request.form.get("repName"),
             "teams": request.form.get("teams"),
-            # Bug: numPeople is always null, and is not present in the form data
             "numPeople": request.form.get("numPeople"),
             "numStudents": utils.limit_to_999(request.form.get("numStudents")),
             "numMentors": utils.limit_to_999(request.form.get("numMentors")),
@@ -257,29 +255,27 @@ def event_register(event_id: str):
             return render_template("event/done.html.jinja", event=event, status="Failed: MISSING_FIELDS",
                                    message="Please fill out all required fields.", user=user)
         
-        return request.form
+        # Remove data that is not required
+        for key in list(private_data.keys()):
+            if not private_data[key] or role != "comp" and key in ("numStudents", "numMentors", "numAdults", "numPeople"):
+                del private_data[key]
 
-        # Check if the teamName is already taken
-        if not db.verify_unique(event_id, private_data["teamName"]):
-            return render_template("event/done.html.jinja", event=event, status="Failed: TEAMNAME_TAKEN",
-                                    message="This team name is already taken. Please choose another.", user=user)
-
+        # Check if the repName is already taken
+        if not db.verify_unique(event_id, private_data["repName"]):
+            return render_template("event/done.html.jinja", event=event, status="Failed: REP_NAME_TAKEN",
+                                    message="Your representing name is already taken. Please choose another.", user=user)
+        
         # Log event registration
         public_data = {
             "registered_time": math.floor(time()),
             "role": role
         }
 
-        # Check for event capacity
-        if event.get("registered") and event["limit"] != -1 and len(event["registered"]) >= event["limit"]:
-            public_data |= {
-                # TODO: Make a method in which this waitlist attribute is checked/removed
-                "waitlist": True
-            }
-            db.add_entry(event_id, public_data, private_data)
-            return render_template("event/done.html.jinja", event=event, status="EVENT_FULL",
-                                   message="This event has reached it's maximum capacity. Your registration has been recorded, and we'll automatically add you if a spot frees up.",
-                                   user=user)
+        # Check for event capacity if it is a team registration
+        if event.get("registered") and event["limit"] != -1 and len(event["registered"]) >= event["limit"] and role == "comp":
+            return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_FULL",
+                                message="This event has reached maximum capacity for team registrations. You will need to contact the event owner.",
+                                user=user)
 
         db.add_entry(event_id, public_data, private_data)
         return render_template("event/done.html.jinja", event=event, status="Registration successful",
@@ -302,22 +298,31 @@ def event_register(event_id: str):
 @login_required
 @user_data_must_be_present
 def event_unregister(event_id: str):
+    event = db.get_event(event_id)
     if request.method == "POST":
-        event = db.get_event(event_id)
+        if not event.get("registered"):
+            return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_NF",
+                                   message="You are not registered for this event.", user=getattr(current_user, "data"))
+        
         if event["creator"] == getattr(current_user, "id"):
             return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_OWNER",
                                    message="The currently logged in RoboRegistry account is the owner of this event. The owner cannot unregister from their own event.",
                                    user=getattr(current_user, "data"))
-        if getattr(current_user, "id") in event["registered"]:
-            db.unregister(event_id)
-            return render_template("event/done.html.jinja", event=event, status="Unregistration successful",
-                                   message="Your registration was successfully removed.",
-                                   user=getattr(current_user, "data"))
-        else:
+        
+        if getattr(current_user, "id") not in event["registered"]:
             return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_NF",
                                    message="You are not registered for this event.", user=getattr(current_user, "data"))
+        
+        if db.unregister(event_id):
+            return render_template("event/done.html.jinja", event=event, status="Unregistration successful",
+                                    message="Your registration was successfully removed.",
+                                    user=getattr(current_user, "data"))
+        else:
+            return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_FAIL",
+                                    message="Unable to unregister you from this event. If the event has started/concluded, unregistration is no longer possible.",
+                                    user=getattr(current_user, "data"))
     else:
-        return render_template("event/unregister.html.jinja", event=db.get_event(event_id),
+        return render_template("event/unregister.html.jinja", event=event,
                                user=getattr(current_user, "data"))
 
 
