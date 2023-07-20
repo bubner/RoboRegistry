@@ -237,6 +237,7 @@ def event_register(event_id: str):
                                message="This event has already ended. Registation has been automatically disabled.")
 
     if request.method == "POST":
+        return request.form
         role = request.form.get("role")
         private_data = {
             "repName": request.form.get("repName"),

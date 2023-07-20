@@ -74,13 +74,13 @@ Register for: {{ event.name }}
             <label for="numPeople" class="form-label">Estimated number of attendees<span aria-hidden="true"
                     class="text-danger">*</span></label>
             <select class="form-select" id="numPeople" name="numPeople" required>
-                <option selected disabled value="">-</option>
-                <option value="<5">&lt;5</option>
-                <option value="5-10">5-10</option>
-                <option value="10-15">10-15</option>
-                <option value="15-20">15-20</option>
-                <option value="20-25">20-25</option>
-                <option value="25+">25+</option>
+                <option value="" selected disabled>-</option>
+                <option value="lt">&lt;5</option>
+                <option value="ftt">5-10</option>
+                <option value="ttf">10-15</option>
+                <option value="ftt">15-20</option>
+                <option value="ttt">20-25</option>
+                <option value="gt">25+</option>
             </select>
         </div>
         <div class="mb-3">
@@ -106,7 +106,7 @@ Register for: {{ event.name }}
             <label for="contactPhone" class="form-label">Contact Phone Number</label>
             <input type="tel" class="form-control" id="contactPhone" name="contactPhone">
         </div>
-        <i>Incase of unexpected event changes, the event owner can choose to contact your preferred contact email
+        <i>In case of unexpected event changes, the event owner can choose to contact your preferred contact email
             and/or phone number listed here.</i> <br /> <br />
         <a class="btn btn-secondary" href="/dashboard">Cancel</a>
         <button id="registernow" type="submit" class="btn btn-primary" style="display: inline;">Register</button>

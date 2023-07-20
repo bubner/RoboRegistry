@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("add-button").addEventListener("click", (e) => handleAddTeamNumber(e));
     document.getElementById("tnum").addEventListener("onkeydown", (e) => {
+        // As we cannot use a form (due to nesting), we need to manually handle these events
         if (e.key == "Enter") handleAddTeamNumber(e);
     });
 
@@ -84,6 +85,7 @@ function submitForm(e) {
     // Combine team names and numbers into an object
     const teamData = {};
     for (let i = 0; i < teamNames.length; i++) {
+        // FIXME: Errors with selector team names, debug soon
         teamData[teamNumbers[i]] = teamNames[i];
     }
 
@@ -143,8 +145,11 @@ function handleAddTeamNumber(e) {
     // Can't be adding a team if the option isn't even selected
     if (document.getElementById("role").value != "comp") return;
     
-    e.preventDefault();
     let teamNumber = document.getElementById("tnum").value;
+    // Handler might fire without any data or if the modal is not open
+    if (!teamNumber || !document.getElementById("modal").classList.contains("show")) return;
+
+    e.preventDefault();
     teamNumber = parseInt(teamNumber);
 
     if (isNaN(teamNumber) || teamNumber < 10 || teamNumber > 99999) {
@@ -157,7 +162,7 @@ function handleAddTeamNumber(e) {
 
     // Check for duplicates
     for (let i = 0; i < teamList.children.length; i++) {
-        if (teamList.children[i].innerText.includes(teamNumber)) {
+        if (teamList.children[i].textContent.trim() === teamNumber) {
             alert("Team number already added to the list!");
             return;
         }
@@ -177,6 +182,8 @@ function handleAddTeamNumber(e) {
     document.getElementById("registernow").disabled = true;
     document.getElementById("waitmsg").style.display = "inline";
 
+    document.getElementById("tnum").value = "";
+
     // internal_api.js
     api.getTeamData(teamNumber).then((data) => {
         try {
@@ -192,7 +199,7 @@ function handleAddTeamNumber(e) {
             let value = "";
             if (data.data.length > 1) {
                 // More than one team, we need to ask the user which one they want
-                value = `<select class="form-select" id="selector-${teamNumber}">`;
+                value = `<select class="form-select team" id="selector-${teamNumber}">`;
                 for (const team of data.data) {
                     value += `<option class="team" value="${team.nickname}">${team.nickname}</option>`;
                 }
@@ -213,7 +220,7 @@ function handleAddTeamNumber(e) {
                 if (value == "other") {
                     if (confirm("Use a custom team name?")) {
                         // Act as if there is no team
-                        target.innerHTML = `<input type="text" class="form-control" placeholder="Enter team name">`;
+                        target.innerHTML = `<input type="text" class="form-control team" placeholder="Enter team name">`;
                     } else {
                         // Reset to first team
                         document.getElementById(`selector-${teamNumber}`).value = data.data[0].nickname;
