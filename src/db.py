@@ -195,8 +195,9 @@ def delete_event(event_id, auth=None):
     auth = auth or getattr(current_user, "id", None)
     if db.child("events").child(event_id).child("creator").get(auth).val() != utils.get_uid():
         return
-    db.child("registered_data").child(event_id).remove()
-    db.child("events").child(event_id).remove()
+    # MUST remove registered_data before events, otherwise Firebase cannot determine an owner
+    db.child("registered_data").child(event_id).remove(auth)
+    db.child("events").child(event_id).remove(auth)
 
 
 def delete_all_user_events():

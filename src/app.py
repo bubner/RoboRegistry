@@ -8,8 +8,9 @@ import warnings
 from datetime import timedelta, datetime
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, session, make_response
-from flask_login import LoginManager, current_user, login_required
+from requests.exceptions import HTTPError
+from flask import Flask, render_template, request, redirect, url_for, session, make_response, flash
+from flask_login import LoginManager, current_user, login_required, AnonymousUserMixin
 from flask_wtf.csrf import CSRFProtect
 
 import api
@@ -52,7 +53,7 @@ app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    PERMANENT_SESSION_LIFETIME=timedelta(minutes=30)
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=60)
 )
 
 app.register_blueprint(utils.filter_bp)
@@ -67,7 +68,11 @@ def load_user(auth_id):
         Loads the user from the database into the session.
     """
     if auth_id:
-        user = User(auth_id)
+        try:
+            user = User(auth_id)
+        except HTTPError:
+            # Session has expired
+            return None
         user.refresh()
         return user
     else:
@@ -80,6 +85,7 @@ def unauthorized():
         Redirects the user to the login page if they try to access a page that requires login.
     """
     session["next"] = "/" + request.full_path.lstrip("/").rstrip("?")
+    flash("Login required or session expired. Please log in to continue.")
     return redirect(url_for("auth.login"))
 
 

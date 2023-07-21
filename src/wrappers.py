@@ -9,6 +9,7 @@ from flask import session, request, redirect, abort, render_template, url_for
 from flask_login import current_user, AnonymousUserMixin
 from pytz import timezone
 
+import utils
 from db import get_uid_for, get_event, logged_out_data
 
 
@@ -19,7 +20,7 @@ def must_be_event_owner(f):
 
     @wraps(f)
     def check(event_id, *args, **kwargs):
-        if not get_uid_for(event_id) == getattr(current_user, "id", None):
+        if not get_uid_for(event_id) == utils.get_uid():
             return abort(403)
         return f(event_id, *args, **kwargs)
 
