@@ -274,8 +274,7 @@ def event_register(event_id: str):
         }
 
         # Check for event capacity if it is a team registration
-        if event.get("registered") and event["limit"] != -1 and len(event["registered"]) >= event[
-            "limit"] and role == "comp":
+        if event.get("registered") and event["limit"] != -1 and len(event["registered"]) >= event["limit"] and role == "comp":
             return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_FULL",
                                    message="This event has reached maximum capacity for team registrations. You will need to contact the event owner.",
                                    user=user)
@@ -286,13 +285,15 @@ def event_register(event_id: str):
                                user=user)
     else:
         if event.get("registered") and utils.get_uid() in event["registered"]:
-            if event["registered"][utils.get_uid()] == "owner":
-                return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_OWNER",
-                                       message="The currently logged in RoboRegistry account is the owner of this event. The owner cannot register for their own event.",
-                                       user=getattr(current_user, "data"))
             return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_ALR",
                                    message="You are already registered for this event. If you wish to unregister from this event, please go to the event view tab and unregister from there.",
                                    user=user)
+        
+        if utils.get_uid() == event["creator"]:
+            return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_OWNER",
+                                       message="The currently logged in RoboRegistry account is the owner of this event. The owner cannot register for their own event.",
+                                       user=getattr(current_user, "data"))
+        
         return render_template("event/register.html.jinja", event=event, user=user,
                                mapbox_api_key=os.getenv("MAPBOX_API_KEY"))
 

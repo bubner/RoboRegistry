@@ -4,32 +4,6 @@
  */
 
 document.addEventListener("DOMContentLoaded", () => {
-    mapboxgl.accessToken = MAPBOX_API_KEY;
-    fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${EVENT_LOCATION}.json?access_token=${mapboxgl.accessToken}`
-    )
-        .then((response) => response.json())
-        .then((data) => {
-            const coordinates = data.features[0].center;
-            const map = new mapboxgl.Map({
-                container: "map",
-                style: "mapbox://styles/mapbox/streets-v11",
-                center: coordinates,
-                zoom: 15,
-            });
-            // Add a marker at the event location
-            new mapboxgl.Marker({
-                draggable: false,
-            })
-                .setLngLat(coordinates)
-                .addTo(map);
-
-            map.flyTo({
-                center: coordinates,
-                zoom: 15,
-            });
-        });
-
     // Get the local time zone from the internationalisation API
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
