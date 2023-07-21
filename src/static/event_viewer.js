@@ -83,9 +83,11 @@ class EventStates {
     static get NOT_STARTED() {
         return 0;
     }
+
     static get RUNNING() {
         return 1;
     }
+
     static get ENDED() {
         return 2;
     }

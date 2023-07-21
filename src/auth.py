@@ -4,7 +4,7 @@
 """
 
 from flask import Blueprint, render_template, request, redirect, session, make_response, url_for
-from flask_login import current_user, UserMixin, login_required, logout_user
+from flask_login import current_user, UserMixin, login_required, logout_user, login_user
 
 import db
 from firebase_instance import auth
@@ -17,9 +17,14 @@ class User(UserMixin):
         User class for Flask-Login
     """
 
-    def __init__(self, firebase_acc):
-        self.id = firebase_acc.get("users")[0].get("localId")
-        self.acc = firebase_acc
+    def __init__(self, tokens):
+        # tokens may either be a dictionary from Firebase or a string from Flask-Login
+        try:
+            self.id = tokens.get("idToken")
+        except AttributeError:
+            self.id = tokens
+
+        self.acc = auth.get_account_info(self.id)
         self.data = None
 
     def is_email_verified(self):
@@ -32,14 +37,13 @@ class User(UserMixin):
         """
             Refreshes the local instance of user data to reflect data in Firebase.
         """
-        self.data = db.get_user_data(self.id)
+        self.data = db.get_user_data(self.acc.get("users")[0].get("localId"), self.id)
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     """
         Logs in the user with the provided email and password through Firebase.
-        Stores token into cookies.
     """
     # If we're already logged in then redirect to the dashboard
     if getattr(current_user, "is_authenticated", lambda: False):
@@ -48,15 +52,11 @@ def login():
         # Get the email and password from the form
         email = request.form["email"]
         password = request.form["password"]
-        session["should_remember"] = request.form.get("remember-me", False)
         try:
             # Sign in with the provided email and password
             user = auth.sign_in_with_email_and_password(email, password)
-            # Store the user refresh token in a cookie
-            response = make_response(redirect("/"))
-            # Set cookie with refresh token
-            response.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
-            return response
+            login_user(User(user), remember=session.get("should_remember", False))
+            return redirect("/")
         except Exception:
             return render_template("auth/login.html.jinja", error="Invalid email or password.")
     else:
@@ -143,7 +143,7 @@ def verify():
     """
         Page for users to verify their email address.
     """
-    auth.send_email_verification(getattr(current_user, "id"))
+    auth.send_email_verification(getattr(current_user, "id", None))
     return render_template("auth/verify.html.jinja")
 
 

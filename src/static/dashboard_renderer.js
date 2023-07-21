@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Loop over data and create boxes
         let row,
             count = 0;
-            
+
         for (const value of Object.values(data)) {
             // Add rows of 3
             if (count % 3 === 0) {

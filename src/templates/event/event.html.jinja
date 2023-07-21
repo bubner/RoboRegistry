@@ -36,7 +36,9 @@
             <div
                 class="card sync {% if is_running %}border-success{% elif not can_register %}border-danger{% else %}border-primary{% endif %}">
                 <div class="card-body">
-                    <h5 class="card-title">{% if is_running %}Event is running!{% elif not can_register %}Event has ended!{% else %}Time until event{% endif %}</h5>
+                    <h5 class="card-title">{% if is_running %}Event is running!{% elif not can_register %}Event has
+                        ended!{% else %}Time until
+                        event{% endif %}</h5>
                     <p class="card-text" id="relative-event-time"></p>
                     <p id="event-time"></p>
                 </div>

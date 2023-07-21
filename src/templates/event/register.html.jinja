@@ -17,7 +17,8 @@ Register for: {{ event.name }}
         <div id="map" style="height: 300px; width: 100%; margin-top: 10px;"></div>
     </div>
     <br />
-    <p class="text-center">Please fill in the form below to register for this event, either as a visitor or team.</p>
+    <p class="text-center">Please fill in the form below to register for this event, either as a visitor or
+        team.</p>
     <form id="regis" action="/events/register/{{ event.uid }}" method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <div class="mb-3">
@@ -80,7 +81,7 @@ Register for: {{ event.name }}
                 <option value="15t20">15-20</option>
                 <option value="20t25">20-25</option>
                 <option value="gt25">25+</option>
-            </select> 
+            </select>
         </div>
         <div class="mb-3">
             <label for="numStudents" class="form-label">Number of Students Attending<span aria-hidden="true"

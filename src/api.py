@@ -5,10 +5,11 @@
 
 from datetime import datetime, timedelta
 
-from flask import request, redirect, Blueprint, make_response, session
-from flask_login import login_required
+from flask import request, redirect, Blueprint
+from flask_login import login_required, login_user
 
 import db
+from auth import User
 from firebase_instance import auth
 
 api_bp = Blueprint("api", __name__, template_folder="templates")
@@ -20,11 +21,9 @@ def callback():
         Handles the callback from Google OAuth.
     """
     user = auth.sign_in_with_oauth_credential(request.url)
-    res = make_response(redirect("/"))
-    res.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
     # Always remember the user when they log in with Google
-    session["should_remember"] = True
-    return res
+    login_user(User(user), True)
+    return redirect("/")
 
 
 @api_bp.route("/api/dashboard")
@@ -77,4 +76,3 @@ def api_dashboard():
             }
         ]
     return should_display
-    

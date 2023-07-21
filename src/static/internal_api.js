@@ -9,7 +9,7 @@ class API {
     }
 
     async safeFetch(endpoint) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, _) => {
             let data = null;
             const timeout = setTimeout(() => {
                 this.abortCurrentRequest();

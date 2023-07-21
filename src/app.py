@@ -9,15 +9,14 @@ from datetime import timedelta, datetime
 
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, make_response
-from flask_login import LoginManager, login_user, current_user, login_required
+from flask_login import LoginManager, current_user, login_required
 from flask_wtf.csrf import CSRFProtect
 
 import api
 import events
 import utils
-import wrappers
+from wrappers import validate_user
 from auth import auth_bp, User
-from firebase_instance import auth
 
 load_dotenv()
 app = Flask(__name__)
@@ -63,36 +62,14 @@ app.register_blueprint(events.events_bp)
 
 
 @login_manager.user_loader
-def load_user(uid=None):
+def load_user(auth_id):
     """
         Loads the user from the database into the session.
     """
-    # Attempt to retrieve the user tokens from the cookies
-    refresh_token = request.cookies.get("refresh_token")
-    # The refresh token would be set from the login page
-    if refresh_token:
-        try:
-            # Refresh user token based on refresh token
-            user = auth.refresh(refresh_token)
-
-            # Store new ID token in the session
-            session["id_token"] = user["idToken"]
-
-            # Use token to get user account info
-            acc = auth.get_account_info(session["id_token"])
-            user_obj = User(acc)
-            user_obj.refresh()
-
-            return user_obj
-        except Exception:
-            return None
-    elif uid:
-        # If we don't have a refresh token, indicating we are on a new session, use the UID to get the user
-        # as Flask-Login would have stored the UID as part of a remember-me schema
-        acc = auth.get_account_info(uid)
-        user_obj = User(acc)
-        user_obj.refresh()
-        return user_obj
+    if auth_id:
+        user = User(auth_id)
+        user.refresh()
+        return user
     else:
         return None
 
@@ -107,30 +84,13 @@ def unauthorized():
 
 
 @app.route("/")
+@validate_user
 def index():
     """
         Index page where the user will be directed to a login page.
         If the user can be logged in automatically, they will be redirected to the dashboard.
     """
-    user = load_user()
-    if user:
-        # Log user in with Flask-Login
-        if should_remember := session.get("should_remember", False):
-            session.pop("should_remember")
-        login_user(user, remember=should_remember)
-
-        # Redirect those who haven't verified their email to the verification page
-        is_email_verified = getattr(
-            current_user, "is_email_verified", lambda: False)
-        if not is_email_verified():
-            return redirect(url_for("auth.verify"))
-
-        # Ensure we have the user's data in the database
-        # This is also handled by the @user_data_must_be_present wrapper, but since this is where
-        # we assign user data, we will ensure the state has been considered before continuing.
-        if not getattr(current_user, "data", None):
-            return redirect(url_for("auth.create_profile"))
-
+    if current_user:
         # Try to redirect to the page the user was trying to access before logging in
         if goto := session.get("next"):
             session.pop("next")
@@ -142,7 +102,7 @@ def index():
 
 @app.route("/dashboard")
 @login_required
-@wrappers.user_data_must_be_present
+@validate_user
 def dashboard():
     """
         Primary landing page for logged-in users, including a list of their own events.
@@ -153,7 +113,7 @@ def dashboard():
 
 @app.route("/settings", methods=["GET", "POST"])
 @login_required
-@wrappers.user_data_must_be_present
+@validate_user
 def settings():
     """
         Settings page for the user, including the ability to change their theme, settings, etc.

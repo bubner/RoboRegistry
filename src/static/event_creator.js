@@ -39,11 +39,30 @@ document.addEventListener("DOMContentLoaded", () => {
                 .then((data) => {
                     document.getElementById("event_location").value = data.features[0].place_name;
                 })
-                .catch((error) => {
-                    console.log(error);
+                .catch((e) => {
+                    console.error(e);
                 });
         });
     }
+
+    const geocodeAddress = () => {
+        const address = document.getElementById("event_location").value;
+        if (address === "") {
+            return;
+        }
+        fetch("https://api.mapbox.com/geocoding/v5/mapbox.places/" + address + ".json?access_token=" + mapboxgl.accessToken)
+            .then((response) => response.json())
+            .then((data) => {
+                const location = data.features[0].center;
+                map.setCenter(location);
+                marker.setLngLat(location);
+                map.setZoom(15);
+                document.getElementById("event_location").value = data.features[0].place_name;
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    };
 
     document.getElementById("event_location").addEventListener("change", () => geocodeAddress());
     document.getElementById("event_location").addEventListener("keypress", (e) => {
@@ -103,22 +122,3 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
-
-function geocodeAddress() {
-    const address = document.getElementById("event_location").value;
-    if (address === "") {
-        return;
-    }
-    fetch("https://api.mapbox.com/geocoding/v5/mapbox.places/" + address + ".json?access_token=" + mapboxgl.accessToken)
-        .then((response) => response.json())
-        .then((data) => {
-            const location = data.features[0].center;
-            map.setCenter(location);
-            marker.setLngLat(location);
-            map.setZoom(15);
-            document.getElementById("event_location").value = data.features[0].place_name;
-        })
-        .catch((error) => {
-            console.log(error);
-        });
-}

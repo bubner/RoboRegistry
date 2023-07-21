@@ -6,7 +6,7 @@ from datetime import datetime
 from functools import wraps
 
 from flask import session, request, redirect, abort, render_template, url_for
-from flask_login import current_user
+from flask_login import current_user, AnonymousUserMixin
 from pytz import timezone
 
 from db import get_uid_for, get_event, logged_out_data
@@ -48,17 +48,24 @@ def event_must_be_running(f):
     return check
 
 
-def user_data_must_be_present(f):
+def validate_user(f):
     """
-        Ensure a user's data is present to allow requests to be made.
-        Will redirect to the profile creation page if not, and store the next page in the session.
+        Ensure a user's data is present and email is valid to allow requests to be made.
+        If the current_user does not exist, checks will be ignored.
+        Will redirect to the profile creation/verification page if not, and store the next page in the session.
     """
 
     @wraps(f)
     def check(*args, **kwargs):
-        if not getattr(current_user, "data", None):
-            session["next"] = "/" + request.full_path.lstrip("/").rstrip("?")
-            return redirect(url_for("auth.create_profile"))
+        if current_user and not isinstance(current_user, AnonymousUserMixin):
+            if not getattr(current_user, "data"):
+                session["next"] = "/" + request.full_path.lstrip("/").rstrip("?")
+                return redirect(url_for("auth.create_profile"))
+
+            if not getattr(current_user, "is_email_verified")():
+                session["next"] = "/" + request.full_path.lstrip("/").rstrip("?")
+                return redirect(url_for("auth.verify"))
+
         return f(*args, **kwargs)
 
     return check
