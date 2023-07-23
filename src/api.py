@@ -36,7 +36,7 @@ def api_dashboard():
     registered_events, created_events = db.get_my_events()
     should_display = []
     for uid in created_events:
-        # Check if the date of an event is in the next two weeks
+        # Check if the date of an event is in the next 4 weeks
         date = datetime.strptime(created_events[uid]['date'], "%Y-%m-%d")
         if datetime.now() < date < datetime.now() + timedelta(days=28):
             should_display.append(

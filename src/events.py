@@ -339,6 +339,9 @@ def gen(event_id: str):
         Generate a QR code for an event.
     """
     event = db.get_event(event_id)
+    if not event:
+        abort(404)
+        
     # Check if the event is done, reject if it is
     tz = timezone(event["timezone"])
     tz.localize(datetime.strptime(
@@ -372,6 +375,13 @@ def checkin(event_id: str):
         Check in to an event.
     """
     event = db.get_event(event_id)
+    if not event:
+        abort(404)
+
+    if not event.get("registered"):
+        # Can't check in any users if there are no registered users
+        abort(418)
+
     if request.method == "POST":
         # Validate checkin code
         code = request.form.get("code")
@@ -392,75 +402,45 @@ def dynamic(event_id: str):
     """
         Check into an event using check in code approval.
     """
-    # FIXME: Horrible code, commented out needs to be fixed
-    raise NotImplementedError
     event = db.get_event(event_id)
+    if not event:
+        abort(404)
+
     code = session.get("checkin")
-    if not code or code != event.get("checkin_code") or not event:
+    if not code or code != event.get("checkin_code"):
         # Send them back to the check-in page if they don't have a valid check-in code
         return redirect("/events/ci/" + event_id)
 
+    if not event.get("registered"):
+        abort(418)
+
     registered = []
-    # if event.get("registered_data"):
-    #     for registration in event["registered_data"].values():
-    #         if not registration.get("checkin"):
-    #             registered.append(
-    #                 f"{registration['teamName'].upper()}, behalf of {registration['contactName']}")
+    for registration in event["registered"].values():
+        if registration.get("checkin_data").get("checked_in"):
+            continue
+        registered.append(registration["entity"])
+
     if request.method == "POST":
         # Get the entity of which we are checking in
         entity = request.form.get("entity")
+
+        # Otherwise the user would have to provide a basic affiliation
         anon_affil = request.form.get("visit-reason")
         anon_name = request.form.get("anon-name")
+
         if not entity or (entity == "anon" and not anon_affil and not anon_name):
             return render_template("event/done.html.jinja", event=event, status="Failed: CI_INVALID",
                                    message="You have provided insufficient data! If trouble persists, try registration email check-in or asking the event owner to record you as attended manually.",
                                    user=getattr(current_user, "data") or db.logged_out_data)
-        # Put check-in data into the event data
-        # if not anon_affil:
-        #     try:
-        #         prev = event["registered_data"][db.get_uid_for_entity(
-        #             event_id, entity)]
-        #     except KeyError:
-        #         prev = {}
-        #     event |= {
-        #         "registered_data": {
-        #             db.get_uid_for_entity(event_id, entity): {
-        #                 **prev,
-        #                 "checkin": math.floor(time()),
-        #             }
-        #         }
-        #     }
-        # else:
-        #     try:
-        #         # Attempt to increment the number of times this entity has checked in
-        #         affil_num = event["registered_data"]["anon_data"][anon_affil] + 1
-        #     except KeyError:
-        #         affil_num = 1
-        #     try:
-        #         prev = event["registered_data"]["anon_data"]["times"]
-        #     except KeyError:
-        #         prev = {}
-        #     try:
-        #         prev_data = event["registered_data"]
-        #     except KeyError:
-        #         prev_data = {}
-        #     event |= {
-        #         "registered_data": {
-        #             **prev_data,
-        #             "anon_data": {
-        #                 anon_affil: affil_num,
-        #                 "times": {
-        #                     **prev,
-        #                     "".join(random.choice(ascii_letters + digits + "_-") for _ in range(16)): {
-        #                         "entity": anon_affil,
-        #                         "name": anon_name,
-        #                         "checkin": math.floor(time())
-        #                     }
-        #                 }
-        #             }
-        #         }
-        #     }
-        # db.update_event(event_id, event)
+        if anon_affil:
+            # Anonymous user check-in
+            db.anon_check_in(event_id, anon_affil, anon_name)
+        else:
+            # Normal user check-in
+            db.dyn_check_in(event_id, entity)
+
+        session["checkin"] = None
+
         return render_template("event/done.html.jinja", event=event, status="Check in successful",
                                message="Your check in has been recorded successfully by dynamic self check-in. You can safely close this tab.",
                                user=getattr(current_user, "data") or db.logged_out_data)
@@ -494,7 +474,7 @@ def manual(event_id: str):
                                user=getattr(current_user, "data"))
     else:
         return render_template("event/manual.html.jinja", event=event, user=getattr(current_user, "data"),
-                               data=registered[event_id]["registered_data"][utils.get_uid()])
+                               entity=registered[event_id]["registered"][utils.get_uid()]["entity"])
 
 
 @events_bp.route("/events/ci", methods=["GET", "POST"])

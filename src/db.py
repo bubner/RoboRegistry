@@ -78,15 +78,38 @@ def remove_entry(event_id, auth=None):
     db.child("registered_data").child(event_id).child(utils.get_uid()).remove(auth)
 
 
-def check_in(event_id, auth=None):
+def check_in(event_id, uid=None, auth=None):
     """
         Checks a user into an event.
+        No arguments will check in the current user.
     """
     auth = auth or getattr(current_user, "id", None)
-    db.child("events").child(event_id).child("registered").child(utils.get_uid()).child("checkin_data").set({
+    uid = uid or utils.get_uid()
+    db.child("events").child(event_id).child("registered").child(uid).child("checkin_data").set({
         "checked_in": True,
         "time": math.floor(time())
     }, auth)
+
+
+def anon_check_in(event_id, affil, name):
+    """
+        Checks in an anonymous user.
+    """
+    # Authentication is not required as this tree is public
+    data = {
+        "rep": affil,
+        "name": name,
+        "time": math.floor(time())
+    }
+    db.child("registered_data").child(event_id).child("anon_data").push(data)
+
+
+def dyn_check_in(event_id, entity):
+    """
+        Checks in a user from an entity.
+    """
+    uid = get_uid_for_entity(event_id, entity)
+    check_in(event_id, uid)
 
 
 def get_event(event_id, auth=None):
