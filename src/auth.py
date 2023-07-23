@@ -17,14 +17,11 @@ class User(UserMixin):
         User class for Flask-Login
     """
 
-    def __init__(self, tokens):
-        # tokens may either be a dictionary from Firebase or a string from Flask-Login
-        try:
-            self.id = tokens.get("idToken")
-        except AttributeError:
-            self.id = tokens
-
-        self.acc = auth.get_account_info(self.id)
+    def __init__(self, refresh_token):
+        self.id = refresh_token
+        # Automatically refresh the user's token
+        self.token = auth.refresh(refresh_token).get("idToken")
+        self.acc = auth.get_account_info(self.token)
         self.data = None
 
     def is_email_verified(self):
@@ -37,7 +34,7 @@ class User(UserMixin):
         """
             Refreshes the local instance of user data to reflect data in Firebase.
         """
-        self.data = db.get_user_data(self.acc.get("users")[0].get("localId"), self.id)
+        self.data = db.get_user_data(self.acc.get("users")[0].get("localId"), self.token)
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
@@ -55,7 +52,9 @@ def login():
         try:
             # Sign in with the provided email and password
             user = auth.sign_in_with_email_and_password(email, password)
-            login_user(User(user), remember=session.get("should_remember", False))
+            if not user:
+                return redirect("/login")
+            login_user(User(user.get("refreshToken")), remember=session.get("should_remember", False))
             return redirect("/")
         except Exception:
             return render_template("auth/login.html.jinja", error="Invalid email or password.")
@@ -69,7 +68,7 @@ def register():
         Registers the user with the provided email and password through Firebase.
     """
     # Redirect to dashboard if already logged in
-    if session.get("token") or request.cookies.get("refresh_token"):
+    if getattr(current_user, "is_authenticated", lambda: False):
         return redirect("/")
     if request.method == "POST":
         email = request.form["email"]
@@ -90,7 +89,9 @@ def register():
             res = make_response(redirect("/"))
             # Sign in on registration
             user = auth.sign_in_with_email_and_password(email, password)
-            res.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+            if not user:
+                return redirect("/login")
+            login_user(User(user.get("refreshToken")), remember=session.get("should_remember", False))
             return res
         except Exception:
             return render_template("auth/register.html.jinja", error="Something went wrong, please try again.")
@@ -103,6 +104,8 @@ def googleauth():
     """
         Redirects the user to the Google OAuth page.
     """
+    if getattr(current_user, "is_authenticated", lambda: False):
+        return redirect("/")
     return redirect(auth.authenticate_login_with_google())
 
 
@@ -112,7 +115,6 @@ def logout():
         Logs out the user by removing the user token from the cookies.
     """
     res = make_response(redirect(url_for("auth.login")))
-    res.set_cookie("refresh_token", "", expires=0)
     session.clear()
     logout_user()
     return res
@@ -123,6 +125,8 @@ def forgotpassword():
     """
         Allows the user to reset their password.
     """
+    if getattr(current_user, "is_authenticated", lambda: False):
+        return redirect("/")
     if request.method == "POST":
         if not (email := request.form["email"]):
             return render_template("auth/forgotpassword.html.jinja", error="Please enter an email address.")
@@ -143,7 +147,9 @@ def verify():
     """
         Page for users to verify their email address.
     """
-    auth.send_email_verification(getattr(current_user, "id", None))
+    if getattr(current_user, "is_email_verified", lambda: False)():
+        return redirect("/")
+    auth.send_email_verification(getattr(current_user, "token", None))
     return render_template("auth/verify.html.jinja")
 
 

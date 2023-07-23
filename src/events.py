@@ -274,7 +274,8 @@ def event_register(event_id: str):
         }
 
         # Check for event capacity if it is a team registration
-        if event.get("registered") and event["limit"] != -1 and len(event["registered"]) >= event["limit"] and role == "comp":
+        if event.get("registered") and event["limit"] != -1 and len(event["registered"]) >= event[
+            "limit"] and role == "comp":
             return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_FULL",
                                    message="This event has reached maximum capacity for team registrations. You will need to contact the event owner.",
                                    user=user)
@@ -288,12 +289,12 @@ def event_register(event_id: str):
             return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_ALR",
                                    message="You are already registered for this event. If you wish to unregister from this event, please go to the event view tab and unregister from there.",
                                    user=user)
-        
+
         if utils.get_uid() == event["creator"]:
             return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_OWNER",
-                                       message="The currently logged in RoboRegistry account is the owner of this event. The owner cannot register for their own event.",
-                                       user=getattr(current_user, "data"))
-        
+                                   message="The currently logged in RoboRegistry account is the owner of this event. The owner cannot register for their own event.",
+                                   user=getattr(current_user, "data"))
+
         return render_template("event/register.html.jinja", event=event, user=user,
                                mapbox_api_key=os.getenv("MAPBOX_API_KEY"))
 
@@ -341,7 +342,7 @@ def gen(event_id: str):
     event = db.get_event(event_id)
     if not event:
         abort(404)
-        
+
     # Check if the event is done, reject if it is
     tz = timezone(event["timezone"])
     tz.localize(datetime.strptime(
@@ -378,10 +379,6 @@ def checkin(event_id: str):
     if not event:
         abort(404)
 
-    if not event.get("registered"):
-        # Can't check in any users if there are no registered users
-        abort(418)
-
     if request.method == "POST":
         # Validate checkin code
         code = request.form.get("code")
@@ -411,18 +408,20 @@ def dynamic(event_id: str):
         # Send them back to the check-in page if they don't have a valid check-in code
         return redirect("/events/ci/" + event_id)
 
-    if not event.get("registered"):
-        abort(418)
-
     registered = []
-    for registration in event["registered"].values():
-        if registration.get("checkin_data").get("checked_in"):
-            continue
-        registered.append(registration["entity"])
+    if event.get("registered"):
+        for registration in event["registered"].values():
+            if registration.get("checkin_data").get("checked_in"):
+                continue
+            registered.append(registration["entity"])
 
     if request.method == "POST":
         # Get the entity of which we are checking in
         entity = request.form.get("entity")
+
+        if entity != "anon" and len(registered) == 0:
+            # This should be impossible
+            abort(418)
 
         # Otherwise the user would have to provide a basic affiliation
         anon_affil = request.form.get("visit-reason")

@@ -19,7 +19,7 @@ def get_user_data(uid, auth=None) -> dict:
     """
         Gets a user's info from the database.
     """
-    auth = auth or getattr(current_user, "id", None)
+    auth = auth or getattr(current_user, "token", None)
     try:
         data = db.child("users").child(uid).get(auth).val()
     except KeyError:
@@ -33,7 +33,7 @@ def mutate_user_data(info: dict, auth=None) -> None:
     """
         Appends user data in the database.
     """
-    auth = auth or getattr(current_user, "id", None)
+    auth = auth or getattr(current_user, "token", None)
     db.child("users").child(utils.get_uid()).update(info, auth)
 
 
@@ -41,7 +41,7 @@ def get_uid_for(event_id, auth=None) -> str:
     """
         Find the event creator for an event.
     """
-    auth = auth or getattr(current_user, "id", None)
+    auth = auth or getattr(current_user, "token", None)
     return str(db.child("events").child(event_id).child("creator").get(auth).val())
 
 
@@ -49,7 +49,7 @@ def add_event(uid, event, auth=None):
     """
         Adds an event to the database.
     """
-    auth = auth or getattr(current_user, "id", None)
+    auth = auth or getattr(current_user, "token", None)
     db.child("events").child(uid).set(event, auth)
 
 
@@ -57,7 +57,7 @@ def add_entry(event_id, public_data, private_data, auth=None):
     """
         Updates an event in the database to reflect a new registration.
     """
-    auth = auth or getattr(current_user, "id", None)
+    auth = auth or getattr(current_user, "token", None)
     public_data |= {
         "entity": f"{private_data['contactName']} | {private_data['repName'].upper()}",
         "checkin_data": {
@@ -73,7 +73,7 @@ def remove_entry(event_id, auth=None):
     """
         Removes an event registration from the database.
     """
-    auth = auth or getattr(current_user, "id", None)
+    auth = auth or getattr(current_user, "token", None)
     db.child("events").child(event_id).child("registered").child(utils.get_uid()).remove(auth)
     db.child("registered_data").child(event_id).child(utils.get_uid()).remove(auth)
 
@@ -83,7 +83,7 @@ def check_in(event_id, uid=None, auth=None):
         Checks a user into an event.
         No arguments will check in the current user.
     """
-    auth = auth or getattr(current_user, "id", None)
+    auth = auth or getattr(current_user, "token", None)
     uid = uid or utils.get_uid()
     db.child("events").child(event_id).child("registered").child(uid).child("checkin_data").set({
         "checked_in": True,
@@ -116,7 +116,7 @@ def get_event(event_id, auth=None):
     """
         Gets an event from a creator from the database.
     """
-    auth = auth or getattr(current_user, "id", None)
+    auth = auth or getattr(current_user, "token", None)
     try:
         event = db.child("events").child(event_id).get(auth).val()
         event = dict(event)
@@ -131,7 +131,7 @@ def unregister(event_id, auth=None) -> bool:
     """
         Unregister from an event.
     """
-    auth = auth or getattr(current_user, "id", None)
+    auth = auth or getattr(current_user, "token", None)
     # Disallow unregistration if event has already started/ended
     event = get_event(event_id)
     tz = timezone(event["timezone"])
@@ -148,7 +148,7 @@ def verify_unique(event_id, repname, auth=None) -> bool:
     """
         Verify a team name is not already registered for an event.
     """
-    auth = auth or getattr(current_user, "id", None)
+    auth = auth or getattr(current_user, "token", None)
     all_registrations = db.child("events").child(event_id).child("registered").get(auth).val()
     try:
         all_registrations = dict(all_registrations)
@@ -166,7 +166,7 @@ def get_event_data(event_id, auth=None):
         Get registered data for an event.
         May only be accessed by the event owner.
     """
-    auth = auth or getattr(current_user, "id", None)
+    auth = auth or getattr(current_user, "token", None)
     try:
         event_data = db.child("registered_data").child(event_id).get(auth).val()
     except (HTTPError, TypeError):
@@ -194,7 +194,7 @@ def get_my_events(auth=None) -> tuple[dict, dict]:
         Gets a user's events from the database.
         @return: (registered_events, owned_events)
     """
-    auth = auth or getattr(current_user, "id", None)
+    auth = auth or getattr(current_user, "token", None)
     try:
         events = db.child("events").get(auth).val()
         registered_events = {}
@@ -215,7 +215,7 @@ def delete_event(event_id, auth=None):
     """
         Deletes an event from the database.
     """
-    auth = auth or getattr(current_user, "id", None)
+    auth = auth or getattr(current_user, "token", None)
     if db.child("events").child(event_id).child("creator").get(auth).val() != utils.get_uid():
         return
     # MUST remove registered_data before events, otherwise Firebase cannot determine an owner

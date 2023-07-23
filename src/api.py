@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 
 from flask import request, redirect, Blueprint
 from flask_login import login_required, login_user
+from requests.exceptions import MissingSchema
 
 import db
 from auth import User
@@ -20,9 +21,14 @@ def callback():
     """
         Handles the callback from Google OAuth.
     """
-    user = auth.sign_in_with_oauth_credential(request.url)
+    try:
+        user = auth.sign_in_with_oauth_credential(request.url)
+        if not user:
+            raise MissingSchema
+    except MissingSchema:
+        return redirect("/login")
     # Always remember the user when they log in with Google
-    login_user(User(user), True)
+    login_user(User(user.get("refreshToken")), True)
     return redirect("/")
 
 

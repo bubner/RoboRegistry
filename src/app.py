@@ -8,16 +8,16 @@ import warnings
 from datetime import timedelta, datetime
 
 from dotenv import load_dotenv
-from requests.exceptions import HTTPError
 from flask import Flask, render_template, request, redirect, url_for, session, make_response, flash
-from flask_login import LoginManager, current_user, login_required, AnonymousUserMixin
+from flask_login import LoginManager, current_user, login_required
 from flask_wtf.csrf import CSRFProtect
+from requests.exceptions import HTTPError
 
 import api
 import events
 import utils
-from wrappers import validate_user
 from auth import auth_bp, User
+from wrappers import validate_user
 
 load_dotenv()
 app = Flask(__name__)
@@ -63,15 +63,15 @@ app.register_blueprint(events.events_bp)
 
 
 @login_manager.user_loader
-def load_user(auth_id):
+def load_user(ref_token):
     """
         Loads the user from the database into the session.
     """
-    if auth_id:
+    if ref_token:
         try:
-            user = User(auth_id)
+            user = User(ref_token)
         except HTTPError:
-            # Session has expired
+            # Refresh token is no longer valid
             return None
         user.refresh()
         return user
@@ -177,9 +177,4 @@ def handle_403(e):
 
 @error_handler(405, "Method Not Allowed")
 def handle_405(e):
-    pass
-
-
-@error_handler(409, "Conflict")
-def handle_409(e):
     pass
