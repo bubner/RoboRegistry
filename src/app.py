@@ -14,6 +14,7 @@ from flask_wtf.csrf import CSRFProtect
 from requests.exceptions import HTTPError
 
 import api
+import db
 import events
 import utils
 from auth import auth_bp, User
@@ -127,13 +128,41 @@ def settings():
     if request.method == "POST":
         res = make_response(redirect(url_for("dashboard")))
         darkmode = request.form.get("darkmode")
+        account = {
+            "email": getattr(current_user, "data", {}).get("email"),
+            "first_name": request.form.get("first"),
+            "last_name": request.form.get("last"),
+            "role": request.form.get("role"),
+            "affil": request.form.get("affil"),
+        }
+
+        if not all(account.values()):
+            flash("Please fill out all fields.")
+            return redirect(url_for("settings"))
+
+        # Promotion can be False, which will flag all()
+        account["promotion"] = request.form.get("promotion") == "on"
+
+        if len(account["first_name"]) > 16 or len(account["last_name"]) > 16:
+            flash("Name(s) must be less than 16 characters each.")
+            return redirect(url_for("settings"))
+
+        # Update the user account info
+        db.mutate_user_data(account)
+        getattr(current_user, "refresh")()
+
         # Use cookies to store user preferences
         res.set_cookie("darkmode", darkmode or "off", secure=True,
                        expires=datetime.now() + timedelta(days=365))
         return res
     else:
         current_settings = {
-            "darkmode": request.cookies.get("darkmode")
+            "darkmode": request.cookies.get("darkmode"),
+            "first": getattr(current_user, "data", {}).get("first_name", ""),
+            "last": getattr(current_user, "data", {}).get("last_name", ""),
+            "promotion": getattr(current_user, "data", {}).get("promotion", ""),
+            "role": getattr(current_user, "data", {}).get("role", ""),
+            "affil": getattr(current_user, "data", {}).get("affil", ""),
         }
         return render_template("misc/settings.html.jinja", user=getattr(current_user, "data", None),
                                settings=current_settings)
@@ -142,6 +171,15 @@ def settings():
 @app.route("/about")
 def about():
     return render_template("misc/about.html.jinja")
+
+
+@app.route("/exportall")
+@login_required
+def exportall():
+    """
+        Export all user data available for the current user.
+    """
+    raise NotImplementedError
 
 
 def error_handler(code, reason):

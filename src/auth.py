@@ -2,9 +2,11 @@
     User authentication and profile creation for RoboRegistry
     @author: Lucas Bubner, 2023
 """
+import random
 
 from flask import Blueprint, render_template, request, redirect, session, make_response, url_for
 from flask_login import current_user, UserMixin, login_required, logout_user, login_user
+from requests.exceptions import HTTPError
 
 import db
 from firebase_instance import auth
@@ -149,7 +151,11 @@ def verify():
     """
     if getattr(current_user, "is_email_verified", lambda: False)():
         return redirect("/")
-    auth.send_email_verification(getattr(current_user, "token", None))
+    try:
+        auth.send_email_verification(getattr(current_user, "token", None))
+    except HTTPError:
+        # Timeout error, we can ignore it
+        pass
     return render_template("auth/verify.html.jinja")
 
 
@@ -161,7 +167,7 @@ def create_profile():
     """
     auth_email = getattr(current_user, "acc", {}).get("users", [{}])[0].get("email")
     # If the user already has a profile, redirect them back to the dashboard
-    if not getattr(current_user, "data", None):
+    if getattr(current_user, "data", False):
         return redirect("/dashboard")
 
     if request.method == "POST":
@@ -169,7 +175,9 @@ def create_profile():
         first_name = request.form.get("first_name")
         last_name = request.form.get("last_name")
         role = request.form.get("role")
-        if not first_name or not last_name or not role:
+        affil = request.form.get("affiliation")
+
+        if not first_name or not last_name or not role or not affil:
             return render_template("auth/addinfo.html.jinja", error="Please enter required details.", email=auth_email)
 
         if len(first_name) > 16 or len(last_name) > 16:
@@ -184,8 +192,53 @@ def create_profile():
 
         # Create the user's profile
         db.mutate_user_data({"first_name": first_name.strip(), "last_name": last_name.strip(),
-                             "role": role, "email": email, "promotion": promotion})
+                             "role": role, "email": email, "promotion": promotion, "affil": affil.strip()})
 
         return redirect("/")
     else:
         return render_template("auth/addinfo.html.jinja", email=auth_email)
+
+
+@auth_bp.route("/changepassword")
+@login_required
+def changepassword():
+    """
+        Change the password of the currently logged-in user.
+    """
+    # current_user.acc.users[0].providerUserInfo[0].providerId
+    if getattr(current_user, "acc", {}).get("users", [{}])[0].get("providerUserInfo", [{}])[0].get(
+            "providerId") == "google.com":
+        # We cannot change the password of a user that signed in with Google, so we'll send them on their merry way
+        return redirect("https://myaccount.google.com/security")
+
+    # For now, we'll let Firebase handle all the password management, and an easy way we can do that is by sending a reset email
+    auth.send_password_reset_email(getattr(current_user, "acc", {}).get("users", [{}])[0].get("email"))
+
+    return render_template("auth/changepassword.html.jinja", user=getattr(current_user, "data", None))
+
+
+@auth_bp.route("/deleteaccount", methods=["GET", "POST"])
+@login_required
+def deleteaccount():
+    """
+        Permanently deletes the user's account.
+    """
+    num = str(random.randint(100000, 999999))
+    numevents = len(db.get_my_events()[1])
+
+    if request.method == "POST":
+        old_num = request.form.get("num")
+        new_num = request.form.get("newnum")
+
+        if old_num != new_num:
+            return render_template("auth/deleteaccount.html.jinja", user=getattr(current_user, "data", None),
+                                   error="Numbers don't match.", num=num, numevents=numevents)
+
+        db.delete_all_user_events()
+        db.delete_user_data()
+        auth.delete_user_account(getattr(current_user, "token", None))
+
+        return redirect("/logout")
+    else:
+        return render_template("auth/deleteaccount.html.jinja", user=getattr(current_user, "data", None), num=num,
+                               numevents=numevents)

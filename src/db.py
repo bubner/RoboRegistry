@@ -232,6 +232,14 @@ def delete_all_user_events():
         delete_event(event_id)
 
 
+def delete_user_data(auth=None):
+    """
+        Delete all additional user data.
+    """
+    auth = auth or getattr(current_user, "token", None)
+    db.child("users").child(utils.get_uid()).remove(auth)
+
+
 logged_out_data = {
     "first_name": "Guest",
     "last_name": "User",
