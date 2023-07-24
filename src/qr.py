@@ -65,7 +65,7 @@ def generate_qrcode(event, size, qr_type):
                   font=boldfont)
 
         # Add event name
-        text = event.get('name').upper()
+        text = event.get("name").upper()
         text_width, text_height = draw.textsize(text, bigfont)
         draw.text(((template_width - text_width) // 2, 800 + text_height), text, (0, 0, 0), font=bigfont)
 
@@ -83,19 +83,19 @@ def generate_qrcode(event, size, qr_type):
                       font=font)
 
             # Add location
-            text = event.get('location')
+            text = event.get("location")
             text_width, text_height = draw.textsize(text, smallfont if len(text) > 90 else font)
             draw.text(((template_width - text_width) // 2, template_height - text_height - 600), text, (0, 0, 0),
                       font=smallfont if len(text) > 90 else font)
 
             # Add email
-            text = event.get('email')
+            text = "For inquiries contact: " + event.get("email")
             text_width, text_height = draw.textsize(text, boldfont)
-            draw.text(((template_width - text_width) // 2 + 500, template_height - text_height - 480), text, (0, 0, 0),
+            draw.text(((template_width - text_width) // 2, template_height - text_height - 480), text, (0, 0, 0),
                       font=boldfont)
         else:
             # Add event check-in code
-            text = str(event.get('checkin_code'))
+            text = str(event.get("checkin_code"))
             text_width, text_height = draw.textsize(text, bigfont)
             draw.text(((template_width - text_width) // 2, template_height - text_height - 480), text, (0, 0, 0),
                       font=bigfont)
