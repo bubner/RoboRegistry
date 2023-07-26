@@ -7,6 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
         rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
@@ -17,7 +18,7 @@
         integrity="sha384-yBhgDqxM50qJV5JPdayci8wCfooqvhFYbIKhv0hTtLvfeeyJMJCscRfFNKIxt43M"
         crossorigin="anonymous"></script>
     <meta name="author" content="Lucas Bubner, 2023" />
-    <meta name="description" content="Registry for Recording and Tracking RoboLeague Event Attendance" />
+    <meta name="description" content="Registry for Recording and Tracking FLL/FTC/FRC Event Attendance" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}{% endblock %} | RoboRegistry</title>
 </head>
@@ -95,11 +96,11 @@
     </noscript>
     <main>{% block body %}{% endblock %}</main>
     <footer
-        style="background-color: {{ '#1c1c1c' if request.cookies.get('darkmode') == 'on' else 'rgb(228, 228, 228)' }};">
-        <p style="color: {{ 'white' if request.cookies.get('darkmode') == 'on' else 'rgb(110, 110, 110)' }};">
+        style="background-color: {{ '#1f1f1f' if request.cookies.get('darkmode') == 'on' else 'rgb(228, 228, 228)' }};">
+        <p style="color: {{ '#6c757d' if request.cookies.get('darkmode') == 'on' else 'rgb(110, 110, 110)' }};">
             © 2023
-            <a href="https://github.com/hololb/" target="_blank" style="color: rgb(91, 116, 230);">Lucas Bubner</a>,
-            FTC 15215.
+            <a href="https://github.com/hololb/" target="_blank" style="color: rgb(91, 116, 230);">Lucas Bubner</a>.
+            All rights reserved.
             <noscript>Running without JavaScript.</noscript>
         </p>
     </footer>

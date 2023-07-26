@@ -12,4 +12,4 @@ The register can be used to compile data for planning, reporting, and/or inclusi
 
 During a specified event, the application utilises a QR code check-in process with online sign-up and prerequisite beforehand. As teams prerequisitely register, their team number will be fetched with the [FIRSTTeamAPI](https://github.com/hololb/FIRSTTeamAPI), simplifying the registering process in a simple, modern, and accessible web UI. Once the event is over, the data can be exported or viewed at the event owner's discretion.
 
-###### Copyright (c) Lucas Bubner 2023 under the [MIT License](https://raw.githubusercontent.com/hololb/RoboRegistry/prod/LICENSE).
+###### Copyright (c) 2023 Lucas Bubner under the [BSD 3-Clause Clear License](https://raw.githubusercontent.com/hololb/RoboRegistry/prod/LICENSE).
