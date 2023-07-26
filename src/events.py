@@ -155,6 +155,11 @@ def create():
         event_uid = re.sub(r'[^a-zA-Z0-9]+', '-', name.lower()
                            ) + "-" + date.replace("-", "")
 
+        # Determine if we need to store an email
+        email = "N/A"
+        if request.form.get("display_email") == "on":
+            email = request.form.get("event_email") or user["email"]
+
         # Create the event and generate a UID
         event = {
             "name": name,
@@ -171,7 +176,7 @@ def create():
             "start_time": request.form.get("event_start_time"),
             "end_time": request.form.get("event_end_time"),
             "description": request.form.get("event_description"),
-            "email": request.form.get("event_email") or user["email"],
+            "email": email,
             "location": request.form.get("event_location"),
             "limit": utils.limit_to_999(request.form.get("event_limit")),
             "timezone": request.form.get("event_timezone"),
