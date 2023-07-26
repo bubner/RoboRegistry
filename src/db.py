@@ -58,6 +58,9 @@ def add_entry(event_id, public_data, private_data, auth=None):
         Updates an event in the database to reflect a new registration.
     """
     auth = auth or getattr(current_user, "token", None)
+    # Refuse if the event is not accepting registrations
+    if not get_event(event_id)["settings"]["regis"]:
+        return
     public_data |= {
         "entity": f"{private_data['contactName']} | {private_data['repName'].upper()}",
         "checkin_data": {
@@ -69,21 +72,15 @@ def add_entry(event_id, public_data, private_data, auth=None):
     db.child("registered_data").child(event_id).child(utils.get_uid()).set(private_data, auth)
 
 
-def remove_entry(event_id, auth=None):
-    """
-        Removes an event registration from the database.
-    """
-    auth = auth or getattr(current_user, "token", None)
-    db.child("events").child(event_id).child("registered").child(utils.get_uid()).remove(auth)
-    db.child("registered_data").child(event_id).child(utils.get_uid()).remove(auth)
-
-
 def check_in(event_id, uid=None, auth=None):
     """
         Checks a user into an event.
         No arguments will check in the current user.
     """
     auth = auth or getattr(current_user, "token", None)
+    # Refuse if check-ins are not allowed
+    if not get_event(event_id)["settings"]["checkin"]:
+        return
     uid = uid or utils.get_uid()
     db.child("events").child(event_id).child("registered").child(uid).child("checkin_data").set({
         "checked_in": True,
@@ -101,6 +98,9 @@ def anon_check_in(event_id, affil, name):
         "name": name,
         "time": math.floor(time())
     }
+    # Decline if check-ins are not allowed
+    if not get_event(event_id)["settings"]["checkin"]:
+        return
     db.child("registered_data").child(event_id).child("anon_data").push(data)
 
 
@@ -121,6 +121,9 @@ def get_event(event_id, auth=None):
         event = db.child("events").child(event_id).get(auth).val()
         event = dict(event)
         event["uid"] = event_id
+        # Refuse to give the event if it is not visible
+        if event["settings"]["visible"] is False and event["creator"] != utils.get_uid():
+            return {}
     except (HTTPError, TypeError):
         # Event does not exist
         return {}
@@ -132,11 +135,13 @@ def unregister(event_id, auth=None) -> bool:
         Unregister from an event.
     """
     auth = auth or getattr(current_user, "token", None)
-    # Disallow unregistration if event has already started/ended
     event = get_event(event_id)
+
     tz = timezone(event["timezone"])
     tz.localize(datetime.strptime(event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
-    if datetime.now(tz) > tz.localize(datetime.strptime(event["date"] + event["end_time"], "%Y-%m-%d%H:%M")):
+    
+    # Disallow unregistration if event has already started/ended or if it is not accepting registrations
+    if datetime.now(tz) > tz.localize(datetime.strptime(event["date"] + event["end_time"], "%Y-%m-%d%H:%M")) or not event["settings"]["regis"]:
         return False
 
     db.child("events").child(event_id).child("registered").child(utils.get_uid()).remove(auth)
@@ -203,7 +208,7 @@ def get_my_events(auth=None) -> tuple[dict, dict]:
             if event_data["creator"] == utils.get_uid():
                 owned_events[event_id] = event_data
                 continue
-            if event_data.get("registered") and utils.get_uid() in event_data["registered"]:
+            if event_data.get("registered") and utils.get_uid() in event_data["registered"] and event_data.get("settings").get("visible") is True:
                 registered_events[event_id] = event_data
     except (HTTPError, TypeError):
         # Events do not exist
@@ -221,6 +226,25 @@ def delete_event(event_id, auth=None):
     # MUST remove registered_data before events, otherwise Firebase cannot determine an owner
     db.child("registered_data").child(event_id).remove(auth)
     db.child("events").child(event_id).remove(auth)
+
+
+def update_event(event_id, updates: dict, settings: dict, auth=None):
+    """
+        Update an event in the database.
+    """
+    auth = auth or getattr(current_user, "token", None)
+    settings |= {"last_modified": math.floor(time())}
+
+    # Refuse to update if the event is not owned by the user
+    if db.child("events").child(event_id).child("creator").get(auth).val() != utils.get_uid():
+        return
+    
+    # Update the event tree based on each node
+    for node, value in updates.items():
+        db.child("events").child(event_id).child(node).set(value, auth)
+
+    for node, value in settings.items():
+        db.child("events").child(event_id).child("settings").child(node).set(value, auth)
 
 
 def delete_all_user_events():

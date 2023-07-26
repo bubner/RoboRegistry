@@ -158,6 +158,13 @@ def create():
         # Create the event and generate a UID
         event = {
             "name": name,
+            "settings": {
+                "created": math.floor(time()),
+                "last_modified": math.floor(time()),
+                "visible": True,
+                "regis": True,
+                "checkin": True
+            },
             # UIDs are in the form of <event name seperated by dashes><date seperated by dashes>
             "creator": utils.get_uid(),
             "date": date,
@@ -229,6 +236,11 @@ def event_register(event_id: str):
     if not event:
         abort(404)
     user = getattr(current_user, "data")
+
+    # Check if the event has registration manually disabled
+    if not event["settings"]["regis"]:
+        return render_template("event/done.html.jinja", event=event, user=user, status="Failed: REGIS_DISABLED",
+                               message="Registration for this event has been disabled by the event owner.")
 
     # Check to see if the event is over, and decline registration if it is
     tz = timezone(event["timezone"])
@@ -379,6 +391,12 @@ def checkin(event_id: str):
     if not event:
         abort(404)
 
+    # Stop check-in if the event check-in is disabled
+    if not event["settings"]["checkin"]:
+        return render_template("event/done.html.jinja", event=event, status="Failed: CI_DISABLED",
+                               message="Check-in for this event has been disabled by the event owner.",
+                               user=getattr(current_user, "data") or db.logged_out_data)
+
     if request.method == "POST":
         # Validate checkin code
         code = request.form.get("code")
@@ -402,6 +420,12 @@ def dynamic(event_id: str):
     event = db.get_event(event_id)
     if not event:
         abort(404)
+
+    # Stop check-in if the event check-in is disabled
+    if not event["settings"]["checkin"]:
+        return render_template("event/done.html.jinja", event=event, status="Failed: CI_DISABLED",
+                               message="Check-in for this event has been disabled by the event owner.",
+                               user=getattr(current_user, "data") or db.logged_out_data)
 
     code = session.get("checkin")
     if not code or code != event.get("checkin_code"):
@@ -456,6 +480,13 @@ def manual(event_id: str):
         Check in to an event using email associated with registration.
     """
     event = db.get_event(event_id)
+
+    # Stop check-in if the event check-in is disabled
+    if not event["settings"]["checkin"]:
+        return render_template("event/done.html.jinja", event=event, status="Failed: CI_DISABLED",
+                               message="Check-in for this event has been disabled by the event owner.",
+                               user=getattr(current_user, "data") or db.logged_out_data)
+    
     registered, owned = db.get_my_events()
     if event_id in owned.keys():
         return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_OWNER",
