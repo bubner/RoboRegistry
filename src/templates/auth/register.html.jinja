@@ -5,21 +5,21 @@ Register
 {% endblock %}
 
 {% block body %}
-<div class="centercontainer">
+<div class="centercontainer border-bottom rounded">
     <img src="{{ url_for('static', filename='assets/rr.png') }}" id="logoimgr" alt="RoboRegistry" />
     <form action="/register" method="post" class="text-center py-5">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-        <div class="mb-2 alert alert-primary">
-            <h6>You are creating a new RoboRegistry account.<br /></h6>
-            Didn't mean to? <a href="/login">Login here</a> <br />
+        <div class="mb-2 alert alert-secondary">
+            Already have an account? <a href="/login">Login here</a> <hr />
             Looking to check in at an event? <a href="/events/ci">Check in here</a>
         </div>
+        <br />
+        <h6>Register for RoboRegistry</h6>
         {% if error %}
         <div class="alert alert-danger" role="alert">
             {{ error }}
         </div>
         {% endif %}
-        <br />
         <div class="mb-2">
             <label for="email" class="form-label visually-hidden">Email</label>
             <input class="form-control mx-auto w-auto" id="email" name="email" placeholder="Email" type="email" />
@@ -34,7 +34,7 @@ Register
             <label class="form-check-label" for="remember-me">&nbsp; Remember me</label>
         </div>
         <button class="btn btn-primary" type="submit">Register</button>
-        <br /> <br />
+        <h6 style="padding: 12px;">or</h6>
         <a href="/googleauth" id="google">Continue with Google</a>
     </form>
 </div>

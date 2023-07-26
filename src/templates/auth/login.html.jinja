@@ -6,17 +6,6 @@ Login
 
 {% block body %}
 <div class="centercontainer border-top border-bottom rounded">
-    <div class="col-md-12 text-center">
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-warning" role="alert">
-            {{ message }}
-        </div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
-    </div>
     <div class="row">
         <div class="col-md-6 text-center d-flex justify-content-center flex-column">
             <img src="{{ url_for('static', filename='assets/rr.png') }}" id="logoimg" alt="RoboRegistry" />
@@ -24,10 +13,16 @@ Login
             <div class="alert alert-primary mb-2" role="alert">
                 At an event? <a href="/events/ci">Check in here</a>
             </div>
-            <div class="alert alert-info mb-2" role="alert">
-                Need help registering for a scrimmage? Follow <a target="_blank"
-                    href="https://scribehow.com/shared/RoboRegistry_account_creation_and_registration__PHs0o3GWQz6Rg5ERmlAodQ">this
-                    guide</a>.
+            <div class="col-md-12 text-center">
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-warning" role="alert">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
             </div>
         </div>
         <div class="col-md-6">
