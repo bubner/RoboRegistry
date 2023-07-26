@@ -6,10 +6,10 @@ Create Event
 
 {% block body %}
 <div class="container position-absolute top-50 start-50 translate-middle h-75">
-    <div class="bordered p-3">
-        <div class="row">
-            <div class="col-md-6">
-                <form method="POST" action="/events/create">
+    <form method="POST" action="/events/create">
+        <div class="bordered p-3">
+            <div class="row">
+                <div class="col-md-6">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                     <p class="headertext">Create a new event</p>
                     <div class="form-group">
@@ -39,13 +39,13 @@ Create Event
                             class="text-danger">*</span>
                         <select class="form-control" id="event_timezone" name="event_timezone" required>
                             {% for tz in timezones %}
-                            <option value="{{ tz }}" {{ "selected" if tz==old_data.timezone else "" }}>{{ tz }}</option>
+                            <option value="{{ tz }}" {{ "selected" if tz==old_data.timezone else '' }}>{{ tz }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="event_limit">Maximum number of registrations (leave blank for
-                            uncapped)</label>
+                        <label for="event_limit">Team registration limit (blank for uncapped, only applies to FIRST
+                            teams)</label>
                         <input type="number" class="form-control" id="event_limit" name="event_limit" min="1" max="999"
                             value="{{ old_data.limit if old_data.limit != -1 else '' }}">
                     </div>
@@ -59,125 +59,48 @@ Create Event
                     <a class="btn btn-secondary" href="/dashboard">Cancel</a>
                     <button type="submit" class="btn btn-primary">Create Event</button>
                     <br /> <br />
-                </form>
-            </div>
-            <div class="col-md-6">
-                <br />
-                {% if error %}
-                <div class="alert alert-danger" role="alert">
-                    {{ error }}
                 </div>
-                {% endif %}
-                <div class="form-group">
-                    <label for="email">Displayed contact email</label>
-                    <input class="form-control" id="email" name="event_email" placeholder="{{ user.email }}"
-                        value="{{ old_data.email }}" type="email" autocomplete="username" />
+                <div class="col-md-6">
+                    <br />
+                    {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <br />
+                        <div class="form-group form-check">
+                            <input type="checkbox" class="form-check-input" id="display_email" name="display_email" {% if
+                                not old_data.display_email %}checked{% endif %}>
+                            <label class="form-check-label" for="display_email">Display your email with the event?</label>
+                            <p class="text-muted" id="disablewarn" style="display: none;">People registering through
+                                RoboRegistry will not be able to see your email address for contact.</p>
+                        </div>
+                        <label for="email">Display email</label>
+                        <input class="form-control" id="email" name="event_email" placeholder="{{ user.email }}"
+                            value="{{ old_data.email }}" type="email" autocomplete="username" />
+                    </div>
+                    <br />
+                    <div class="form-group">
+                        <label for="event_location">Event Location</label><span aria-hidden="true"
+                            class="text-danger">*</span>
+                        <input type="text" class="form-control" id="event_location" name="event_location" required
+                            value="{{ old_data.location or '' }}">
+                    </div>
+                    <div id="map" style="height: 350px; width: 100%; margin-top: 10px;"></div>
                 </div>
-                <br />
-                <div class="form-group">
-                    <label for="event_location">Event Location</label><span aria-hidden="true"
-                        class="text-danger">*</span>
-                    <input type="text" class="form-control" id="event_location" name="event_location" required
-                        onkeydown="return handleKeyDown(e);" value="{{ old_data.location }}">
-                </div>
-                <div id="map" style="height: 350px; width: 100%; margin-top: 10px;"></div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
-<link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
-<script defer>
-    mapboxgl.accessToken = "{{ mapbox_api_key }}";
-    const map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/mapbox/streets-v11',
-        center: [-96, 37.8],
-        zoom: 3
-    });
-
-    const marker = new mapboxgl.Marker({
-        draggable: true
-    }).setLngLat([-96, 37.8]).addTo(map);
-
-    // Get user's current location
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((position) => {
-            const userLocation = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-            };
-            map.setCenter(userLocation);
-            marker.setLngLat(userLocation);
-            fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + userLocation.lng + ',' + userLocation.lat + '.json?access_token=' + mapboxgl.accessToken)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('event_location').value = data.features[0].place_name;
-                })
-                .catch(error => {
-                    console.log(error);
-                });
-        });
-    }
-
-    document.getElementById('event_location').addEventListener('change', () => {
-        geocodeAddress();
-    });
-
-    function geocodeAddress() {
-        const address = document.getElementById('event_location').value;
-        fetch('https://api.mapbox.com/geocoding/v5/mapbox.places/' + address + '.json?access_token=' + mapboxgl.accessToken)
-            .then(response => response.json())
-            .then(data => {
-                const location = data.features[0].center;
-                map.setCenter(location);
-                marker.setLngLat(location);
-                map.setZoom(15);
-                document.getElementById('event_location').value = data.features[0].place_name;
-            })
-            .catch(error => {
-                console.log(error);
-            });
-    }
-
-    function handleKeyDown(event) {
-        if (event.keyCode === 13) {
-            event.preventDefault();
-            event.target.blur();
-            return false;
-        }
-        return true;
-    }
-
-    // Get the current user's timezone and set it as the default, if there is not one selected before
-    if ("{{ old_data.timezone }}" === "") {
-        document.getElementById("event_timezone").value = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    }
-
-    const startTimeInput = document.getElementById('event_start_time');
-    const endTimeInput = document.getElementById('event_end_time');
-
-    // Add an event listener to the start time input to check if it's after the end time
-    startTimeInput.addEventListener('change', () => {
-        const startTime = new Date(`1970-01-01T${startTimeInput.value}:00`);
-        const endTime = new Date(`1970-01-01T${endTimeInput.value}:00`);
-        if (startTime > endTime) {
-            alert('Start time cannot be after end time.');
-            startTimeInput.value = '';
-        }
-    });
-
-    // Add an event listener to the end time input to check if it's before the start time
-    endTimeInput.addEventListener('change', () => {
-        const startTime = new Date(`1970-01-01T${startTimeInput.value}:00`);
-        const endTime = new Date(`1970-01-01T${endTimeInput.value}:00`);
-        if (endTime < startTime) {
-            alert('End time cannot be before start time.');
-            endTimeInput.value = '';
-        }
-    });
+<script>
+    const MAPBOX_API_KEY = "{{ mapbox_api_key }}";
+    const OLD_DATA_TIMEZONE = "{{ old_data.timezone }}";
 </script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css" rel="stylesheet" />
+<script src="{{ url_for('static', filename='event_creator.js') }}"></script>
 {% endblock %}

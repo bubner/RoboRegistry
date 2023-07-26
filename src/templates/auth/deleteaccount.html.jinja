@@ -1,0 +1,42 @@
+{% extends "nav_layout.html.jinja" %}
+
+{% block title %}
+Delete your account
+{% endblock %}
+
+{% block body %}
+<div class="centercontainer bordered">
+    <p class="headertext">DELETE YOUR ROBOREGISTRY ACCOUNT</p>
+    <p>Deleting account <b>{{ user.email }}</b> ({{ user.first_name }} {{ user.last_name }})</p>
+    <h5>All data related to your name, including your {{ numevents }} event(s), will be destroyed.</h5>
+    <h6>This action can not be undone. Please export any wanted data before deleting.</h6>
+    <i>Events other users have created that you have registered for will not have your deletion reflected.</i>
+    <br />
+    <form method="POST" action="/deleteaccount" id="delaction">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input type="hidden" name="num" value="{{ num }}" />
+        <p>Type '{{ num }}' to confirm your account deletion.</p>
+        {% if error %}
+        <div class="alert alert-danger text-center" role="alert">
+            {{ error }}
+        </div>
+        {% endif %}
+        <div class="input-group mb-3">
+            <input type="text" name="newnum" class="form-control" placeholder="{{ num }}" aria-describedby="del-button" required>
+            <button class="btn btn-outline-danger" type="submit" id="del-button">Delete</button>
+        </div>
+        <a href="/settings" class="btn btn-outline-primary w-100">Take me back</a>
+    </form>
+    <br />
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script defer>
+    document.getElementById("delaction").addEventListener("submit", (e) => {
+        if (!confirm("Are you sure you want to delete your account?")) {
+            e.preventDefault();
+        }
+    });
+</script>
+{% endblock %}

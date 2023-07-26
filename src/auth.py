@@ -2,9 +2,11 @@
     User authentication and profile creation for RoboRegistry
     @author: Lucas Bubner, 2023
 """
+import random
 
 from flask import Blueprint, render_template, request, redirect, session, make_response, url_for
-from flask_login import current_user, UserMixin, login_required, logout_user
+from flask_login import current_user, UserMixin, login_required, logout_user, login_user
+from requests.exceptions import HTTPError
 
 import db
 from firebase_instance import auth
@@ -17,9 +19,11 @@ class User(UserMixin):
         User class for Flask-Login
     """
 
-    def __init__(self, firebase_acc):
-        self.id = firebase_acc.get("users")[0].get("localId")
-        self.acc = firebase_acc
+    def __init__(self, refresh_token):
+        self.id = refresh_token
+        # Automatically refresh the user's token
+        self.token = auth.refresh(refresh_token).get("idToken")
+        self.acc = auth.get_account_info(self.token)
         self.data = None
 
     def is_email_verified(self):
@@ -32,14 +36,13 @@ class User(UserMixin):
         """
             Refreshes the local instance of user data to reflect data in Firebase.
         """
-        self.data = db.get_user_data(self.id)
+        self.data = db.get_user_data(self.acc.get("users")[0].get("localId"), self.token)
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     """
         Logs in the user with the provided email and password through Firebase.
-        Stores token into cookies.
     """
     # If we're already logged in then redirect to the dashboard
     if getattr(current_user, "is_authenticated", lambda: False):
@@ -48,15 +51,13 @@ def login():
         # Get the email and password from the form
         email = request.form["email"]
         password = request.form["password"]
-        session["should_remember"] = request.form.get("remember-me", False)
         try:
             # Sign in with the provided email and password
             user = auth.sign_in_with_email_and_password(email, password)
-            # Store the user refresh token in a cookie
-            response = make_response(redirect("/"))
-            # Set cookie with refresh token
-            response.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
-            return response
+            if not user:
+                return redirect("/login")
+            login_user(User(user.get("refreshToken")), remember=session.get("should_remember", False))
+            return redirect("/")
         except Exception:
             return render_template("auth/login.html.jinja", error="Invalid email or password.")
     else:
@@ -69,7 +70,7 @@ def register():
         Registers the user with the provided email and password through Firebase.
     """
     # Redirect to dashboard if already logged in
-    if session.get("token") or request.cookies.get("refresh_token"):
+    if getattr(current_user, "is_authenticated", lambda: False):
         return redirect("/")
     if request.method == "POST":
         email = request.form["email"]
@@ -90,7 +91,9 @@ def register():
             res = make_response(redirect("/"))
             # Sign in on registration
             user = auth.sign_in_with_email_and_password(email, password)
-            res.set_cookie("refresh_token", user["refreshToken"], secure=True, httponly=True, samesite="Lax")
+            if not user:
+                return redirect("/login")
+            login_user(User(user.get("refreshToken")), remember=session.get("should_remember", False))
             return res
         except Exception:
             return render_template("auth/register.html.jinja", error="Something went wrong, please try again.")
@@ -103,6 +106,8 @@ def googleauth():
     """
         Redirects the user to the Google OAuth page.
     """
+    if getattr(current_user, "is_authenticated", lambda: False):
+        return redirect("/")
     return redirect(auth.authenticate_login_with_google())
 
 
@@ -112,7 +117,6 @@ def logout():
         Logs out the user by removing the user token from the cookies.
     """
     res = make_response(redirect(url_for("auth.login")))
-    res.set_cookie("refresh_token", "", expires=0)
     session.clear()
     logout_user()
     return res
@@ -123,6 +127,8 @@ def forgotpassword():
     """
         Allows the user to reset their password.
     """
+    if getattr(current_user, "is_authenticated", lambda: False):
+        return redirect("/")
     if request.method == "POST":
         if not (email := request.form["email"]):
             return render_template("auth/forgotpassword.html.jinja", error="Please enter an email address.")
@@ -143,7 +149,13 @@ def verify():
     """
         Page for users to verify their email address.
     """
-    auth.send_email_verification(getattr(current_user, "id"))
+    if getattr(current_user, "is_email_verified", lambda: False)():
+        return redirect("/")
+    try:
+        auth.send_email_verification(getattr(current_user, "token", None))
+    except HTTPError:
+        # Timeout error, we can ignore it
+        pass
     return render_template("auth/verify.html.jinja")
 
 
@@ -155,7 +167,7 @@ def create_profile():
     """
     auth_email = getattr(current_user, "acc", {}).get("users", [{}])[0].get("email")
     # If the user already has a profile, redirect them back to the dashboard
-    if not getattr(current_user, "data", None):
+    if getattr(current_user, "data", False):
         return redirect("/dashboard")
 
     if request.method == "POST":
@@ -163,7 +175,9 @@ def create_profile():
         first_name = request.form.get("first_name")
         last_name = request.form.get("last_name")
         role = request.form.get("role")
-        if not first_name or not last_name or not role:
+        affil = request.form.get("affiliation")
+
+        if not first_name or not last_name or not role or not affil:
             return render_template("auth/addinfo.html.jinja", error="Please enter required details.", email=auth_email)
 
         if len(first_name) > 16 or len(last_name) > 16:
@@ -173,13 +187,58 @@ def create_profile():
         if not (email := request.form.get("email")):
             email = auth_email
 
-        if not (promotion := request.form.get("consent")):
-            promotion = "off"
+        promotion = request.form.get("consent")
+        promotion = promotion == "on"
 
         # Create the user's profile
-        db.mutate_user_data(getattr(current_user, "id"), {"first_name": first_name, "last_name": last_name,
-                                                          "role": role, "email": email, "promotion": promotion})
+        db.mutate_user_data({"first_name": first_name.strip(), "last_name": last_name.strip(),
+                             "role": role, "email": email, "promotion": promotion, "affil": affil.strip()})
 
         return redirect("/")
     else:
         return render_template("auth/addinfo.html.jinja", email=auth_email)
+
+
+@auth_bp.route("/changepassword")
+@login_required
+def changepassword():
+    """
+        Change the password of the currently logged-in user.
+    """
+    # current_user.acc.users[0].providerUserInfo[0].providerId
+    if getattr(current_user, "acc", {}).get("users", [{}])[0].get("providerUserInfo", [{}])[0].get(
+            "providerId") == "google.com":
+        # We cannot change the password of a user that signed in with Google, so we'll send them on their merry way
+        return redirect("https://myaccount.google.com/security")
+
+    # For now, we'll let Firebase handle all the password management, and an easy way we can do that is by sending a reset email
+    auth.send_password_reset_email(getattr(current_user, "acc", {}).get("users", [{}])[0].get("email"))
+
+    return render_template("auth/changepassword.html.jinja", user=getattr(current_user, "data", None))
+
+
+@auth_bp.route("/deleteaccount", methods=["GET", "POST"])
+@login_required
+def deleteaccount():
+    """
+        Permanently deletes the user's account.
+    """
+    num = str(random.randint(100000, 999999))
+    numevents = len(db.get_my_events()[1])
+
+    if request.method == "POST":
+        old_num = request.form.get("num")
+        new_num = request.form.get("newnum")
+
+        if old_num != new_num:
+            return render_template("auth/deleteaccount.html.jinja", user=getattr(current_user, "data", None),
+                                   error="Numbers don't match.", num=num, numevents=numevents)
+
+        db.delete_all_user_events()
+        db.delete_user_data()
+        auth.delete_user_account(getattr(current_user, "token", None))
+
+        return redirect("/logout")
+    else:
+        return render_template("auth/deleteaccount.html.jinja", user=getattr(current_user, "data", None), num=num,
+                               numevents=numevents)

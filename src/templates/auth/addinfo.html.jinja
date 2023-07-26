@@ -14,13 +14,13 @@ Registration
             <div class="mb-3">
                 <label for="first_name" class="form-label">Your first name<span aria-hidden="true"
                         class="text-danger">*</span></label>
-                <input class="form-control" id="first_name" name="first_name" placeholder="First name" type="text"
+                <input class="form-control" id="first_name" name="first_name" placeholder="First name" type="text" maxlength="16"
                     required />
             </div>
             <div class="mb-3">
                 <label for="last_name" class="form-label">Your last name<span aria-hidden="true"
                         class="text-danger">*</span></label>
-                <input class="form-control" id="last_name" name="last_name" placeholder="Last name" type="text"
+                <input class="form-control" id="last_name" name="last_name" placeholder="Last name" type="text" maxlength="16"
                     required />
             </div>
             <div class="mb-3">
@@ -48,7 +48,7 @@ Registration
                 </select>
             </div>
             <div class="text-center">
-                <button class="btn btn-secondary" onclick="event.preventDefault(); window.location.href='/logout'">
+                <button class="btn btn-secondary" type="button" onclick="window.location.href = '/logout'">
                     Sign out
                 </button>
                 <button class="btn btn-primary" type="submit">Complete registration</button>

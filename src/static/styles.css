@@ -1,6 +1,9 @@
 * {
     font-family: "Inter", sans-serif;
     opacity: 1;
+}
+
+*:not(.fade) {
     animation: fadeIn 250ms;
 }
 
@@ -136,10 +139,11 @@ footer a:not(p > a) {
     height: 40px;
 }
 
-#pfp {
+#pfp,
+#dpfp {
     height: 40px;
     border-radius: 50%;
-    border: rgba(195, 195, 195, 0.5) 2px solid;
+    border: rgba(90, 90, 90, 0.5) 2px solid;
     transition: background-color 0.5s;
 }
 

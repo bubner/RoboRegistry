@@ -1,42 +1,48 @@
-async function fetchDashboard() {
-    // Fetch data
-    let data = null;
-    while (!data) {
-        const response = await fetch("/api/dashboard");
-        try {
-            data = await response.json();
-        } catch (e) {
-            console.warn("API: Could not fetch dashboard content. Retrying...");
-        }
+/**
+ * Internal API access for RoboRegistry with abort controller and timeout.
+ * @author Lucas Bubner, 2023
+ */
+
+class API {
+    constructor() {
+        this.controller = new AbortController();
     }
 
-    // Get dashboard boxes and clear them
-    const target = document.getElementById("dashboardboxes");
-    target.innerHTML = "";
+    async safeFetch(endpoint) {
+        return new Promise((resolve, _) => {
+            let data = null;
+            const timeout = setTimeout(() => {
+                this.abortCurrentRequest();
+                console.warn(`API: Request to '${endpoint}' timed out after 15 seconds.`);
+                resolve({});
+            }, 15000);
 
-    // Determine if dark mode is on
-    const dark = document.cookie.includes("darkmode=on");
+            const fetchAndProcessData = async () => {
+                const response = await fetch(endpoint, { signal: this.controller.signal });
+                try {
+                    data = await response.json();
+                    clearTimeout(timeout);
+                    resolve(data);
+                } catch (e) {
+                    console.warn(`API: Could not fetch '${endpoint}'. Retrying...`);
+                    setTimeout(fetchAndProcessData, 500);
+                }
+            };
 
-    // Loop over data and create boxes
-    let row, count = 0;
-    for (const value of Object.values(data)) {
-        // Add rows of 3
-        if (count % 3 === 0) {
-            row = document.createElement("div");
-            row.classList.add("row");
-            target.appendChild(row);
-        }
-        const box = document.createElement("div");
-        box.classList.add("col-sm-4");
-        const square = document.createElement("div");
-        square.classList.add("square");
-        square.onclick = () => {
-            location.assign(value.path);
-        }
-        square.style.backgroundColor = dark ? "#333" : "#e9e9e9";
-        square.innerHTML = `<p class="db-content">${value.text}</p>`;
-        box.appendChild(square);
-        row.appendChild(box);
-        count++;
+            fetchAndProcessData();
+        });
+    }
+
+    abortCurrentRequest() {
+        this.controller.abort();
+        this.controller = new AbortController();
+    }
+
+    async getTeamData(number) {
+        // FIRSTTeamAPI: https://github.com/hololb/FIRSTTeamAPI
+        return this.safeFetch(`https://firstteamapi.vercel.app/get_team/${number}`);
     }
 }
+
+// Allow access to the API from anywhere
+const api = new API();

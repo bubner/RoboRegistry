@@ -27,7 +27,5 @@ Dashboard
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='internal_api.js') }}"></script>
-<script defer>
-    fetchDashboard();
-</script>
+<script src="{{ url_for('static', filename='dashboard_renderer.js') }}"></script>
 {% endblock %}
