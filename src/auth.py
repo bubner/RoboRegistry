@@ -59,9 +59,9 @@ def login():
             login_user(User(user.get("refreshToken")), remember=session.get("should_remember", False))
             return redirect("/")
         except Exception:
-            return render_template("auth/login.html", error="Invalid email or password.")
+            return render_template("auth/login.html.jinja", error="Invalid email or password.")
     else:
-        return render_template("auth/login.html")
+        return render_template("auth/login.html.jinja")
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
@@ -78,11 +78,11 @@ def register():
         session["should_remember"] = request.form.get("remember-me", False)
 
         if len(password) < 8:
-            return render_template("auth/register.html", error="Password must be at least 8 characters long.")
+            return render_template("auth/register.html.jinja", error="Password must be at least 8 characters long.")
 
         # Make sure password contains at least one number and one capital letter
         if not any(char.isdigit() for char in password) or not any(char.isupper() for char in password):
-            return render_template("auth/register.html",
+            return render_template("auth/register.html.jinja",
                                    error="Password must contain at least one number and one capital letter.")
 
         try:
@@ -96,9 +96,9 @@ def register():
             login_user(User(user.get("refreshToken")), remember=session.get("should_remember", False))
             return res
         except Exception:
-            return render_template("auth/register.html", error="Something went wrong, please try again.")
+            return render_template("auth/register.html.jinja", error="Something went wrong, please try again.")
     else:
-        return render_template("auth/register.html")
+        return render_template("auth/register.html.jinja")
 
 
 @auth_bp.route("/googleauth")
@@ -131,16 +131,16 @@ def forgotpassword():
         return redirect("/")
     if request.method == "POST":
         if not (email := request.form["email"]):
-            return render_template("auth/forgotpassword.html", error="Please enter an email address.")
+            return render_template("auth/forgotpassword.html.jinja", error="Please enter an email address.")
         try:
             # Send a password reset email to the user
             auth.send_password_reset_email(email)
-            return render_template("auth/forgotpassword.html",
+            return render_template("auth/forgotpassword.html.jinja",
                                    success="Password reset email sent. Please follow instructions from there.")
         except Exception:
-            return render_template("auth/forgotpassword.html", error="Something went wrong, please try again.")
+            return render_template("auth/forgotpassword.html.jinja", error="Something went wrong, please try again.")
     else:
-        return render_template("auth/forgotpassword.html")
+        return render_template("auth/forgotpassword.html.jinja")
 
 
 @auth_bp.route("/verify")
@@ -156,7 +156,7 @@ def verify():
     except HTTPError:
         # Timeout error, we can ignore it
         pass
-    return render_template("auth/verify.html")
+    return render_template("auth/verify.html.jinja")
 
 
 @auth_bp.route("/create_profile", methods=["GET", "POST"])
@@ -178,10 +178,10 @@ def create_profile():
         affil = request.form.get("affiliation")
 
         if not first_name or not last_name or not role or not affil:
-            return render_template("auth/addinfo.html", error="Please enter required details.", email=auth_email)
+            return render_template("auth/addinfo.html.jinja", error="Please enter required details.", email=auth_email)
 
         if len(first_name) > 16 or len(last_name) > 16:
-            return render_template("auth/addinfo.html", error="Name(s) must be less than 16 characters each.",
+            return render_template("auth/addinfo.html.jinja", error="Name(s) must be less than 16 characters each.",
                                    email=auth_email)
 
         if not (email := request.form.get("email")):
@@ -196,7 +196,7 @@ def create_profile():
 
         return redirect("/")
     else:
-        return render_template("auth/addinfo.html", email=auth_email)
+        return render_template("auth/addinfo.html.jinja", email=auth_email)
 
 
 @auth_bp.route("/changepassword")
@@ -214,7 +214,7 @@ def changepassword():
     # For now, we'll let Firebase handle all the password management, and an easy way we can do that is by sending a reset email
     auth.send_password_reset_email(getattr(current_user, "acc", {}).get("users", [{}])[0].get("email"))
 
-    return render_template("auth/changepassword.html", user=getattr(current_user, "data", None))
+    return render_template("auth/changepassword.html.jinja", user=getattr(current_user, "data", None))
 
 
 @auth_bp.route("/deleteaccount", methods=["GET", "POST"])
@@ -231,7 +231,7 @@ def deleteaccount():
         new_num = request.form.get("newnum")
 
         if old_num != new_num:
-            return render_template("auth/deleteaccount.html", user=getattr(current_user, "data", None),
+            return render_template("auth/deleteaccount.html.jinja", user=getattr(current_user, "data", None),
                                    error="Numbers don't match.", num=num, numevents=numevents)
 
         db.delete_all_user_events()
@@ -240,5 +240,5 @@ def deleteaccount():
 
         return redirect("/logout")
     else:
-        return render_template("auth/deleteaccount.html", user=getattr(current_user, "data", None), num=num,
+        return render_template("auth/deleteaccount.html.jinja", user=getattr(current_user, "data", None), num=num,
                                numevents=numevents)

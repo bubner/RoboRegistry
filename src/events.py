@@ -40,7 +40,7 @@ def viewall():
             done_events[key] = value
     for key in deletions:
         del registered_events[key]
-    return render_template("dash/view.html", created_events=created_events, registered_events=registered_events,
+    return render_template("dash/view.html.jinja", created_events=created_events, registered_events=registered_events,
                            done_events=done_events, user=getattr(current_user, "data"))
 
 
@@ -92,7 +92,7 @@ def viewevent(uid: str):
 
     is_running = start_time < datetime.now(tz) < end_time
 
-    return render_template("event/event.html", user=getattr(current_user, "data"), event=data,
+    return render_template("event/event.html.jinja", user=getattr(current_user, "data"), event=data,
                            team_regis_count=team_regis_count,
                            registered=registered, owned=owned, mapbox_api_key=os.getenv("MAPBOX_API_KEY"),
                            time_to_start=time_to_start, time_to_end=time_to_end, is_running=is_running,
@@ -108,19 +108,19 @@ def redirector():
     """
     if request.method == "POST":
         if not (target := request.form.get("event_url")):
-            return render_template("dash/redirector.html", user=getattr(current_user, "data"),
+            return render_template("dash/redirector.html.jinja", user=getattr(current_user, "data"),
                                    error="Missing url!")
         if not (event := db.get_event(target)):
             res = make_response(redirect(target))
             # Test to see if it is a url and/or if it is a 404
             target = urlparse(target).hostname
             if target and target not in ["roboregistry.vercel.app", "rbreg.vercel.app"] or res.status_code == 404:
-                return render_template("dash/redirector.html", user=getattr(current_user, "data"),
+                return render_template("dash/redirector.html.jinja", user=getattr(current_user, "data"),
                                        error="Hmm, we can't seem to find that event.")
             return res
         return redirect(f"/events/view/{event['uid']}")
     else:
-        return render_template("dash/redirector.html", user=getattr(current_user, "data"))
+        return render_template("dash/redirector.html.jinja", user=getattr(current_user, "data"))
 
 
 @events_bp.route("/events/create", methods=["GET", "POST"])
@@ -134,21 +134,21 @@ def create():
     mapbox_api_key = os.getenv("MAPBOX_API_KEY")
     if request.method == "POST":
         if not (name := request.form.get("event_name")):
-            return render_template("event/create.html", error="Please enter an event name.", user=user,
+            return render_template("event/create.html.jinja", error="Please enter an event name.", user=user,
                                    mapbox_api_key=mapbox_api_key)
         if not (date := request.form.get("event_date")):
-            return render_template("event/create.html", error="Please enter an event date.", user=user,
+            return render_template("event/create.html.jinja", error="Please enter an event date.", user=user,
                                    mapbox_api_key=mapbox_api_key)
 
         if len(name) > 32:
-            return render_template("event/create.html", error="Event name can only be 32 characters.", user=user,
+            return render_template("event/create.html.jinja", error="Event name can only be 32 characters.", user=user,
                                    mapbox_api_key=mapbox_api_key)
 
         # Sanitise the name by removing everything that isn't alphanumeric and space
         # If the string is completely empty, return an error
         name = re.sub(r'[^a-zA-Z0-9 ]+', '', name)
         if not name:
-            return render_template("event/create.html", error="Please enter a valid event name.", user=user,
+            return render_template("event/create.html.jinja", error="Please enter a valid event name.", user=user,
                                    mapbox_api_key=mapbox_api_key)
 
         # Generate an event UID
@@ -184,7 +184,7 @@ def create():
         }
 
         if db.get_event(event_uid):
-            return render_template("event/create.html", error="An event with that name and date already exists.",
+            return render_template("event/create.html.jinja", error="An event with that name and date already exists.",
                                    user=user, mapbox_api_key=mapbox_api_key, old_data=event, timezones=all_timezones)
 
         if not event["limit"]:
@@ -192,25 +192,25 @@ def create():
 
         # Make sure all fields were filled
         if not all(event.values()):
-            return render_template("event/create.html", error="Please fill out all fields.", user=user,
+            return render_template("event/create.html.jinja", error="Please fill out all fields.", user=user,
                                    mapbox_api_key=mapbox_api_key, timezones=all_timezones, old_data=event)
 
         # Make sure start time is before end time
         if datetime.strptime(event["start_time"], "%H:%M") > datetime.strptime(event["end_time"], "%H:%M"):
-            return render_template("event/create.html", error="Please enter a start time before the end time.",
+            return render_template("event/create.html.jinja", error="Please enter a start time before the end time.",
                                    user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones, old_data=event)
 
         tz = timezone(event["timezone"])
         event_start_time = tz.localize(datetime.strptime(
             event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
         if event_start_time < datetime.now(tz):
-            return render_template("event/create.html", error="Please enter a date and time in the future.",
+            return render_template("event/create.html.jinja", error="Please enter a date and time in the future.",
                                    user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones, old_data=event)
 
         db.add_event(event_uid, event)
         return redirect(f"/events/view/{event_uid}")
     else:
-        return render_template("event/create.html", user=user, mapbox_api_key=mapbox_api_key,
+        return render_template("event/create.html.jinja", user=user, mapbox_api_key=mapbox_api_key,
                                timezones=all_timezones, old_data={})
 
 
@@ -226,7 +226,7 @@ def delete(event_id: str):
         db.delete_event(event_id)
         return redirect("/events/view")
     else:
-        return render_template("event/delete.html", event=db.get_event(event_id),
+        return render_template("event/delete.html.jinja", event=db.get_event(event_id),
                                user=getattr(current_user, "data"))
 
 
@@ -244,14 +244,14 @@ def event_register(event_id: str):
 
     # Check if the event has registration manually disabled
     if not event["settings"]["regis"]:
-        return render_template("event/done.html", event=event, user=user, status="Failed: REGIS_DISABLED",
+        return render_template("event/done.html.jinja", event=event, user=user, status="Failed: REGIS_DISABLED",
                                message="Registration for this event has been disabled by the event owner.")
 
     # Check to see if the event is over, and decline registration if it is
     tz = timezone(event["timezone"])
     tz.localize(datetime.strptime(event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
     if datetime.now(tz) > tz.localize(datetime.strptime(event["date"] + event["end_time"], "%Y-%m-%d%H:%M")):
-        return render_template("event/done.html", event=event, user=user, status="Failed: EVENT_AUTO_CLOSED",
+        return render_template("event/done.html.jinja", event=event, user=user, status="Failed: EVENT_AUTO_CLOSED",
                                message="This event has already ended. Registration has been automatically disabled.")
 
     if request.method == "POST":
@@ -270,7 +270,7 @@ def event_register(event_id: str):
 
         # Ensure that all required fields are filled
         if not utils.validate_form(private_data, role):
-            return render_template("event/done.html", event=event, status="Failed: MISSING_FIELDS",
+            return render_template("event/done.html.jinja", event=event, status="Failed: MISSING_FIELDS",
                                    message="Please fill out all required fields.", user=user)
 
         # Remove data that is not required
@@ -281,7 +281,7 @@ def event_register(event_id: str):
 
         # Check if the repName is already taken
         if not db.verify_unique(event_id, private_data["repName"]):
-            return render_template("event/done.html", event=event, status="Failed: REP_NAME_TAKEN",
+            return render_template("event/done.html.jinja", event=event, status="Failed: REP_NAME_TAKEN",
                                    message="Your representing name is already taken. Please choose another.", user=user)
 
         # Log event registration
@@ -293,26 +293,26 @@ def event_register(event_id: str):
         # Check for event capacity if it is a team registration
         if event.get("registered") and event["limit"] != -1 and len(event["registered"]) >= event[
             "limit"] and role == "comp":
-            return render_template("event/done.html", event=event, status="Failed: EVENT_FULL",
+            return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_FULL",
                                    message="This event has reached maximum capacity for team registrations. You will need to contact the event owner.",
                                    user=user)
 
         db.add_entry(event_id, public_data, private_data)
-        return render_template("event/done.html", event=event, status="Registration successful",
+        return render_template("event/done.html.jinja", event=event, status="Registration successful",
                                message="Your registration was successfully recorded. Go to the dashboard to view all your registered events, and remember to bring a smart device for QR code check-in on the day.",
                                user=user)
     else:
         if event.get("registered") and utils.get_uid() in event["registered"]:
-            return render_template("event/done.html", event=event, status="Failed: REGIS_ALR",
+            return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_ALR",
                                    message="You are already registered for this event. If you wish to unregister from this event, please go to the event view tab and unregister from there.",
                                    user=user)
 
         if utils.get_uid() == event["creator"]:
-            return render_template("event/done.html", event=event, status="Failed: REGIS_OWNER",
+            return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_OWNER",
                                    message="The currently logged in RoboRegistry account is the owner of this event. The owner cannot register for their own event.",
                                    user=getattr(current_user, "data"))
 
-        return render_template("event/register.html", event=event, user=user,
+        return render_template("event/register.html.jinja", event=event, user=user,
                                mapbox_api_key=os.getenv("MAPBOX_API_KEY"))
 
 
@@ -323,28 +323,28 @@ def event_unregister(event_id: str):
     event = db.get_event(event_id)
     if request.method == "POST":
         if not event.get("registered"):
-            return render_template("event/done.html", event=event, status="Failed: REGIS_NF",
+            return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_NF",
                                    message="You are not registered for this event.", user=getattr(current_user, "data"))
 
         if event["creator"] == utils.get_uid():
-            return render_template("event/done.html", event=event, status="Failed: REGIS_OWNER",
+            return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_OWNER",
                                    message="The currently logged in RoboRegistry account is the owner of this event. The owner cannot unregister from their own event.",
                                    user=getattr(current_user, "data"))
 
         if utils.get_uid() not in event["registered"]:
-            return render_template("event/done.html", event=event, status="Failed: REGIS_NF",
+            return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_NF",
                                    message="You are not registered for this event.", user=getattr(current_user, "data"))
 
         if db.unregister(event_id):
-            return render_template("event/done.html", event=event, status="Unregistration successful",
+            return render_template("event/done.html.jinja", event=event, status="Unregistration successful",
                                    message="Your registration was successfully removed.",
                                    user=getattr(current_user, "data"))
         else:
-            return render_template("event/done.html", event=event, status="Failed: REGIS_FAIL",
+            return render_template("event/done.html.jinja", event=event, status="Failed: REGIS_FAIL",
                                    message="Unable to unregister you from this event. If the event has started/concluded, unregistration is no longer possible.",
                                    user=getattr(current_user, "data"))
     else:
-        return render_template("event/unregister.html", event=event,
+        return render_template("event/unregister.html.jinja", event=event,
                                user=getattr(current_user, "data"))
 
 
@@ -365,7 +365,7 @@ def gen(event_id: str):
     tz.localize(datetime.strptime(
         event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
     if tz.localize(datetime.strptime(event["date"] + event["end_time"], "%Y-%m-%d%H:%M")) < datetime.now(tz):
-        return render_template("event/done.html", event=event, status="Failed: QR_GEN_FAIL",
+        return render_template("event/done.html.jinja", event=event, status="Failed: QR_GEN_FAIL",
                                message="Unable to generate QR codes for an event that has ended, as registration and check-in links are no longer active.",
                                user=getattr(current_user, "data"))
     if request.method == "POST":
@@ -373,17 +373,17 @@ def gen(event_id: str):
         size = request.form.get("size")
         qr_type = request.form.get("type")
         if not size or not qr_type:
-            return render_template("event/gen.html", error="Please fill out all fields.", event=event,
+            return render_template("event/gen.html.jinja", error="Please fill out all fields.", event=event,
                                    user=getattr(current_user, "data"))
         # Generate QR code based on input
         qrcode = qr.generate_qrcode(event, size, qr_type)
         if not qrcode:
-            return render_template("event/gen.html", error="An error occurred while generating the QR code.",
+            return render_template("event/gen.html.jinja", error="An error occurred while generating the QR code.",
                                    event=event, user=getattr(current_user, "data"))
         # Send file to user
         return send_file(qrcode, mimetype="image/png")
     else:
-        return render_template("event/gen.html", event=event, user=getattr(current_user, "data"))
+        return render_template("event/gen.html.jinja", event=event, user=getattr(current_user, "data"))
 
 
 @events_bp.route("/events/ci/<string:event_id>", methods=["GET", "POST"])
@@ -398,7 +398,7 @@ def checkin(event_id: str):
 
     # Stop check-in if the event check-in is disabled
     if not event["settings"]["checkin"]:
-        return render_template("event/done.html", event=event, status="Failed: CI_DISABLED",
+        return render_template("event/done.html.jinja", event=event, status="Failed: CI_DISABLED",
                                message="Check-in for this event has been disabled by the event owner.",
                                user=getattr(current_user, "data") or db.logged_out_data)
 
@@ -406,14 +406,14 @@ def checkin(event_id: str):
         # Validate checkin code
         code = request.form.get("code")
         if not code or code != str(event["checkin_code"]):
-            return render_template("event/done.html", event=event, status="Failed: CI_INVALID",
+            return render_template("event/done.html.jinja", event=event, status="Failed: CI_INVALID",
                                    message="You have provided an invalid check-in code! If trouble persists, try registration email check-in or asking the event owner to record you as attended manually.",
                                    user=getattr(current_user, "data") or db.logged_out_data)
         session["checkin"] = event["checkin_code"]
         # Redirect to event check-in page with approval
         return redirect("/events/ci/" + event_id + "/dynamic")
     else:
-        return render_template("event/gatekeep.html", event=event)
+        return render_template("event/gatekeep.html.jinja", event=event)
 
 
 @events_bp.route("/events/ci/<string:event_id>/dynamic", methods=["GET", "POST"])
@@ -428,7 +428,7 @@ def dynamic(event_id: str):
 
     # Stop check-in if the event check-in is disabled
     if not event["settings"]["checkin"]:
-        return render_template("event/done.html", event=event, status="Failed: CI_DISABLED",
+        return render_template("event/done.html.jinja", event=event, status="Failed: CI_DISABLED",
                                message="Check-in for this event has been disabled by the event owner.",
                                user=getattr(current_user, "data") or db.logged_out_data)
 
@@ -457,7 +457,7 @@ def dynamic(event_id: str):
         anon_name = request.form.get("anon-name")
 
         if not entity or (entity == "anon" and not anon_affil and not anon_name):
-            return render_template("event/done.html", event=event, status="Failed: CI_INVALID",
+            return render_template("event/done.html.jinja", event=event, status="Failed: CI_INVALID",
                                    message="You have provided insufficient data! If trouble persists, try registration email check-in or asking the event owner to record you as attended manually.",
                                    user=getattr(current_user, "data") or db.logged_out_data)
         if anon_affil:
@@ -469,11 +469,11 @@ def dynamic(event_id: str):
 
         session["checkin"] = None
 
-        return render_template("event/done.html", event=event, status="Check in successful",
+        return render_template("event/done.html.jinja", event=event, status="Check in successful",
                                message="Your check in has been recorded successfully by dynamic self check-in. You can safely close this tab.",
                                user=getattr(current_user, "data") or db.logged_out_data)
     else:
-        return render_template("event/checkin.html", event=event, registered=registered)
+        return render_template("event/checkin.html.jinja", event=event, registered=registered)
 
 
 @events_bp.route("/events/ci/<string:event_id>/manual", methods=["GET", "POST"])
@@ -488,27 +488,27 @@ def manual(event_id: str):
 
     # Stop check-in if the event check-in is disabled
     if not event["settings"]["checkin"]:
-        return render_template("event/done.html", event=event, status="Failed: CI_DISABLED",
+        return render_template("event/done.html.jinja", event=event, status="Failed: CI_DISABLED",
                                message="Check-in for this event has been disabled by the event owner.",
                                user=getattr(current_user, "data") or db.logged_out_data)
     
     registered, owned = db.get_my_events()
     if event_id in owned.keys():
-        return render_template("event/done.html", event=event, status="Failed: EVENT_OWNER",
+        return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_OWNER",
                                message="The currently logged in RoboRegistry account is the owner of this event. The owner cannot check in to their own event.",
                                user=getattr(current_user, "data"))
     if event_id not in registered.keys():
-        return render_template("event/done.html", event=event, status="Failed: NO_AFFIL",
+        return render_template("event/done.html.jinja", event=event, status="Failed: NO_AFFIL",
                                message="The currently logged in RoboRegistry account has not registered for this event. The event owner will have to manually record your presence through their Dashboard.",
                                user=getattr(current_user, "data"))
     if request.method == "POST":
         # Attempt a manual registration using the affiliated email
         db.check_in(event_id)
-        return render_template("event/done.html", event=event, status="Check in successful",
+        return render_template("event/done.html.jinja", event=event, status="Check in successful",
                                message="Your check in has been recorded successfully by registered email verification. You can safely close this tab.",
                                user=getattr(current_user, "data"))
     else:
-        return render_template("event/manual.html", event=event, user=getattr(current_user, "data"),
+        return render_template("event/manual.html.jinja", event=event, user=getattr(current_user, "data"),
                                entity=registered[event_id]["registered"][utils.get_uid()]["entity"])
 
 
@@ -522,10 +522,10 @@ def ci():
         link = request.form.get("event_url")
         target = urlparse(link).hostname
         if not link or (target and target not in ["roboregistry.vercel.app", "rbreg.vercel.app"]):
-            return render_template("event/qr.html")
+            return render_template("event/qr.html.jinja")
         return redirect(link)
     else:
-        return render_template("event/qr.html")
+        return render_template("event/qr.html.jinja")
 
 
 @events_bp.route("/events/manage/<string:event_id>", methods=["GET", "POST"])
@@ -538,4 +538,4 @@ def manage(event_id: str):
     """
     event = db.get_event(event_id)
     data = db.get_event_data(event_id)
-    return render_template("event/manage.html", event=event, data=data, user=getattr(current_user, "data"))
+    return render_template("event/manage.html.jinja", event=event, data=data, user=getattr(current_user, "data"))
