@@ -115,7 +115,7 @@ def dashboard():
         Primary landing page for logged-in users, including a list of their own events.
         For users that haven't completed the profile creation process, they will be redirected by the index.
     """
-    return render_template("dash/dash.html.jinja", user=getattr(current_user, "data", None))
+    return render_template("dash/dash.html", user=getattr(current_user, "data", None))
 
 
 @app.route("/settings", methods=["GET", "POST"])
@@ -164,13 +164,13 @@ def settings():
             "role": getattr(current_user, "data", {}).get("role", ""),
             "affil": getattr(current_user, "data", {}).get("affil", ""),
         }
-        return render_template("misc/settings.html.jinja", user=getattr(current_user, "data", None),
+        return render_template("misc/settings.html", user=getattr(current_user, "data", None),
                                settings=current_settings)
 
 
 @app.route("/about")
 def about():
-    return render_template("misc/about.html.jinja")
+    return render_template("misc/about.html")
 
 
 @app.route("/exportall")
@@ -186,7 +186,7 @@ def error_handler(code, reason):
     def decorator(f):
         @app.errorhandler(code)
         def wrapper(e):
-            return render_template("misc/error.html.jinja", code=code, reason=reason, debug=e.description), code
+            return render_template("misc/error.html", code=code, reason=reason, debug=e.description), code
 
         return wrapper
 
