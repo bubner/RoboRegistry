@@ -14,11 +14,15 @@ Login
                 At an event? <a href="/events/ci">Check in here</a>
             </div>
             <div class="col-md-12 text-center">
-                {% with messages = get_flashed_messages() %}
+                {% with messages = get_flashed_messages(with_categories=True) %}
                 {% if messages %}
                 {% for message in messages %}
+                {% if message[0] == 'success' %}
+                <div class="alert alert-success" role="alert">
+                {% else %}
                 <div class="alert alert-warning" role="alert">
-                    {{ message }}
+                {% endif %}
+                {{ message[1] }}
                 </div>
                 {% endfor %}
                 {% endif %}
