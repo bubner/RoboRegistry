@@ -14,7 +14,7 @@ Register for: {{ event.name }}
     <br /> <br />
     <div class="container border rounded-3 p-3">
         <h5 class="text-center">{{ event.location }}</h5>
-        <div id="map" style="height: 300px; width: 100%; margin-top: 10px;"></div>
+        <div id="map"></div>
     </div>
     <br />
     <p class="text-center">Please fill in the form below to register for this event, either as a visitor or
@@ -101,7 +101,7 @@ Register for: {{ event.name }}
             <label for="contactName" class="form-label">Contact Name</label><span aria-hidden="true"
                     class="text-danger">*</span></label>
             <input type="text" class="form-control" id="contactName" name="contactName"
-                placeholder="Enter your preferred contact name" value="{{ user.first_name }} {{ user.last_name }}">
+                placeholder="Enter your preferred contact name" value="{{ user.first_name }} {{ user.last_name }}" required>
         </div>
         <div class="mb-3">
             <label for="contactPhone" class="form-label">Contact Phone Number</label>
@@ -110,8 +110,8 @@ Register for: {{ event.name }}
         <i>In case of unexpected event changes, the event owner can choose to contact your preferred contact email
             and/or phone number listed here.</i> <br /> <br />
         <a class="btn btn-secondary" href="/dashboard">Cancel</a>
-        <button id="registernow" type="submit" class="btn btn-primary" style="display: inline;">Register</button>
-        <div id="waitmsg" style="display: none;">
+        <button id="registernow" type="submit" class="btn btn-primary">Register</button>
+        <div id="waitmsg">
             <div class="spinner-border spinner-border-sm" role="status"></div>
             <span class="text-muted">Waiting for 'Add FIRST Team Numbers'</span>
         </div>
@@ -120,7 +120,7 @@ Register for: {{ event.name }}
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
     const MAPBOX_API_KEY = "{{ mapbox_api_key }}";
     const EVENT_LOCATION = "{{ event.location }}";
     const EVENT_LIMIT = parseInt("{{ event.limit }}");

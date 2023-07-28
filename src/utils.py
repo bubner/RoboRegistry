@@ -75,11 +75,34 @@ def validate_form(form_data, role):
     if role == "comp" and not all(
             form_data.get(field) for field in ("numPeople", "numStudents", "numMentors", "teams")):
         return False
+    # numPeople must be in ["lt5", "5t10", "10t15", "15t20", "20t25", "gt25"]
+    if role == "comp" and form_data.get("numPeople") not in ("lt5", "5t10", "10t15", "15t20", "20t25", "gt25"):
+        return False
     # All values in teams must be non-empty
     if form_data.get("teams") and any(not team for team in form_data.get("teams")):
         return False
     return True
 
+
+def reformat_number(number):
+    """
+        Remove a phone number from any formatting.
+    """
+    return number.replace("-", "").replace(" ", "").replace("(", "").replace(")", "")
+
+
+def validate_email(email):
+    """
+        Validate an email address by checking for "@" and "." in this order.
+    """
+    if "@" not in email:
+        return False
+    if "." not in email:
+        return False
+    if email.index(".") < email.index("@"):
+        return False
+    return True
+    
 
 def get_uid():
     """

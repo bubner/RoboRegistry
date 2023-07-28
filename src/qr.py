@@ -3,13 +3,11 @@
     @author: Lucas Bubner
 """
 
-from datetime import datetime
 from io import BytesIO
 
 import qrcode
 import qrcode.constants
 from PIL import Image, ImageDraw, ImageFont, ImageOps
-from pytz import UTC
 
 
 def generate_qrcode(event, size, qr_type):
@@ -70,12 +68,6 @@ def generate_qrcode(event, size, qr_type):
         draw.text(((template_width - text_width) // 2, 800 + text_height), text, (0, 0, 0), font=bigfont)
 
         if qr_type == "register":
-            # Add generation time
-            text = datetime.now(UTC).strftime("%Y-%m-%d, %H:%M:%S UTC")
-            text_width, text_height = draw.textsize(text, smallfont)
-            draw.text(((template_width - text_width) // 2 + 220, template_height - text_height - 180), text, (0, 0, 0),
-                      font=smallfont)
-
             # Add event details
             text = f"{event.get('date')} | {event.get('start_time')} - {event.get('end_time')}"
             text_width, text_height = draw.textsize(text, font)

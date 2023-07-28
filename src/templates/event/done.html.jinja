@@ -11,8 +11,14 @@ Event Register
             '{{ user.first_name }} {{ user.last_name }}'</h6>
         <p class="headertext">{{ status }}</p>
         <p>{{ message }}</p>
-        <a class="btn btn-primary" href="javascript:history.back()">Go Back</a>
+        <button id="goback" class="btn btn-primary">Go Back</button>
         <a class="btn btn-success" href="/dashboard">Return to home page</a>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script defer nonce="{{ csp_nonce() }}">
+    document.getElementById("goback").onclick = () => window.history.back();
+</script>
 {% endblock %}

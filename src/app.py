@@ -10,6 +10,7 @@ from datetime import timedelta, datetime
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, make_response, flash
 from flask_login import LoginManager, current_user, login_required
+from flask_talisman import Talisman
 from flask_wtf.csrf import CSRFProtect
 from requests.exceptions import HTTPError
 
@@ -60,6 +61,37 @@ login_manager = LoginManager()
 
 login_manager.init_app(app)
 csrf.init_app(app)
+
+csp = {
+    "default-src": [
+        "'self'",
+        "fonts.googleapis.com",
+        "fonts.gstatic.com",
+        "api.mapbox.com",
+        "cdn.jsdelivr.net",
+        "events.mapbox.com",
+        "firstteamapi.vercel.app"
+    ],
+    "script-src": [
+        "'self'",
+        "cdn.jsdelivr.net",
+        "cdnjs.cloudflare.com",
+        "api.mapbox.com",
+        "blob:"
+    ],
+    "img-src": [
+        "'self'",
+        "data:",
+        "https://github.githubassets.com/favicons/favicon.png",
+        "https://cdn.freebiesupply.com/logos/large/2x/python-5-logo-png-transparent.png",
+        "https://firebase.google.com/static/downloads/brand-guidelines/SVG/logo-logomark.svg",
+        "https://www.svgrepo.com/show/327408/logo-vercel.svg",
+        "https://cdn.freebiesupply.com/logos/large/2x/flask-logo-png-transparent.png",
+        "https://quintagroup.com/cms/python/images/jinja2.png/@@images/919c2c3d-5b4e-4650-943a-b0df263f851b.png",
+        "https://upload.wikimedia.org/wikipedia/commons/b/b2/Bootstrap_logo.svg"
+    ]
+}
+Talisman(app, content_security_policy=csp, content_security_policy_nonce_in=["script-src"])
 
 app.config.update(
     SESSION_COOKIE_SECURE=True,
@@ -150,7 +182,12 @@ def settings():
         if not all(account.values()):
             flash("Please fill out all fields.")
             return redirect(url_for("settings"))
-
+        
+        # Role must be in ("student", "mentor", "event_organiser", "other")
+        if account["role"] not in ("student", "mentor", "event_organiser", "other"):
+            flash("Invalid role.")
+            return redirect(url_for("settings"))
+            
         # Promotion can be False, which will flag all()
         account["promotion"] = request.form.get("promotion") == "on"
 

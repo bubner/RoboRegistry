@@ -179,6 +179,9 @@ def create_profile():
 
         if not first_name or not last_name or not role or not affil:
             return render_template("auth/addinfo.html.jinja", error="Please enter required details.", email=auth_email)
+        
+        if role not in ("student", "mentor", "event_organiser", "other"):
+            return render_template("auth/addinfo.html.jinja", error="Invalid role.", email=auth_email)
 
         if len(first_name) > 16 or len(last_name) > 16:
             return render_template("auth/addinfo.html.jinja", error="Name(s) must be less than 16 characters each.",

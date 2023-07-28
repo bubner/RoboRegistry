@@ -64,7 +64,7 @@ Login
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
     // Set dark mode cookie if user has dark mode preference
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches && !document.cookie.includes("darkmode")) {
         const date = new Date();

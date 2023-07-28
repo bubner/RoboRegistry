@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setInterval(() => {
         // Refresh the page if the eventState has changed
         if (last && eventState !== last) {
-            location.reload();
+            window.location.reload();
         }
         last = eventState;
 
@@ -85,10 +85,4 @@ function getTimeData(date, time, offset) {
 function timeDiff(s, e) {
     const millis = s - e;
     return humanizeDuration(millis, { round: true, largest: 3 });
-}
-
-function copyToClipboard(text) {
-    const url = `https://roboregistry.vercel.app/${text}`;
-    navigator.clipboard.writeText(url);
-    alert(`Copied to clipboard: ${url}`);
 }

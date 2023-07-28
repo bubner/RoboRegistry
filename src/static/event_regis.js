@@ -154,8 +154,9 @@ function handleAddTeamNumber(e) {
     // Protected as teamNumber is parsed as an int
     newTeam.innerHTML = `
         <label for="${teamNumber}">${teamNumber}</label> <span id='${teamNumber}'><div class="spinner-border spinner-border-sm" role="status"></div> Querying</span>
-        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeTeam(this)">Remove</button>
+        <button type="button" class="btn btn-outline-danger btn-sm">Remove</button>
     `;
+    newTeam.querySelector("button").addEventListener("click", (e) => removeTeam(e.target));
     teamList.appendChild(newTeam);
 
     // Disable submitting

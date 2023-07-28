@@ -32,7 +32,7 @@ Delete your account
 {% endblock %}
 
 {% block scripts %}
-<script defer>
+<script defer nonce="{{ csp_nonce() }}">
     document.getElementById("delaction").addEventListener("submit", (e) => {
         if (!confirm("Are you sure you want to delete your account?")) {
             e.preventDefault();
