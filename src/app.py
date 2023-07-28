@@ -21,7 +21,18 @@ from auth import auth_bp, User
 from wrappers import validate_user
 
 load_dotenv()
-app = Flask(__name__)
+
+
+class App(Flask):
+    # Override the automatic determiner for autoescape protection
+    # This is because we are using the .jinja file extension, which is not protected automatically
+    def select_jinja_autoescape(self, filename: str) -> bool:
+        if filename is None:
+            return True
+        return filename.endswith((".html", ".htm", ".xml", ".xhtml", ".svg", ".jinja"))
+
+
+app = App(__name__)
 
 key = os.getenv("SECRET_KEY")
 if not key:

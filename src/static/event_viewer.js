@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Display local time on the page, if required
     const eventTime = document.querySelector("#event-time");
     if (eventTime)
-        eventTime.innerHTML = `<i>Local time (${timeZone})</i> <br> <b>From</b>: ${startLocalTime} <br> <b>To</b>: ${endLocalTime}`;
+        eventTime.innerHTML = `<i>Local time (${DOMPurify.sanitize(timeZone)})</i> <br> <b>From</b>: ${DOMPurify.sanitize(startLocalTime)} <br> <b>To</b>: ${DOMPurify.sanitize(endLocalTime)}`;
 
     // Calculate relative event times
     const relativeEventTime = document.querySelector("#relative-event-time");
@@ -41,13 +41,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const now = new Date();
         if (now < eventStartTime) {
             eventState = EventStates.NOT_STARTED;
-            relativeEventTime.innerHTML = `Starts in ${timeDiff(eventStartTime, now)}`;
+            relativeEventTime.textContent = `Starts in ${timeDiff(eventStartTime, now)}`;
         } else if (now < eventEndTime) {
             eventState = EventStates.RUNNING;
-            relativeEventTime.innerHTML = `Ends in ${timeDiff(eventEndTime, now)}`;
+            relativeEventTime.textContent = `Ends in ${timeDiff(eventEndTime, now)}`;
         } else {
             eventState = EventStates.ENDED;
-            relativeEventTime.innerHTML = `Ended ${timeDiff(now, eventEndTime)} ago`;
+            relativeEventTime.textContent = `Ended ${timeDiff(now, eventEndTime)} ago`;
         }
     }, 1000);
 });

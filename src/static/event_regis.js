@@ -143,7 +143,7 @@ function handleAddTeamNumber(e) {
 
     // Check for duplicates
     for (let i = 0; i < currentTeams.length; i++) {
-        if (currentTeams[i].innerText === teamNumber) {
+        if (currentTeams[i].innerText === teamNumber.toString()) {
             alert("Team number already added to the list!");
             return;
         }
@@ -151,6 +151,7 @@ function handleAddTeamNumber(e) {
 
     newTeam.innerText = teamNumber;
     newTeam.classList.add("list-group-item", "d-flex", "justify-content-evenly", "align-items-center");
+    // Protected as teamNumber is parsed as an int
     newTeam.innerHTML = `
         <label for="${teamNumber}">${teamNumber}</label> <span id='${teamNumber}'><div class="spinner-border spinner-border-sm" role="status"></div> Querying</span>
         <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeTeam(this)">Remove</button>
@@ -182,14 +183,14 @@ function handleAddTeamNumber(e) {
                 // More than one team, we need to ask the user which one they want
                 value = `<select class="form-select team" id="selector-${teamNumber}">`;
                 for (const team of data.data) {
-                    value += `<option class="team" value="${team.nickname}">${team.nickname}</option>`;
+                    value += `<option class="team" value="${DOMPurify.sanitize(team.nickname)}">${DOMPurify.sanitize(team.nickname)}</option>`;
                 }
                 value += '<option value="other">Other</option></select>';
             } else {
                 // Only one team, we can skip straight to rendering
                 const team = data.data[0] || {};
                 value = `<input type="text" class="form-control team" placeholder="Enter team name" value="${
-                    team.nickname || ""
+                    DOMPurify.sanitize(team.nickname) || ""
                 }">`;
             }
 

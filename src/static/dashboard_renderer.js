@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 location.assign(value.path);
             };
             square.style.backgroundColor = dark ? "#333" : "#e9e9e9";
-            square.innerHTML = `<p class="db-content">${value.text}</p>`;
+            square.innerHTML = `<p class="db-content">${DOMPurify.sanitize(value.text)}</p>`;
             box.appendChild(square);
             row.appendChild(box);
             count++;

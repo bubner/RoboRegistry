@@ -320,6 +320,9 @@ def event_register(event_id: str):
 @login_required
 @validate_user
 def event_unregister(event_id: str):
+    """
+        Unregister a user from an event.
+    """
     event = db.get_event(event_id)
     if request.method == "POST":
         if not event.get("registered"):
@@ -520,10 +523,10 @@ def ci():
     if request.method == "POST":
         # Redirect to the link found in the QR code
         link = request.form.get("event_url")
-        target = urlparse(link).hostname
-        if not link or (target and target not in ["roboregistry.vercel.app", "rbreg.vercel.app"]):
+        target = urlparse(link)
+        if not link or not target or (target.hostname and target.hostname not in ["roboregistry.vercel.app", "rbreg.vercel.app"]):
             return render_template("event/qr.html.jinja")
-        return redirect(link)
+        return redirect(target.geturl())
     else:
         return render_template("event/qr.html.jinja")
 

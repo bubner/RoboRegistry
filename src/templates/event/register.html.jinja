@@ -98,9 +98,10 @@ Register for: {{ event.name }}
             <input type="number" class="form-control" id="numAdults" name="numAdults" min="0" max="999">
         </div>
         <div class="mb-3">
-            <label for="contactName" class="form-label">Contact Name</label>
+            <label for="contactName" class="form-label">Contact Name</label><span aria-hidden="true"
+                    class="text-danger">*</span></label>
             <input type="text" class="form-control" id="contactName" name="contactName"
-                placeholder="{{ user.first_name }} {{ user.last_name }}">
+                placeholder="Enter your preferred contact name" value="{{ user.first_name }} {{ user.last_name }}">
         </div>
         <div class="mb-3">
             <label for="contactPhone" class="form-label">Contact Phone Number</label>
@@ -125,6 +126,7 @@ Register for: {{ event.name }}
     const EVENT_LIMIT = parseInt("{{ event.limit }}");
     const EVENT_REGISTRATIONS = parseInt("{{ event.registered|length }}");
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js" integrity="sha512-KqUc2WMPF/gxte9xVjVE4TIt1LMUTidO3BrcItFg0Ro24I7pGNzgcXdnWdezNY+8T0/JEmdC79MuwYn+8UdOqw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
 <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
 <script src="{{ url_for('static', filename='internal_api.js') }}"></script>
