@@ -58,9 +58,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 marker.setLngLat(location);
                 map.setZoom(15);
                 document.getElementById("event_location").value = data.features[0].place_name;
-            })
-            .catch((error) => {
-                console.log(error);
             });
     };
 

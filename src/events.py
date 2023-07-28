@@ -191,7 +191,7 @@ def create():
             return render_template("event/create.html.jinja", error="An event with that name and date already exists.",
                                    user=user, mapbox_api_key=mapbox_api_key, old_data=event, timezones=all_timezones)
 
-        if not event["limit"]:
+        if not event["limit"] or event["limit"] == "0":
             event["limit"] = -1
 
         # Make sure all fields were filled
