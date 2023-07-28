@@ -1,8 +1,7 @@
 {% extends "layout.html.jinja" %}
 
 {% block navbar %}
-<nav class="navbar navbar-expand-lg navbar-light {{ 'bg-dark' if request.cookies.get('darkmode') == 'on' else 'bg-light' }}"
-    style="z-index: 10;">
+<nav class="navbar navbar-expand-lg navbar-light {{ 'bg-dark' if request.cookies.get('darkmode') == 'on' else 'bg-light' }}">
     <div class="container-fluid">
         <a class="navbar-brand" href="/dashboard"><img src="{{ url_for('static', filename='assets/rr.png') }}"
                 alt="RoboRegistry" id="brand" /></a>
@@ -27,7 +26,7 @@
                             id="pfp"></svg>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li style="white-space: nowrap; padding: 12px">Logged in as <b>{{ user.email }}</b></li>
+                        <li id="loggedinas">Logged in as <b>{{ user.email }}</b></li>
                         <li><a class="dropdown-item" href="/about">📖 About</a></li>
                         <li><a class="dropdown-item" href="/settings">⚙️ Settings</a></li>
                         <li><a class="dropdown-item" href="/logout">👋 Log out</a></li>

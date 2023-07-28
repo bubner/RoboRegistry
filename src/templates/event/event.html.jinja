@@ -8,7 +8,7 @@
 <div class="maxtext dashheading">
     <p>{{ event.name }}</p>
     <h5>{{ event.uid }}</h5>
-    {% if owned and can_register %}
+    {% if owned %}
     <h6>Event check-in code: {{ event.checkin_code }} </h6>
     {% endif %}
     {% if not registered and not owned and can_register %}
@@ -19,11 +19,11 @@
     <a href="/events/manage/{{ event.uid }}" class="btn btn-primary">Manage</a>
     {% endif %}
     {% if can_register %}
-    <button class="btn btn-secondary" onclick="copyToClipboard('events/register/{{ event.uid }}')">Copy
+    <button id="copyregis" class="btn btn-secondary">Copy
         Registration Link
     </button>
     {% if owned %}
-    <button class="btn btn-secondary" onclick="copyToClipboard('events/ci/{{ event.uid }}')">Copy Check-In
+    <button id="copyci" class="btn btn-secondary">Copy Check-In
         Link
     </button>
     {% endif %}
@@ -75,7 +75,7 @@
                     <h5 class="card-title">Location</h5>
                     <p class="card-text">{{ event.location }}</p>
                 </div>
-                <div id="map" style="height: 300px; width: 100%; margin-top: 10px;"></div>
+                <div id="map"></div>
             </div>
         </div>
     </div>
@@ -83,14 +83,30 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script defer nonce="{{ csp_nonce() }}">
     const MAPBOX_API_KEY = "{{ mapbox_api_key }}";
     const EVENT_LOCATION = "{{ event.location }}";
     const EVENT_DATE = "{{ event.date }}";
     const EVENT_START_TIME = "{{ event.start_time }}";
     const EVENT_END_TIME = "{{ event.end_time }}";
     const OFFSET = "{{ offset }}";
+
+    function copyToClipboard(url) {
+        navigator.clipboard.writeText(url);
+        alert(`Copied to clipboard: ${url}`);
+    }
+
+    document.getElementById('copyregis').addEventListener('click', () => {
+        const url = `https://roboregistry.vercel.app/events/register/${"{{ event.uid }}"}`;
+        copyToClipboard(url);
+    });
+
+    document.getElementById('copyci').addEventListener('click', () => {
+        const url = `https://roboregistry.vercel.app/events/ci/${"{{ event.uid }}"}`;
+        copyToClipboard(url);
+    });
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js" integrity="sha512-KqUc2WMPF/gxte9xVjVE4TIt1LMUTidO3BrcItFg0Ro24I7pGNzgcXdnWdezNY+8T0/JEmdC79MuwYn+8UdOqw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
 <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
 <script src="{{ url_for('static', filename='libs/humanize-duration.min.js') }}"></script>

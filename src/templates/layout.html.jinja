@@ -96,10 +96,10 @@
     </noscript>
     <main>{% block body %}{% endblock %}</main>
     <footer
-        style="background-color: {{ '#1f1f1f' if request.cookies.get('darkmode') == 'on' else 'rgb(228, 228, 228)' }};">
-        <p style="color: {{ '#6c757d' if request.cookies.get('darkmode') == 'on' else 'rgb(110, 110, 110)' }};">
+        id="{{ 'darkbar' if request.cookies.get('darkmode') == 'on' else 'lightbar' }}">
+        <p id="{{ 'lighttext' if request.cookies.get('darkmode') == 'on' else 'darktext' }}">
             Copyright © 2023
-            <a href="https://github.com/hololb/" target="_blank" style="color: rgb(91, 116, 230);">Lucas Bubner</a>.
+            <a href="https://github.com/hololb/" target="_blank">Lucas Bubner</a>.
             <noscript>Running without JavaScript.</noscript>
         </p>
     </footer>

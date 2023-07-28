@@ -53,7 +53,7 @@ Create Event
                         <label for="event_description">Event Description</label><span aria-hidden="true"
                             class="text-danger">*</span>
                         <textarea class="form-control" id="event_description" name="event_description" rows="3"
-                            style="resize: none;" required>{{ old_data.description }}</textarea>
+                            required>{{ old_data.description }}</textarea>
                     </div>
                     <br />
                     <a class="btn btn-secondary" href="/dashboard">Cancel</a>
@@ -73,12 +73,12 @@ Create Event
                             <input type="checkbox" class="form-check-input" id="display_email" name="display_email" {% if
                                 not old_data.display_email %}checked{% endif %}>
                             <label class="form-check-label" for="display_email">Display your email with the event?</label>
-                            <p class="text-muted" id="disablewarn" style="display: none;">People registering through
+                            <p id="noemailwarn" class="text-muted" id="disablewarn">People registering through
                                 RoboRegistry will not be able to see your email address for contact.</p>
                         </div>
                         <label for="email">Display email</label>
                         <input class="form-control" id="email" name="event_email" placeholder="{{ user.email }}"
-                            value="{{ old_data.email }}" type="email" autocomplete="username" />
+                            value="{{ old_data.email if old_data.email != 'N/A' }}" type="email" autocomplete="username" />
                     </div>
                     <br />
                     <div class="form-group">
@@ -87,7 +87,7 @@ Create Event
                         <input type="text" class="form-control" id="event_location" name="event_location" required
                             value="{{ old_data.location or '' }}">
                     </div>
-                    <div id="map" style="height: 350px; width: 100%; margin-top: 10px;"></div>
+                    <div id="map"></div>
                 </div>
             </div>
         </div>
@@ -96,7 +96,7 @@ Create Event
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
     const MAPBOX_API_KEY = "{{ mapbox_api_key }}";
     const OLD_DATA_TIMEZONE = "{{ old_data.timezone }}";
 </script>

@@ -58,9 +58,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 marker.setLngLat(location);
                 map.setZoom(15);
                 document.getElementById("event_location").value = data.features[0].place_name;
-            })
-            .catch((error) => {
-                console.log(error);
             });
     };
 
@@ -87,8 +84,8 @@ document.addEventListener("DOMContentLoaded", () => {
     startTimeInput.addEventListener("change", () => {
         const startTime = new Date(`1970-01-01T${startTimeInput.value}:00`);
         const endTime = new Date(`1970-01-01T${endTimeInput.value}:00`);
-        if (startTime > endTime) {
-            alert("Start time cannot be after end time.");
+        if (startTime >= endTime) {
+            alert("Start time cannot be before or the same as the end time.");
             startTimeInput.value = "";
         }
     });
@@ -97,8 +94,8 @@ document.addEventListener("DOMContentLoaded", () => {
     endTimeInput.addEventListener("change", () => {
         const startTime = new Date(`1970-01-01T${startTimeInput.value}:00`);
         const endTime = new Date(`1970-01-01T${endTimeInput.value}:00`);
-        if (endTime < startTime) {
-            alert("End time cannot be before start time.");
+        if (endTime <= startTime) {
+            alert("End time cannot be before or the same as the start time.");
             endTimeInput.value = "";
         }
     });
@@ -108,8 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const emailInput = document.getElementById("email");
     const disableWarn = document.getElementById("disablewarn");
     let email = emailInput.value;
-
-    displayEmail.addEventListener("change", () => {
+    const handleEmailChange = () => {
         if (displayEmail.checked) {
             emailInput.disabled = false;
             emailInput.value = email;
@@ -120,5 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
             emailInput.value = "N/A";
             disableWarn.style.display = "block";
         }
-    });
+    };
+    displayEmail.addEventListener("change", () => handleEmailChange());
+    setTimeout(handleEmailChange, 500);
 });
