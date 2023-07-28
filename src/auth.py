@@ -4,7 +4,7 @@
 """
 import random
 
-from flask import Blueprint, render_template, request, redirect, session, make_response, url_for
+from flask import Blueprint, render_template, request, redirect, session, make_response, url_for, flash
 from flask_login import current_user, UserMixin, login_required, logout_user, login_user
 from requests.exceptions import HTTPError
 
@@ -116,9 +116,14 @@ def logout():
     """
         Logs out the user by removing the user token from the cookies.
     """
+    should_persist_flashes = request.args.getlist('should_persist_flashes')
     res = make_response(redirect(url_for("auth.login")))
     session.clear()
     logout_user()
+    for f in should_persist_flashes:
+        flash(f)
+    if len(should_persist_flashes) == 0:
+        flash("Logged out successfully.", category="success")
     return res
 
 
@@ -237,11 +242,29 @@ def deleteaccount():
             return render_template("auth/deleteaccount.html.jinja", user=getattr(current_user, "data", None),
                                    error="Numbers don't match.", num=num, numevents=numevents)
 
+        try:
+            auth.delete_user_account(getattr(current_user, "token", None))
+        except HTTPError as e:
+            flashes = []
+            try:
+                error = e.args[0].get("error", {}).get("message", None)
+            except Exception:
+                error = None
+
+            if error == "CREDENTIAL_TOO_OLD_LOGIN_AGAIN":
+                # User hasn't logged in for a while, so we need to reauthenticate them
+                flashes.append("You'll need to reauthenticate yourself to delete this account.")
+            else:
+                flashes.append("Something went wrong, your data has not been erased.")
+                if error:
+                    flashes.append(error)
+
+            return redirect(url_for("auth.logout", should_persist_flashes=flashes))
+        
         db.delete_all_user_events()
         db.delete_user_data()
-        auth.delete_user_account(getattr(current_user, "token", None))
 
-        return redirect("/logout")
+        return redirect(url_for("auth.logout", should_persist_flashes=["Account deleted. Thank you for using RoboRegistry."]))
     else:
         return render_template("auth/deleteaccount.html.jinja", user=getattr(current_user, "data", None), num=num,
                                numevents=numevents)
