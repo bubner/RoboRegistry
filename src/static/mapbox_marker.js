@@ -5,7 +5,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
     mapboxgl.accessToken = MAPBOX_API_KEY;
-    mapboxgl.workerUrl = "https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl-csp-worker.js";
+    mapboxgl.workerUrl = "{{ url_for('static', filename='libs/mapbox-gl-csp-worker_v2.15.0.js') }}";
     fetch(
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${EVENT_LOCATION}.json?access_token=${mapboxgl.accessToken}`
     )
