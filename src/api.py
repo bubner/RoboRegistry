@@ -5,13 +5,14 @@
 
 from datetime import datetime, timedelta
 
-from flask import request, redirect, Blueprint
+from flask import request, redirect, Blueprint, abort
 from flask_login import login_required, login_user
 from requests.exceptions import MissingSchema
+from pytz import timezone
 
 import db
 from auth import User
-from firebase_instance import auth
+from fb import auth
 
 api_bp = Blueprint("api", __name__, template_folder="templates")
 
@@ -82,3 +83,27 @@ def api_dashboard():
             }
         ]
     return should_display
+
+@api_bp.route("/api/is_auto_open/<string:event_id>")
+@login_required
+def api_is_auto_open(event_id):
+    """
+        Determines if an event is automatically open for registration and checkin.
+    """
+    event = db.get_event(event_id)
+    if not event:
+        abort(404)
+
+    tz = timezone(event["timezone"])
+
+    start_time = tz.localize(datetime.strptime(
+        f"{event['date']} {event['start_time']}", "%Y-%m-%d %H:%M"))
+    can_register = start_time > datetime.now(tz)
+
+    can_checkin = start_time < datetime.now(tz) < tz.localize(datetime.strptime(
+        f"{event['date']} {event['end_time']}", "%Y-%m-%d %H:%M"))
+    
+    return {
+        "can_register": can_register,
+        "can_checkin": can_checkin
+    }

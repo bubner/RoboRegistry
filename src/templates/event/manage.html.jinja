@@ -9,8 +9,7 @@ Manage '{{ event.name }}'
     <br />
     <h1 class="maxtext text-center">{{ event.name|upper }}</h1>
     <hr />
-    This page is a work-in-progress!
-    {# <div class="row">
+    <div class="row">
         <div class="col-md-4">
             <div class="card mb-4 shadow-sm">
                 <div class="card-body">
@@ -73,7 +72,17 @@ Manage '{{ event.name }}'
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h4 class="card-title">Status</h4>
-                    <p class="card-text"></p>
+                    <p class="card-text">
+                        <a href="/events/view/{{ event.uid }}" class="btn btn-outline-primary w-100">View your event page</a>
+                        <div class="container-inline d-flex justify-content-between">
+                            <a href="/events/gen/qr/{{ event.uid }}" class="btn btn-outline-success w-50 mx-1">Generate QR codes</a>
+                            <a href="/events/gen/ci/{{ event.uid }}" class="btn btn-outline-secondary w-50 mx-1">Print check-in sheet</a>
+                        </div>
+                        <br />
+                        Your event is currently <b id="visibility">{{ "visible." if event.settings.visible else "not visible." }}</b> <br />
+                        Registrations are <b id="registration">loading...</b> <br />
+                        Check-in is <b id="checkin">loading...</b>
+                    </p>
                 </div>
             </div>
         </div>
@@ -99,7 +108,7 @@ Manage '{{ event.name }}'
             </div>
         </div>
     </div>
-</div> #}
+</div>
 <div class="modal fade" id="fullPageModal" tabindex="-1" aria-labelledby="fullPageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
@@ -182,5 +191,12 @@ Manage '{{ event.name }}'
 {% endblock %}
 
 {% block scripts %}
+<script defer nonce="{{ csp_nonce() }}">
+    const EVENT_UID = "{{ event.uid }}";
+    const EVENT_VISIBLE = "{{ event.settings.regis }}" === "True";
+    const EVENT_REGIS = "{{ event.settings.regis }}" === "True";
+    const EVENT_CHECKIN = "{{ event.settings.checkin }}" === "True";
+</script>
+<script src="{{ url_for('static', filename='internal_api.js') }}"></script>
 <script src="{{ url_for('static', filename='eman.js') }}"></script>
 {% endblock %}

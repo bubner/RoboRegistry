@@ -12,7 +12,7 @@ from pytz import timezone
 from requests.exceptions import HTTPError
 
 import utils
-from firebase_instance import db
+from fb import db
 
 
 def get_user_data(uid, auth=None) -> dict:

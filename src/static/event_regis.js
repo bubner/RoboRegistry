@@ -133,7 +133,7 @@ function handleAddTeamNumber(e) {
     teamNumber = parseInt(teamNumber);
 
     if (isNaN(teamNumber) || teamNumber < 10 || teamNumber > 99999) {
-        alert("Invalid!");
+        alert("Invalid! You need to supply a team number. If your team does not have a number, you can supply a mock one e.g. 99999.");
         return;
     }
 

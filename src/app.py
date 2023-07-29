@@ -68,20 +68,22 @@ csp = {
         "fonts.googleapis.com",
         "fonts.gstatic.com",
         "api.mapbox.com",
-        "cdn.jsdelivr.net",
+        "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css",
+        "https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js",
+        "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js",
         "events.mapbox.com",
         "firstteamapi.vercel.app"
     ],
     "script-src": [
         "'self'",
-        "cdn.jsdelivr.net",
-        "cdnjs.cloudflare.com",
-        "api.mapbox.com",
-        "blob:"
+        "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css",
+        "https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js",
+        "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js",
+        "api.mapbox.com"
     ],
     "img-src": [
         "'self'",
-        "data:",
         "https://github.githubassets.com/favicons/favicon.png",
         "https://cdn.freebiesupply.com/logos/large/2x/python-5-logo-png-transparent.png",
         "https://firebase.google.com/static/downloads/brand-guidelines/SVG/logo-logomark.svg",
@@ -89,7 +91,9 @@ csp = {
         "https://cdn.freebiesupply.com/logos/large/2x/flask-logo-png-transparent.png",
         "https://quintagroup.com/cms/python/images/jinja2.png/@@images/919c2c3d-5b4e-4650-943a-b0df263f851b.png",
         "https://upload.wikimedia.org/wikipedia/commons/b/b2/Bootstrap_logo.svg"
-    ]
+    ],
+    "object-src": ["'none'"],
+    "base-uri": ["'self'"]
 }
 Talisman(app, content_security_policy=csp, content_security_policy_nonce_in=["script-src"])
 

@@ -7,6 +7,8 @@ import math
 import os
 import random
 import re
+from io import BytesIO
+from zipfile import ZipFile
 from datetime import datetime
 from time import time
 from urllib.parse import urlparse
@@ -16,7 +18,7 @@ from flask_login import current_user, login_required
 from pytz import all_timezones, timezone
 
 import db
-import qr
+import img
 import utils
 from wrappers import must_be_event_owner, event_must_be_running, validate_user
 
@@ -79,8 +81,6 @@ def viewevent(uid: str):
 
     # Determine if a user can register
     can_register = start_time > datetime.now(tz)
-
-    tz = timezone(data["timezone"])
     offset = tz.utcoffset(datetime.now()).total_seconds() / 3600
 
     if data.get("registered"):
@@ -365,7 +365,7 @@ def event_unregister(event_id: str):
                                user=getattr(current_user, "data"))
 
 
-@events_bp.route("/events/gen/<string:event_id>", methods=["GET", "POST"])
+@events_bp.route("/events/gen/qr/<string:event_id>", methods=["GET", "POST"])
 @login_required
 @must_be_event_owner
 @validate_user
@@ -401,7 +401,7 @@ def gen(event_id: str):
             return render_template("event/gen.html.jinja", error="Invalid QR code type.", event=event,
                                    user=getattr(current_user, "data"))
         # Generate QR code based on input
-        qrcode = qr.generate_qrcode(event, size, qr_type)
+        qrcode = img.generate_qrcode(event, size, qr_type)
         if not qrcode:
             return render_template("event/gen.html.jinja", error="An error occurred while generating the QR code.",
                                    event=event, user=getattr(current_user, "data"))
@@ -409,6 +409,30 @@ def gen(event_id: str):
         return send_file(qrcode, mimetype="image/png")
     else:
         return render_template("event/gen.html.jinja", event=event, user=getattr(current_user, "data"))
+
+
+@events_bp.route("/events/gen/ci/<string:event_id>", methods=["GET"])
+@login_required
+@must_be_event_owner
+@validate_user
+def gen_ci(event_id: str):
+    """
+        Generate a static version of check-in information for an event.
+    """
+    event = db.get_event(event_id)
+    bufs = img.generate_man_ci(event)
+    file = None
+    if len(bufs) > 1:
+        # Need to zip the files
+        stream = BytesIO()
+        with ZipFile(stream, "w") as zip:
+            for i, buf in enumerate(bufs):
+                zip.writestr(f"checkin_{i}.png", buf.getvalue())
+        stream.seek(0)
+        file = stream
+    else:
+        file = bufs[0]
+    return send_file(file, mimetype="image/png" if len(bufs) == 1 else "application/zip")
 
 
 @events_bp.route("/events/ci/<string:event_id>", methods=["GET", "POST"])
@@ -425,7 +449,7 @@ def checkin(event_id: str):
     if not event["settings"]["checkin"]:
         return render_template("event/done.html.jinja", event=event, status="Failed: CI_DISABLED",
                                message="Check-in for this event has been disabled by the event owner.",
-                               user=getattr(current_user, "data", None) or db.logged_out_data)
+                               user=getattr(current_user, "data", db.logged_out_data))
 
     if request.method == "POST":
         # Validate checkin code
@@ -433,7 +457,7 @@ def checkin(event_id: str):
         if not code or code != str(event["checkin_code"]):
             return render_template("event/done.html.jinja", event=event, status="Failed: CI_INVALID",
                                    message="You have provided an invalid check-in code! If trouble persists, try registration email check-in or asking the event owner to record you as attended manually.",
-                                   user=getattr(current_user, "data", None) or db.logged_out_data)
+                                   user=getattr(current_user, "data", db.logged_out_data))
         session["checkin"] = event["checkin_code"]
         # Redirect to event check-in page with approval
         return redirect("/events/ci/" + event_id + "/dynamic")
@@ -455,7 +479,7 @@ def dynamic(event_id: str):
     if not event["settings"]["checkin"]:
         return render_template("event/done.html.jinja", event=event, status="Failed: CI_DISABLED",
                                message="Check-in for this event has been disabled by the event owner.",
-                               user=getattr(current_user, "data", None) or db.logged_out_data)
+                               user=getattr(current_user, "data", db.logged_out_data))
 
     code = session.get("checkin")
     if not code or code != event.get("checkin_code"):
@@ -477,7 +501,7 @@ def dynamic(event_id: str):
         if entity != "anon" and entity not in registered:
             return render_template("event/done.html.jinja", event=event, status="Failed: CI_INVALID",
                                    message="You have provided an invalid entity! If trouble persists, try registration email check-in or asking the event owner to record you as attended manually.",
-                                   user=getattr(current_user, "data", None) or db.logged_out_data)
+                                   user=getattr(current_user, "data", db.logged_out_data))
 
         if entity != "anon" and len(registered) == 0:
             # This should be impossible
@@ -490,13 +514,13 @@ def dynamic(event_id: str):
         if not entity or (entity == "anon" and not anon_affil and not anon_name):
             return render_template("event/done.html.jinja", event=event, status="Failed: CI_INVALID",
                                    message="You have provided insufficient data! If trouble persists, try registration email check-in or asking the event owner to record you as attended manually.",
-                                   user=getattr(current_user, "data", None) or db.logged_out_data)
+                                   user=getattr(current_user, "data", db.logged_out_data))
         if anon_affil:
             # Ensure visit-reason is in (noregis, public, visitor, manager, other)
             if anon_affil not in ("noregis", "public", "visitor", "manager", "other"):
                 return render_template("event/done.html.jinja", event=event, status="Failed: CI_INVALID",
                                        message="You have provided an invalid affiliation! If trouble persists, try registration email check-in or asking the event owner to record you as attended manually.",
-                                       user=getattr(current_user, "data", None) or db.logged_out_data)
+                                       user=getattr(current_user, "data", db.logged_out_data))
 
             # Anonymous user check-in
             db.anon_check_in(event_id, anon_affil, anon_name)
@@ -508,7 +532,7 @@ def dynamic(event_id: str):
 
         return render_template("event/done.html.jinja", event=event, status="Check in successful",
                                message="Your check in has been recorded successfully by dynamic self check-in. You can safely close this tab.",
-                               user=getattr(current_user, "data", None) or db.logged_out_data)
+                               user=getattr(current_user, "data", db.logged_out_data))
     else:
         return render_template("event/checkin.html.jinja", event=event, registered=registered)
 
@@ -527,7 +551,7 @@ def manual(event_id: str):
     if not event["settings"]["checkin"]:
         return render_template("event/done.html.jinja", event=event, status="Failed: CI_DISABLED",
                                message="Check-in for this event has been disabled by the event owner.",
-                               user=getattr(current_user, "data", None) or db.logged_out_data)
+                               user=getattr(current_user, "data", db.logged_out_data))
     
     registered, owned = db.get_my_events()
     if event_id in owned.keys():

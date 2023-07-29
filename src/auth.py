@@ -9,7 +9,7 @@ from flask_login import current_user, UserMixin, login_required, logout_user, lo
 from requests.exceptions import HTTPError
 
 import db
-from firebase_instance import auth
+from fb import auth
 
 auth_bp = Blueprint("auth", __name__, template_folder="templates")
 
