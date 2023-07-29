@@ -96,7 +96,7 @@ def register():
             login_user(User(user.get("refreshToken")), remember=session.get("should_remember", False))
             return res
         except Exception:
-            return render_template("auth/register.html.jinja", error="Something went wrong, please try again.")
+            return render_template("auth/register.html.jinja", error="Something went wrong, are you sure you don't already have a RoboRegistry account?")
     else:
         return render_template("auth/register.html.jinja")
 
