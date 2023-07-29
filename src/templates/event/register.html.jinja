@@ -124,7 +124,7 @@ Register for: {{ event.name }}
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl-csp.js"></script>
 <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
 <script nonce="{{ csp_nonce() }}">
-    mapboxgl.workerUrl = "{{ url_for('static', filename='libs/mapbox-gl-csp-worker_v2.15.0.js') }}";
+    mapboxgl.workerUrl = "https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl-csp-worker.js";
     const MAPBOX_API_KEY = "{{ mapbox_api_key }}";
     const EVENT_LOCATION = "{{ event.location }}";
     const EVENT_LIMIT = parseInt("{{ event.limit }}");
