@@ -321,3 +321,11 @@ nav {
 #storer {
     padding-bottom: 50px;
 }
+
+.green {
+    color: #28a745;
+}
+
+.red {
+    color: #dc3545;
+}

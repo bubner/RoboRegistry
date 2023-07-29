@@ -5,14 +5,16 @@
 
 from datetime import datetime, timedelta
 
-from flask import request, redirect, Blueprint, abort
+import requests
+from flask import request, redirect, Blueprint, abort, flash
 from flask_login import login_required, login_user
-from requests.exceptions import MissingSchema
 from pytz import timezone
+from requests.exceptions import MissingSchema, HTTPError
 
 import db
 from auth import User
 from fb import auth
+from wrappers import must_be_event_owner
 
 api_bp = Blueprint("api", __name__, template_folder="templates")
 
@@ -84,6 +86,7 @@ def api_dashboard():
         ]
     return should_display
 
+
 @api_bp.route("/api/is_auto_open/<string:event_id>")
 @login_required
 def api_is_auto_open(event_id):
@@ -102,8 +105,122 @@ def api_is_auto_open(event_id):
 
     can_checkin = start_time < datetime.now(tz) < tz.localize(datetime.strptime(
         f"{event['date']} {event['end_time']}", "%Y-%m-%d %H:%M"))
-    
+
     return {
         "can_register": can_register,
         "can_checkin": can_checkin
     }
+
+
+@api_bp.route("/api/registrations/<string:event_id>")
+@login_required
+@must_be_event_owner
+def api_event_data(event_id):
+    """
+        Returns all registered users and their data for an event.
+    """
+    event = db.get_event(event_id)
+    if not event:
+        return {
+            "error": "NOT_FOUND"
+        }, 404
+
+    try:
+        data = db.get_event_data(event_id)
+    except HTTPError:
+        return {
+            "error": "FORBIDDEN"
+        }, 403
+
+    # Merge public and private data into an object of all data
+    bigdata = {}
+    if event.get("registered"):
+        for uid in event["registered"]:
+            user = {}
+            if data:
+                user.update(data[uid])
+            user.update(event["registered"][uid])
+            bigdata[uid] = user
+
+    return bigdata
+
+
+@api_bp.route("/api/changevis/<string:event_id>", methods=["POST"])
+@login_required
+@must_be_event_owner
+def api_change_visibility(event_id):
+    """
+        Changes the visibility of an event.
+    """
+    event = db.get_event(event_id)
+    if not event:
+        return {
+            "error": "NOT_FOUND"
+        }, 404
+
+    # Toggle the visibility
+    db.update_event(event_id, {}, {"visible": not event["settings"]["visible"]})
+    flash("Visibility status changed.", "success")
+
+    return redirect(f"/events/manage/{event_id}")
+
+
+@api_bp.route("/api/changeregis/<string:event_id>", methods=["POST"])
+@login_required
+@must_be_event_owner
+def api_change_registration(event_id):
+    """
+        Changes the registration status of an event.
+    """
+    event = db.get_event(event_id)
+    if not event:
+        return {
+            "error": "NOT_FOUND"
+        }, 404
+
+    # Toggle the registration
+    db.update_event(event_id, {}, {"regis": not event["settings"]["regis"]})
+    flash("Registration status changed.", "success")
+
+    return redirect(f"/events/manage/{event_id}")
+
+
+@api_bp.route("/api/changecheckin/<string:event_id>", methods=["POST"])
+@login_required
+@must_be_event_owner
+def api_change_checkin(event_id):
+    """
+        Changes the checkin status of an event.
+    """
+    event = db.get_event(event_id)
+    if not event:
+        return {
+            "error": "NOT_FOUND"
+        }, 404
+
+    # Toggle the checkin
+    db.update_event(event_id, {}, {"checkin": not event["settings"]["checkin"]})
+    flash("Check-in status changed.", "success")
+
+    return redirect(f"/events/manage/{event_id}")
+
+
+@api_bp.route("/api/addregistration/<string:event_id>", methods=["POST"])
+@login_required
+@must_be_event_owner
+def api_manual_regis(event_id):
+    """
+        Manually register someone for an event.
+        request.form contains the normal registration data.
+    """
+    req = {
+        **request.form,
+        "manual": "true"
+    }
+    res = requests.post(f"{request.host_url}events/register/{event_id}", data=req, cookies=request.cookies,
+                        headers=request.headers, allow_redirects=False)
+    if res.status_code != 200:
+        flash("Registration failed. Please ensure the fields you have entered are valid.", "danger")
+    else:
+        flash("Registration successful.", "success")
+    return redirect(f"/events/manage/{event_id}")

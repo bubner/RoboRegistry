@@ -9,6 +9,16 @@ Manage '{{ event.name }}'
     <br />
     <h1 class="maxtext text-center">{{ event.name|upper }}</h1>
     <hr />
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
     <div class="row">
         <div class="col-md-4">
             <div class="card mb-4 shadow-sm">
@@ -61,7 +71,8 @@ Manage '{{ event.name }}'
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h4 class="card-title">Metrics</h4>
-                    <p class="card-text">box 1 info</p>
+                    This feature is a WIP!
+                    {# <canvas id="metrics"></canvas> #}
                 </div>
             </div>
         </div>
@@ -71,7 +82,7 @@ Manage '{{ event.name }}'
         <div class="col-md-6">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <h4 class="card-title">Status</h4>
+                    <h4 class="card-title">Quick Actions</h4>
                     <p class="card-text">
                         <a href="/events/view/{{ event.uid }}" class="btn btn-outline-primary w-100">View your event page</a>
                         <div class="container-inline d-flex justify-content-between">
@@ -79,7 +90,7 @@ Manage '{{ event.name }}'
                             <a href="/events/gen/ci/{{ event.uid }}" class="btn btn-outline-secondary w-50 mx-1">Print check-in sheet</a>
                         </div>
                         <br />
-                        Your event is currently <b id="visibility">{{ "visible." if event.settings.visible else "not visible." }}</b> <br />
+                        Your event is currently <b id="visibility" class="{{ 'green' if event.settings.visible else 'red' }}">{{ "visible." if event.settings.visible else "not visible." }}</b> <br />
                         Registrations are <b id="registration">loading...</b> <br />
                         Check-in is <b id="checkin">loading...</b>
                     </p>
@@ -89,20 +100,29 @@ Manage '{{ event.name }}'
         <div class="col-md-6">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <h4 class="card-title">Quick Actions</h4>
+                    <h4 class="card-title">Access Control</h4>
                     <div class="d-grid gap-2">
-                        <div class="d-flex align-items-center" id="b-vis">
-                            <button class="btn btn-outline-secondary flex-grow-1" type="button">Toggle event visibility</button> &nbsp; &nbsp;
-                            <span class="ms-2">{{ "ON" if event.settings.visible else "OFF" }}</span>
-                        </div>
-                        <div class="d-flex align-items-center" id="b-regis">
-                            <button class="btn btn-outline-secondary flex-grow-1" type="button">Toggle event registrations</button>&nbsp; &nbsp;
-                            <span class="ms-2">{{ "AUTO" if event.settings.regis else "OFF" }}</span>
-                        </div>
-                        <div class="d-flex align-items-center" id="b-ci">
-                            <button class="btn btn-outline-secondary flex-grow-1" type="button">Toggle event check-in</button> &nbsp; &nbsp;
-                            <span class="ms-2">{{ "AUTO" if event.settings.checkin else "OFF" }}</span>
-                        </div>
+                        <form action="/api/changevis/{{ event.uid }}" method="POST">
+                            <div class="d-flex align-items-center" id="b-vis">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-outline-secondary flex-grow-1" type="submit">Toggle event visibility</button> &nbsp; &nbsp;
+                                <span class="ms-2">{{ "ON" if event.settings.visible else "OFF" }}</span>
+                            </div>
+                        </form>
+                        <form action="/api/changeregis/{{ event.uid }}" method="POST">
+                            <div class="d-flex align-items-center" id="b-regis">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-outline-secondary flex-grow-1" type="submit">Toggle event registrations</button>&nbsp; &nbsp;
+                                <span class="ms-2">{{ "AUTO" if event.settings.regis else "OFF" }}</span>
+                            </div>
+                        </form>
+                        <form action="/api/changecheckin/{{ event.uid }}" method="POST">
+                            <div class="d-flex align-items-center" id="b-ci">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-outline-secondary flex-grow-1" type="submit">Toggle event check-in</button> &nbsp; &nbsp;
+                                <span class="ms-2">{{ "AUTO" if event.settings.checkin else "OFF" }}</span>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -120,7 +140,7 @@ Manage '{{ event.name }}'
 
                 NOT CURRENTLY IMPLEMENTED <br /> <br /> RAW JSON:
                 <hr />
-                {{ event }}
+                {{ event }} {{ data }}
             </div>
         </div>
     </div>
@@ -145,7 +165,7 @@ Manage '{{ event.name }}'
                 <h5 class="modal-title" id="fullPageModalLabel3">Manage registration and check-in</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            {# <div class="modal-body">
+            <div class="modal-body">
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                     <div class="col">
                         <div class="card h-100">
@@ -157,34 +177,83 @@ Manage '{{ event.name }}'
                                             not on RoboRegistry!</small>
                                     </div>
                                     <br />
-                                    <form method="POST" action="">
+                                    <form id="regis" method="POST" action="/api/addregistration/{{ event.uid }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                                         <div class="mb-3">
-                                            <label for="name" class="form-label">Name</label><span aria-hidden="true"
-                                                class="text-danger">*</span>
-                                            <input type="text" class="form-control" id="name" name="name" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="email" class="form-label">Email</label><span aria-hidden="true"
-                                                class="text-danger">*</span>
-                                            <input type="email" class="form-control" id="email" name="email" required>
+                                            <label for="repName" class="form-label">Club or Representing Name<span aria-hidden="true"
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="repName" name="repName"
+                                                placeholder="e.g. FIRST, Murray Bridge High School, General Public" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label for="phone" class="form-label">Phone</label><span aria-hidden="true"
-                                                class="text-danger">*</span>
-                                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                                            <label for="role" class="form-label">I am registering...<span aria-hidden="true"
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select" id="role" name="role" required>
+                                                <option value="comp" selected>FIRST team(s) (registered or unregistered)</option>
+                                                <option value="event">as an Event manager</option>
+                                                <option value="mentor">as an External volunteer or mentor</option>
+                                                <option value="visitor">as a Visitor</option>
+                                                <option value="other">as Other</option>
+                                            </select>
                                         </div>
-                                        <div class="d-grid">
-                                            <button type="submit" class="btn btn-primary">Add manual
-                                                registration</button>
+                                        <div class="mb-3">
+                                            <div class="input-group mb-3">
+                                                <input type="text" id="tnum" class="form-control" placeholder="Enter team number"
+                                                    aria-label="Enter text" aria-describedby="add-button">
+                                                <button class="btn btn-outline-secondary" type="submit" id="add-button">Add</button>
+                                            </div>
+                                            <div class="mb-3" id="team-list"></div>
                                         </div>
+                                        <div class="mb-3">
+                                            <label for="numPeople" class="form-label">Estimated number of attendees<span aria-hidden="true"
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select" id="numPeople" name="numPeople" required>
+                                                <option value="" selected disabled>-</option>
+                                                <option value="lt5">&lt;5</option>
+                                                <option value="5t10">5-10</option>
+                                                <option value="10t15">10-15</option>
+                                                <option value="15t20">15-20</option>
+                                                <option value="20t25">20-25</option>
+                                                <option value="gt25">25+</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="numStudents" class="form-label">Number of Students Attending<span aria-hidden="true"
+                                                    class="text-danger">*</span></label>
+                                            <input type="number" class="form-control" id="numStudents" name="numStudents" min="0" max="999" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="numMentors" class="form-label">Number of Mentors Attending<span aria-hidden="true"
+                                                    class="text-danger">*</span></label>
+                                            <input type="number" class="form-control" id="numMentors" name="numMentors" min="0" max="999" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="numAdults" class="form-label">Number of Other Adults Attending</label>
+                                            <input type="number" class="form-control" id="numAdults" name="numAdults" min="0" max="999">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="contactName" class="form-label">Contact Name</label><span aria-hidden="true"
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="contactName" name="contactName"
+                                                placeholder="" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="contactEmail" class="form-label">Contact Email</label><span aria-hidden="true"
+                                                    class="text-danger">*</span></label>
+                                            <input type="email" class="form-control" id="contactEmail" name="contactEmail"
+                                                placeholder="" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="contactPhone" class="form-label">Contact Phone Number</label>
+                                            <input type="tel" class="form-control" id="contactPhone" name="contactPhone">
+                                        </div>
+                                        <button id="registernow" type="submit" class="btn btn-outline-primary w-100">Register</button>
                                     </form>
                                 </div>
-
                             </div>
                         </div>
                     </div>
-                </div> #}
-                NOT CURRENTLY IMPLEMENTED
+                </div>
             </div>
         </div>
     </div>
@@ -193,10 +262,13 @@ Manage '{{ event.name }}'
 {% block scripts %}
 <script defer nonce="{{ csp_nonce() }}">
     const EVENT_UID = "{{ event.uid }}";
-    const EVENT_VISIBLE = "{{ event.settings.regis }}" === "True";
+    const EVENT_VISIBLE = "{{ event.settings.visible }}" === "True";
     const EVENT_REGIS = "{{ event.settings.regis }}" === "True";
     const EVENT_CHECKIN = "{{ event.settings.checkin }}" === "True";
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js" integrity="sha512-KqUc2WMPF/gxte9xVjVE4TIt1LMUTidO3BrcItFg0Ro24I7pGNzgcXdnWdezNY+8T0/JEmdC79MuwYn+8UdOqw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="{{ url_for('static', filename='internal_api.js') }}"></script>
+<script src="{{ url_for('static', filename='form_handler.js') }}"></script>
 <script src="{{ url_for('static', filename='eman.js') }}"></script>
 {% endblock %}

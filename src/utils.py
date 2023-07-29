@@ -102,7 +102,7 @@ def validate_email(email):
     if email.index(".") < email.index("@"):
         return False
     return True
-    
+
 
 def get_uid():
     """

@@ -3,13 +3,17 @@
     @author: Lucas Bubner
 """
 
+from datetime import datetime
 from io import BytesIO
 
 import qrcode
 import qrcode.constants
-from datetime import datetime
-from pytz import timezone
 from PIL import Image, ImageDraw, ImageFont, ImageOps
+from flask import abort
+from pytz import timezone
+from requests.exceptions import HTTPError
+
+import db
 
 
 def generate_qrcode(event, size, qr_type) -> BytesIO:
@@ -108,11 +112,20 @@ def generate_man_ci(event):
         Generate an A4 paper sheet with checkboxes for manual check-in
         @returns Array of BytesIO objects for all pages needed
     """
+    try:
+        data = db.get_event_data(event.get("uid"))
+    except HTTPError:
+        abort(403)
+
     # Collect all of the entities and sort by time
     entities = []
     if event.get("registered"):
-        for _, registered in event.get("registered").items():
-            entities.append((registered.get("entity"), registered.get("registered_time")))
+        for uid, registered in event.get("registered").items():
+            # Access private data to get the full entity name
+            # We are authorised to do this because we are the event owner
+            name = data.get(uid, {}).get("contactName")
+            entity = registered.get("entity").split(" | ")[1]
+            entities.append((f"{name}|{entity}", registered.get("registered_time")))
 
         # Reformat the entities
         entities = sorted(entities, key=lambda x: x[1])
@@ -122,7 +135,6 @@ def generate_man_ci(event):
             name = values[0].split("|")[0]
             affil = values[0].split("|")[1]
             entities[i] = (name, affil)
-
 
     def _queue(entities) -> BytesIO:
         """
@@ -170,37 +182,39 @@ def generate_man_ci(event):
             text = entity[1]
             maxlen = len(text) if len(text) > maxlen else maxlen
             draw.text((200, 500 + i * 120 + 50), text, (0, 0, 0), font=font)
-            
 
         # Draw a vertical line to separate the registered from the extra walk-ins, using maxlen to calculate the position
         draw.line((100 + 200 + maxlen * 20, 300, 100 + 200 + maxlen * 20, 3508), fill=(0, 0, 0), width=5)
 
         # Draw a table header for the extra walk-ins, with the values Name, Affiliation, and Time
         font = ImageFont.truetype("static/assets/Roboto-Black.ttf", 40)
-        draw.text((100 + 200 + maxlen * 20 + 100 + (500 - font.getsize("Name")[0]) // 2, 400), "Name", (0, 0, 0), font=font)
-        draw.text((100 + 200 + maxlen * 20 + 100 + 500 + (500 - font.getsize("Affiliation")[0]) // 2, 400), "Affiliation", (0, 0, 0), font=font)
-        draw.text((100 + 200 + maxlen * 20 + 100 + 500 + 500 + (500 - font.getsize("Time")[0]) // 2, 400), "Time", (0, 0, 0), font=font)
+        draw.text((100 + 200 + maxlen * 20 + 100 + (500 - font.getsize("Name")[0]) // 2, 400), "Name", (0, 0, 0),
+                  font=font)
+        draw.text((100 + 200 + maxlen * 20 + 100 + 500 + (500 - font.getsize("Affiliation")[0]) // 2, 400),
+                  "Affiliation", (0, 0, 0), font=font)
+        draw.text((100 + 200 + maxlen * 20 + 100 + 500 + 500 + (500 - font.getsize("Time")[0]) // 2, 400), "Time",
+                  (0, 0, 0), font=font)
 
         # Draw table cells
         font = ImageFont.truetype("static/assets/Roboto-Regular.ttf", 40)
         for i in range(30):
             draw.line((100 + 200 + maxlen * 20 + 100, 500 + i * 100, template.width - 100, 500 + i * 100),
-                    fill=(0, 0, 0), width=3)
+                      fill=(0, 0, 0), width=3)
             # Make vertical lines that seperate the columns
             draw.line((100 + 200 + maxlen * 20 + 100 + 500, 400, 100 + 200 + maxlen * 20 + 100 + 500, 3508),
-                        fill=(0, 0, 0), width=3)
+                      fill=(0, 0, 0), width=3)
             draw.line((100 + 200 + maxlen * 20 + 100 + 500 + 500, 400, 100 + 200 + maxlen * 20 + 100 + 500 + 500, 3508),
-                        fill=(0, 0, 0), width=3)
-            draw.line((100 + 200 + maxlen * 20 + 100 + 500 + 500 + 500, 400, 100 + 200 + maxlen * 20 + 100 + 500 + 500 + 500, 3508),
-                        fill=(0, 0, 0), width=3)
-        
+                      fill=(0, 0, 0), width=3)
+            draw.line((100 + 200 + maxlen * 20 + 100 + 500 + 500 + 500, 400,
+                       100 + 200 + maxlen * 20 + 100 + 500 + 500 + 500, 3508),
+                      fill=(0, 0, 0), width=3)
+
         buf = BytesIO()
         template.save(buf, "PNG")
         buf.seek(0)
 
         return buf
 
-    
     bufs = []
 
     # Maximum 25 per page due to size

@@ -71,6 +71,7 @@ csp = {
         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css",
         "https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js",
         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js",
+        "https://cdn.jsdelivr.net/npm/chart.js"
         "events.mapbox.com",
         "firstteamapi.vercel.app"
     ],
@@ -79,10 +80,14 @@ csp = {
         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css",
         "https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js",
         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js",
+        "https://cdn.jsdelivr.net/npm/chart.js",
         "https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js",
         "api.mapbox.com"
     ],
-    "img-src": ["'self'"],
+    "img-src": [
+        "'self'",
+        "data:"
+    ],
     "object-src": ["'none'"],
     "base-uri": ["'self'"]
 }
@@ -177,12 +182,12 @@ def settings():
         if not all(account.values()):
             flash("Please fill out all fields.")
             return redirect(url_for("settings"))
-        
+
         # Role must be in ("student", "mentor", "event_organiser", "other")
         if account["role"] not in ("student", "mentor", "event_organiser", "other"):
             flash("Invalid role.")
             return redirect(url_for("settings"))
-            
+
         # Promotion can be False, which will flag all()
         account["promotion"] = request.form.get("promotion") == "on"
 
