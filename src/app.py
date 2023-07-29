@@ -82,16 +82,7 @@ csp = {
         "https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js",
         "api.mapbox.com"
     ],
-    "img-src": [
-        "'self'",
-        "https://github.githubassets.com/favicons/favicon.png",
-        "https://cdn.freebiesupply.com/logos/large/2x/python-5-logo-png-transparent.png",
-        "https://firebase.google.com/static/downloads/brand-guidelines/SVG/logo-logomark.svg",
-        "https://www.svgrepo.com/show/327408/logo-vercel.svg",
-        "https://cdn.freebiesupply.com/logos/large/2x/flask-logo-png-transparent.png",
-        "https://quintagroup.com/cms/python/images/jinja2.png/@@images/919c2c3d-5b4e-4650-943a-b0df263f851b.png",
-        "https://upload.wikimedia.org/wikipedia/commons/b/b2/Bootstrap_logo.svg"
-    ],
+    "img-src": ["'self'"],
     "object-src": ["'none'"],
     "base-uri": ["'self'"]
 }
