@@ -329,3 +329,15 @@ nav {
 .red {
     color: #dc3545;
 }
+
+#togo {
+    font-weight: 600;
+}
+
+#barlogoimg {
+    margin-left: 10px;
+}
+
+#infotext {
+    transform: translateY(25%);
+}

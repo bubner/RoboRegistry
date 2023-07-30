@@ -224,3 +224,47 @@ def api_manual_regis(event_id):
     else:
         flash("Registration successful.", "success")
     return redirect(f"/events/manage/{event_id}")
+
+
+@api_bp.route("/api/opencinow/<string:event_id>")
+@login_required
+@must_be_event_owner
+def api_open_checkin(event_id):
+    """
+        Open an event check in by overriding the event start time to now.
+    """
+    event = db.get_event(event_id)
+    if not event:
+        return {
+            "error": "NOT_FOUND"
+        }, 404
+    
+    tz = timezone(event["timezone"])
+    start_time = tz.localize(datetime.strptime(
+        f"{event['date']} {event['start_time']}", "%Y-%m-%d %H:%M"))
+    
+    # Check if the event is not visible
+    if not event["settings"]["visible"]:
+        flash("Your event is not visible, therefore check-in cannot be opened.", "danger")
+        return redirect(f"/events/manage/{event_id}")
+    
+    # Check if check-ins are closed and remind the user
+    if not event["settings"]["checkin"]:
+        flash("Check-ins are manually closed. Please open them before opening check-in.", "danger")
+        return redirect(f"/events/manage/{event_id}")
+    
+    # If the event has already started then check-in is already open
+    if start_time < datetime.now(tz) < tz.localize(datetime.strptime(f"{event['date']} {event['end_time']}", "%Y-%m-%d %H:%M")):
+        flash("Check-in is already open.", "warning")
+        return redirect(f"/events/manage/{event_id}")
+    
+    # If the event is over then check-in cannot be opened
+    if datetime.now(tz) > tz.localize(datetime.strptime(f"{event['date']} {event['end_time']}", "%Y-%m-%d %H:%M")):
+        flash("Check-in cannot be opened after the event has ended.", "danger")
+        return redirect(f"/events/manage/{event_id}")
+
+    # Override the start time based on the event timezone now
+    db.update_event(event_id, {"start_time": datetime.now(tz).strftime("%H:%M")}, {})
+
+    flash(f"Check-in has been opened ({datetime.now(tz).strftime('%H:%M')}).", "success")
+    return redirect(f"/events/manage/{event_id}")

@@ -179,8 +179,12 @@ def get_event_data(event_id, auth=None) -> dict:
         May only be accessed by the event owner.
     """
     auth = auth or getattr(current_user, "token", None)
-    # Will raise HTTPError if not authorised, but will return None if no data exists
-    return dict(db.child("registered_data").child(event_id).get(auth).val())
+    # Will raise HTTPError if not authorised, but will return an empty object if no data exists
+    try:
+        data = dict(db.child("registered_data").child(event_id).get(auth).val())
+    except TypeError:
+        return {}
+    return data
 
 
 def get_uid_for_entity(event_id, entity) -> str:

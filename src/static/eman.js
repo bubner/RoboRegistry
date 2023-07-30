@@ -5,7 +5,6 @@
 
 document.addEventListener("DOMContentLoaded", () => {
     tick();
-    getData();
 
     const role = document.getElementById("role");
     const numPeople = document.getElementById("numPeople");
@@ -38,6 +37,28 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("regis").addEventListener("formdata", (e) => addFormData(e));
     document.getElementById("regis").addEventListener("submit", (e) => submitForm(e));
 
+    const offset = (new Date().getTimezoneOffset() * -1) / 60 - parseFloat(OFFSET);
+
+    setInterval(() => {
+        const now = new Date();
+        const eventStartTime = getTimeData(EVENT_DATE, EVENT_START_TIME, offset);
+        const eventEndTime = getTimeData(EVENT_DATE, EVENT_END_TIME, offset);
+        
+        const toStartDiff = humanizeDuration(eventStartTime - now, { round: true });
+        const toEndDiff = humanizeDuration(eventEndTime - now, { round: true });
+        
+        if (eventStartTime - now >= 0) {
+            document.getElementById("status").textContent = "Registration will automatically close and check-in will auto-open in:";
+            document.getElementById("togo").textContent = toStartDiff;
+        } else if (eventEndTime - now >= 0) {
+            document.getElementById("status").textContent = "Registration has been automatically closed. Check-in is open and will auto-close in:";
+            document.getElementById("togo").textContent = toEndDiff;
+        } else {
+            document.getElementById("status").textContent = "Registration and check-in are closed.";
+            document.getElementById("togo").textContent = "";
+        }
+    }, 1000);
+
     // setInterval(tick, 10000);
 });
 
@@ -56,12 +77,6 @@ function submitForm(e) {
     }
 }
 
-function getData() {
-    api.safeFetch(`/api/registrations/${EVENT_UID}`).then((data) => {
-        // TODO
-    });
-}
-
 function tick() {
     api.safeFetch(`/api/is_auto_open/${EVENT_UID}`).then((data) => {
         if (!EVENT_VISIBLE) {
@@ -76,10 +91,19 @@ function tick() {
             document.getElementById("registration").textContent = "closed.";
         }
 
-        if (data.can_checkin) {
+        if (data.can_checkin && EVENT_CHECKIN) {
             document.getElementById("checkin").textContent = "open.";
         } else {
             document.getElementById("checkin").textContent = "closed.";
         }
     });
+
+    api.safeFetch(`/api/registrations/${EVENT_UID}`).then((data) => {
+
+    });
+}
+
+function getTimeData(date, time, offset) {
+    // Reused from event_viewer because working with date and time is a nightmare
+    return new Date(new Date(`${date} ${time}`).getTime() + offset * 60 * 60 * 1000);
 }

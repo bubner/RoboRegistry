@@ -1,0 +1,25 @@
+{% extends "layout.html.jinja" %}
+
+{% block title %}
+{{ event.name|upper }} Secure Check-in Booth
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <img src="{{ url_for('static', filename='assets/rr.png') }}" alt="RoboRegistry" class="img-fluid mt-3 me-3" id="barlogoimg" width="100px" />
+            <span class="fs-4" id="infotext">Secure Check-in Booth for <strong>{{ event.name|upper }}</strong></span>
+        </div>
+        <a href="/" class="btn btn-danger mt-3 me-3">Exit</a>
+    </div>
+    <hr />
+    <div class="container bg-dark p-5 vh-100">
+        <iframe src="/events/ci/{{ event.uid }}?code={{ event.checkin_code }}" class="w-100 h-100 border-0"></iframe>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='checkin_booth.js') }}"></script>
+{% endblock %}

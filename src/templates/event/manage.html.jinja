@@ -140,7 +140,7 @@ Manage '{{ event.name }}'
 
                 NOT CURRENTLY IMPLEMENTED <br /> <br /> RAW JSON:
                 <hr />
-                {{ event }} {{ data }}
+                {{ event }}
             </div>
         </div>
     </div>
@@ -153,7 +153,9 @@ Manage '{{ event.name }}'
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                NOT CURRENTLY IMPLEMENTED
+                NOT CURRENTLY IMPLEMENTED <br /> <br /> RAW JSON:
+                <hr />
+                {{ data }}
             </div>
         </div>
     </div>
@@ -166,89 +168,128 @@ Manage '{{ event.name }}'
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                <div class="row row-cols-1 row-cols-md-2 g-4">
                     <div class="col">
                         <div class="card h-100">
                             <div class="card-body">
-                                <div class="card-body">
-                                    <h4 class="card-title text-center">Register someone manually</h4>
-                                    <div class="card-footer text-center">
-                                        <small class="text-muted">Enter information here to manually register someone
-                                            not on RoboRegistry!</small>
+                                <h4 class="card-title text-center">Register someone manually</h4>
+                                <div class="card-footer text-center">
+                                    <small class="text-muted">Enter information here to manually register someone
+                                        not on RoboRegistry!</small>
+                                </div>
+                                <br />
+                                <form id="regis" method="POST" action="/api/addregistration/{{ event.uid }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                    <div class="mb-3">
+                                        <label for="repName" class="form-label">Club or Representing Name<span aria-hidden="true"
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="repName" name="repName"
+                                            placeholder="e.g. FIRST, Murray Bridge High School, General Public" required>
                                     </div>
-                                    <br />
-                                    <form id="regis" method="POST" action="/api/addregistration/{{ event.uid }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                                        <div class="mb-3">
-                                            <label for="repName" class="form-label">Club or Representing Name<span aria-hidden="true"
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="repName" name="repName"
-                                                placeholder="e.g. FIRST, Murray Bridge High School, General Public" required>
+                                    <div class="mb-3">
+                                        <label for="role" class="form-label">I am registering...<span aria-hidden="true"
+                                                class="text-danger">*</span></label>
+                                        <select class="form-select" id="role" name="role" required>
+                                            <option value="comp" selected>FIRST team(s) (registered or unregistered)</option>
+                                            <option value="event">as an Event manager</option>
+                                            <option value="mentor">as an External volunteer or mentor</option>
+                                            <option value="visitor">as a Visitor</option>
+                                            <option value="other">as Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="input-group mb-3">
+                                            <input type="text" id="tnum" class="form-control" placeholder="Enter team number"
+                                                aria-label="Enter text" aria-describedby="add-button">
+                                            <button class="btn btn-outline-secondary" type="submit" id="add-button">Add</button>
                                         </div>
-                                        <div class="mb-3">
-                                            <label for="role" class="form-label">I am registering...<span aria-hidden="true"
-                                                    class="text-danger">*</span></label>
-                                            <select class="form-select" id="role" name="role" required>
-                                                <option value="comp" selected>FIRST team(s) (registered or unregistered)</option>
-                                                <option value="event">as an Event manager</option>
-                                                <option value="mentor">as an External volunteer or mentor</option>
-                                                <option value="visitor">as a Visitor</option>
-                                                <option value="other">as Other</option>
-                                            </select>
+                                        <div class="mb-3" id="team-list"></div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="numPeople" class="form-label">Estimated number of attendees<span aria-hidden="true"
+                                                class="text-danger">*</span></label>
+                                        <select class="form-select" id="numPeople" name="numPeople" required>
+                                            <option value="" selected disabled>-</option>
+                                            <option value="lt5">&lt;5</option>
+                                            <option value="5t10">5-10</option>
+                                            <option value="10t15">10-15</option>
+                                            <option value="15t20">15-20</option>
+                                            <option value="20t25">20-25</option>
+                                            <option value="gt25">25+</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="numStudents" class="form-label">Number of Students Attending<span aria-hidden="true"
+                                                class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="numStudents" name="numStudents" min="0" max="999" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="numMentors" class="form-label">Number of Mentors Attending<span aria-hidden="true"
+                                                class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="numMentors" name="numMentors" min="0" max="999" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="numAdults" class="form-label">Number of Other Adults Attending</label>
+                                        <input type="number" class="form-control" id="numAdults" name="numAdults" min="0" max="999">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="contactName" class="form-label">Contact Name</label><span aria-hidden="true"
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="contactName" name="contactName"
+                                            placeholder="" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="contactEmail" class="form-label">Contact Email</label><span aria-hidden="true"
+                                                class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" id="contactEmail" name="contactEmail"
+                                            placeholder="" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="contactPhone" class="form-label">Contact Phone Number</label>
+                                        <input type="tel" class="form-control" id="contactPhone" name="contactPhone">
+                                    </div>
+                                    <button id="registernow" type="submit" class="btn btn-outline-primary w-100">Register</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100">
+                            <br />
+                            <h4 class="card-title text-center">Run check-in on this device</h4>
+                            <div class="card-footer text-center">
+                                <small class="text-muted">Turn your web browser into a check-in booth! <br />
+                                This will <b>log you out</b> of your account to establish a secure check-in station.</small>
+                                <a href="/events/manage/{{ event.uid }}/driver" class="btn btn-outline-success w-100 mt-2">Open manual check-in driver</a>
+                            </div>
+                            <br />
+                            <h4 class="card-title text-center">Open check-in now</h4>
+                            <div class="card-footer text-center">
+                                <small class="text-muted">
+                                    This will adjust your event start time to the current time, opening check-in. <br />
+                                    This change will <b>close</b> registration.
+                                </small>
+                                <a href="/api/opencinow/{{ event.uid }}" class="btn btn-outline-secondary w-100 mt-2">Open check-in now</a>
+                            </div>
+                            <br />
+                            <div class="card-body">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h4 class="card-title">Time remaining</h4>
+                                        <span id="status"></span>
+                                        <br />
+                                        <div class="card-text" id="togo"></div>
+                                    </div>
+                                </div>
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h4 class="card-title">Event Registration and Check-in Information</h4>
+                                        <div class="card-text">
+                                            <p>Your event will automatically open check-in when your event start time is reached, then close check-in when your event end time is reached.</p>
+                                            <p>Registration will automatically close when your event start time is reached. You may still register people manually regardless of the time.</p>
+                                            <p>Manual registrations can not be traced back to a specific user, and will be marked as <em>Manual Registration</em> in the data.</p>
                                         </div>
-                                        <div class="mb-3">
-                                            <div class="input-group mb-3">
-                                                <input type="text" id="tnum" class="form-control" placeholder="Enter team number"
-                                                    aria-label="Enter text" aria-describedby="add-button">
-                                                <button class="btn btn-outline-secondary" type="submit" id="add-button">Add</button>
-                                            </div>
-                                            <div class="mb-3" id="team-list"></div>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="numPeople" class="form-label">Estimated number of attendees<span aria-hidden="true"
-                                                    class="text-danger">*</span></label>
-                                            <select class="form-select" id="numPeople" name="numPeople" required>
-                                                <option value="" selected disabled>-</option>
-                                                <option value="lt5">&lt;5</option>
-                                                <option value="5t10">5-10</option>
-                                                <option value="10t15">10-15</option>
-                                                <option value="15t20">15-20</option>
-                                                <option value="20t25">20-25</option>
-                                                <option value="gt25">25+</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="numStudents" class="form-label">Number of Students Attending<span aria-hidden="true"
-                                                    class="text-danger">*</span></label>
-                                            <input type="number" class="form-control" id="numStudents" name="numStudents" min="0" max="999" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="numMentors" class="form-label">Number of Mentors Attending<span aria-hidden="true"
-                                                    class="text-danger">*</span></label>
-                                            <input type="number" class="form-control" id="numMentors" name="numMentors" min="0" max="999" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="numAdults" class="form-label">Number of Other Adults Attending</label>
-                                            <input type="number" class="form-control" id="numAdults" name="numAdults" min="0" max="999">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="contactName" class="form-label">Contact Name</label><span aria-hidden="true"
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="contactName" name="contactName"
-                                                placeholder="" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="contactEmail" class="form-label">Contact Email</label><span aria-hidden="true"
-                                                    class="text-danger">*</span></label>
-                                            <input type="email" class="form-control" id="contactEmail" name="contactEmail"
-                                                placeholder="" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="contactPhone" class="form-label">Contact Phone Number</label>
-                                            <input type="tel" class="form-control" id="contactPhone" name="contactPhone">
-                                        </div>
-                                        <button id="registernow" type="submit" class="btn btn-outline-primary w-100">Register</button>
-                                    </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -265,9 +306,14 @@ Manage '{{ event.name }}'
     const EVENT_VISIBLE = "{{ event.settings.visible }}" === "True";
     const EVENT_REGIS = "{{ event.settings.regis }}" === "True";
     const EVENT_CHECKIN = "{{ event.settings.checkin }}" === "True";
+    const EVENT_DATE = "{{ event.date }}";
+    const EVENT_START_TIME = "{{ event.start_time }}";
+    const EVENT_END_TIME = "{{ event.end_time }}";
+    const OFFSET = "{{ offset }}";
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js" integrity="sha512-KqUc2WMPF/gxte9xVjVE4TIt1LMUTidO3BrcItFg0Ro24I7pGNzgcXdnWdezNY+8T0/JEmdC79MuwYn+8UdOqw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="{{ url_for('static', filename='libs/humanize-duration.min.js') }}"></script>
 <script src="{{ url_for('static', filename='internal_api.js') }}"></script>
 <script src="{{ url_for('static', filename='form_handler.js') }}"></script>
 <script src="{{ url_for('static', filename='eman.js') }}"></script>

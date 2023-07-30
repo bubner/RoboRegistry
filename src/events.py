@@ -14,7 +14,7 @@ from urllib.parse import urlparse
 from zipfile import ZipFile
 
 from flask import Blueprint, render_template, request, session, redirect, abort, send_file, make_response
-from flask_login import current_user, login_required
+from flask_login import current_user, login_required, logout_user
 from pytz import all_timezones, timezone
 from requests.exceptions import HTTPError
 
@@ -289,11 +289,9 @@ def event_register(event_id: str):
 
     # Check to see if the event is over, and decline registration if it is
     tz = timezone(event["timezone"])
-    tz.localize(datetime.strptime(event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
-    if datetime.now(tz) > tz.localize(
-            datetime.strptime(event["date"] + event["end_time"], "%Y-%m-%d%H:%M")) and not override:
+    if datetime.now(tz) > tz.localize(datetime.strptime(event["date"] + event["start_time"], "%Y-%m-%d%H:%M")) and not override:
         return render_template("event/done.html.jinja", event=event, user=user, status="Failed: EVENT_AUTO_CLOSED",
-                               message="This event has already ended. Registration has been automatically disabled."), 400
+                               message="This event has already started or has concluded. Registration has been automatically disabled. You may ask the event owner to register you manually if desired."), 400
 
     if request.method == "POST":
         role = request.form.get("role")
@@ -482,6 +480,10 @@ def checkin(event_id: str):
         # Redirect to event check-in page with approval
         return redirect("/events/ci/" + event_id + "/dynamic")
     else:
+        if request.args.get("code") == str(event["checkin_code"]):
+            # Check-in code is valid, redirect to dynamic check-in
+            session["checkin"] = event["checkin_code"]
+            return redirect("/events/ci/" + event_id + "/dynamic")
         return render_template("event/gatekeep.html.jinja", event=event)
 
 
@@ -531,7 +533,7 @@ def dynamic(event_id: str):
         anon_affil = request.form.get("visit-reason")
         anon_name = request.form.get("anon-name")
 
-        if not entity or (entity == "anon" and not anon_affil and not anon_name):
+        if not entity or (entity == "anon" and not anon_affil or not anon_name):
             return render_template("event/done.html.jinja", event=event, status="Failed: CI_INVALID",
                                    message="You have provided insufficient data! If trouble persists, try registration email check-in or asking the event owner to record you as attended manually.",
                                    user=getattr(current_user, "data", db.logged_out_data)), 400
@@ -623,4 +625,22 @@ def manage(event_id: str):
         data = db.get_event_data(event_id)
     except HTTPError:
         abort(403)
-    return render_template("event/manage.html.jinja", event=event, data=data, user=getattr(current_user, "data"))
+
+    # Calculate the UTC offset for the event, to display time correctly
+    offset = timezone(event["timezone"]).utcoffset(datetime.now()).total_seconds() / 3600
+
+    return render_template("event/manage.html.jinja", event=event, data=data, user=getattr(current_user, "data"), offset=offset)
+
+
+@events_bp.route("/events/manage/<string:event_id>/driver")
+@login_required
+@validate_user
+@must_be_event_owner
+def driver(event_id: str):
+    """
+        Check-in driver for the event owner.
+    """
+    event = db.get_event(event_id)
+    # Establish a secure environment by logging out
+    logout_user()
+    return render_template("event/driver.html.jinja", event=event)

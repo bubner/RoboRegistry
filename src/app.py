@@ -67,22 +67,26 @@ csp = {
         "'self'",
         "fonts.googleapis.com",
         "fonts.gstatic.com",
-        "api.mapbox.com",
+        "https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css",
         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css",
         "https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js",
         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js",
         "https://cdn.jsdelivr.net/npm/chart.js"
-        "events.mapbox.com",
-        "firstteamapi.vercel.app"
     ],
     "script-src": [
         "'self'",
+        "https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl-csp.js",
         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css",
         "https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js",
         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js",
         "https://cdn.jsdelivr.net/npm/chart.js",
         "https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js",
-        "api.mapbox.com"
+    ],
+    "connect-src": [
+        "'self'",
+        "api.mapbox.com",
+        "events.mapbox.com",
+        "firstteamapi.vercel.app"
     ],
     "img-src": [
         "'self'",
