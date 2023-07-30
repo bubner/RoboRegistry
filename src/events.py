@@ -86,7 +86,7 @@ def viewevent(uid: str):
 
     if data.get("registered"):
         # Summate the number of teams registered
-        team_regis_count = sum([v.get("role") == "comp" for v in data["registered"].values()])
+        team_regis_count = sum([v.get("role") == "team" for v in data["registered"].values()])
     else:
         # Cannot be any registered teams if there are no registered users
         team_regis_count = 0
@@ -314,7 +314,7 @@ def event_register(event_id: str):
 
         # Remove data that is not required
         for key in list(private_data.keys()):
-            if not private_data[key] or role != "comp" and key in (
+            if not private_data[key] or role != "team" and key in (
                     "numStudents", "numMentors", "numAdults", "numPeople"):
                 del private_data[key]
 
@@ -332,7 +332,7 @@ def event_register(event_id: str):
 
         # Check for event capacity if it is a team registration
         if event.get("registered") and event["limit"] != -1 and len(event["registered"]) >= event[
-            "limit"] and role == "comp" and not override:
+            "limit"] and role == "team" and not override:
             return render_template("event/done.html.jinja", event=event, status="Failed: EVENT_FULL",
                                    message="This event has reached maximum capacity for team registrations. You will need to contact the event owner.",
                                    user=user), 400

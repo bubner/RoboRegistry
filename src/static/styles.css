@@ -341,3 +341,9 @@ nav {
 #infotext {
     transform: translateY(25%);
 }
+
+.tabulator {
+    color: #000;
+    background-color: #000;
+    border-radius: 10px;
+}

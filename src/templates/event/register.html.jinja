@@ -31,8 +31,8 @@ Register for: {{ event.name }}
             <label for="role" class="form-label">I am registering...<span aria-hidden="true"
                     class="text-danger">*</span></label>
             <select class="form-select" id="role" name="role" required>
-                <option value="comp" selected>FIRST team(s) (registered or unregistered)</option>
-                <option value="event">as an Event manager</option>
+                <option value="team" selected>FIRST team(s) (registered or unregistered)</option>
+                <option value="event_manager">as an Event manager</option>
                 <option value="mentor">as an External volunteer or mentor</option>
                 <option value="visitor">as a Visitor</option>
                 <option value="other">as Other</option>
@@ -75,12 +75,12 @@ Register for: {{ event.name }}
                     class="text-danger">*</span></label>
             <select class="form-select" id="numPeople" name="numPeople" required>
                 <option value="" selected disabled>-</option>
-                <option value="lt5">&lt;5</option>
-                <option value="5t10">5-10</option>
-                <option value="10t15">10-15</option>
-                <option value="15t20">15-20</option>
-                <option value="20t25">20-25</option>
-                <option value="gt25">25+</option>
+                <option value="<5">&lt;5</option>
+                <option value="5-10">5-10</option>
+                <option value="10-15">10-15</option>
+                <option value="15-20">15-20</option>
+                <option value="20-25">20-25</option>
+                <option value=">25">25+</option>
             </select>
         </div>
         <div class="mb-3">

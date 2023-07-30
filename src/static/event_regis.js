@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("role").value = "visitor";
         handleRoleChange();
         document.getElementById("role").addEventListener("change", (e) => {
-            if (e.target.value !== "comp") return;
+            if (e.target.value !== "team") return;
             alert("This event has reached team registration limit! You will need to contact the event owner.");
             e.target.value = "visitor";
         });
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function submitForm(e) {
-    if (document.getElementById("role").value !== "comp") return;
+    if (document.getElementById("role").value !== "team") return;
 
     const teams = document.querySelectorAll(".team");
     const teamSelectionModal = new bootstrap.Modal(document.getElementById("modal"));
@@ -60,7 +60,7 @@ function submitForm(e) {
 }
 
 function handleRoleChange() {
-    const display = document.getElementById("role").value === "comp" ? "block" : "none";
+    const display = document.getElementById("role").value === "team" ? "block" : "none";
     const numPeople = document.getElementById("numPeople");
     const numStudents = document.getElementById("numStudents");
     const numMentors = document.getElementById("numMentors");

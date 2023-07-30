@@ -43,9 +43,15 @@ Manage '{{ event.name }}'
                 </div>
                 <div class="card-footer text-center">
                     <div class="d-grid">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#fullPageModal2">View
-                        </button>
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-info w-50" data-bs-toggle="modal"
+                                data-bs-target="#fullPageModal2">View Registrations
+                            </button>
+                            &nbsp;
+                            <button type="button" class="btn btn-primary w-50" data-bs-toggle="modal"
+                                data-bs-target="#fullPageModal4">View Check-ins
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -137,10 +143,7 @@ Manage '{{ event.name }}'
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-
-                NOT CURRENTLY IMPLEMENTED <br /> <br /> RAW JSON:
-                <hr />
-                {{ event }}
+                This feature is a WIP!
             </div>
         </div>
     </div>
@@ -153,9 +156,23 @@ Manage '{{ event.name }}'
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                NOT CURRENTLY IMPLEMENTED <br /> <br /> RAW JSON:
+                <h5 class="text-center">Click on a registration to view more information.</h5>
+                <div class="d-flex justify-content-center">
+                Export functionality is a WIP!
+                    {# <button type="button" class="btn btn-outline-primary mx-2">Download as CSV</button>
+                    <button type="button" class="btn btn-outline-secondary mx-2">Convert to Excel spreadsheet</button> #}
+                </div>
                 <hr />
-                {{ data }}
+                <div id="registered-table"></div>
+                <br />
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3>Selected registration</h3>
+                        <div id="viewbox">
+                            None
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -190,8 +207,8 @@ Manage '{{ event.name }}'
                                         <label for="role" class="form-label">I am registering...<span aria-hidden="true"
                                                 class="text-danger">*</span></label>
                                         <select class="form-select" id="role" name="role" required>
-                                            <option value="comp" selected>FIRST team(s) (registered or unregistered)</option>
-                                            <option value="event">as an Event manager</option>
+                                            <option value="team" selected>FIRST team(s) (registered or unregistered)</option>
+                                            <option value="event_manager">as an Event manager</option>
                                             <option value="mentor">as an External volunteer or mentor</option>
                                             <option value="visitor">as a Visitor</option>
                                             <option value="other">as Other</option>
@@ -210,12 +227,12 @@ Manage '{{ event.name }}'
                                                 class="text-danger">*</span></label>
                                         <select class="form-select" id="numPeople" name="numPeople" required>
                                             <option value="" selected disabled>-</option>
-                                            <option value="lt5">&lt;5</option>
-                                            <option value="5t10">5-10</option>
-                                            <option value="10t15">10-15</option>
-                                            <option value="15t20">15-20</option>
-                                            <option value="20t25">20-25</option>
-                                            <option value="gt25">25+</option>
+                                            <option value="<5">&lt;5</option>
+                                            <option value="5-10">5-10</option>
+                                            <option value="10-15">10-15</option>
+                                            <option value="15-20">15-20</option>
+                                            <option value="20-25">20-25</option>
+                                            <option value=">25">25+</option>
                                         </select>
                                     </div>
                                     <div class="mb-3">
@@ -298,6 +315,20 @@ Manage '{{ event.name }}'
             </div>
         </div>
     </div>
+</div>
+<div class="modal fade" id="fullPageModal4" tabindex="-1" aria-labelledby="fullPageModalLabel4" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="fullPageModalLabel">Check-in Event Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                This feature is a WIP!
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -313,6 +344,10 @@ Manage '{{ event.name }}'
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js" integrity="sha512-KqUc2WMPF/gxte9xVjVE4TIt1LMUTidO3BrcItFg0Ro24I7pGNzgcXdnWdezNY+8T0/JEmdC79MuwYn+8UdOqw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.1/js/tabulator.min.js" integrity="sha512-/vxlwMJ8+fvTLd1sAiVxC7gBi6YWq0ClV7ZVnuKIiwgQGtVhILH9k1aRvyo/yJigWQT4FWMZMvtX9q0NZVNu2Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link href="https://unpkg.com/tabulator-tables@5.5.1/dist/css/tabulator.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.1/css/tabulator_bootstrap5.min.css" rel="stylesheet" />
+<script src="{{ url_for('static', filename='libs/luxon.min.js') }}"></script>
 <script src="{{ url_for('static', filename='libs/humanize-duration.min.js') }}"></script>
 <script src="{{ url_for('static', filename='internal_api.js') }}"></script>
 <script src="{{ url_for('static', filename='form_handler.js') }}"></script>

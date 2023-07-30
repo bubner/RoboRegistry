@@ -69,18 +69,17 @@ csp = {
         "fonts.gstatic.com",
         "https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css",
         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css",
-        "https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js",
-        "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js",
-        "https://cdn.jsdelivr.net/npm/chart.js"
+        "https://unpkg.com/tabulator-tables@5.5.1/dist/css/tabulator.min.css",
+        "https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.1/css/tabulator_bootstrap5.min.css"
     ],
     "script-src": [
         "'self'",
         "https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl-csp.js",
-        "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css",
         "https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js",
         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js",
         "https://cdn.jsdelivr.net/npm/chart.js",
         "https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.1/js/tabulator.min.js"
     ],
     "connect-src": [
         "'self'",

@@ -5,7 +5,7 @@
 
 function handleAddTeamNumber(e) {
     // Can't be adding a team if the option isn't even selected
-    if (document.getElementById("role").value !== "comp") return;
+    if (document.getElementById("role").value !== "team") return;
 
     let teamNumber = document.getElementById("tnum").value;
     // Handler might fire without any data or if the modal is not open
@@ -116,7 +116,7 @@ function handleAddTeamNumber(e) {
 
 function addFormData(e) {
     // Don't bother adding data if there is no data to add
-    if (document.getElementById("role").value !== "comp") return;
+    if (document.getElementById("role").value !== "team") return;
     const formData = e.formData;
 
     const teams = document.querySelectorAll(".team");

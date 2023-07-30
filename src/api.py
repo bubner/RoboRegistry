@@ -141,6 +141,10 @@ def api_event_data(event_id):
                 user.update(data[uid])
             user.update(event["registered"][uid])
             bigdata[uid] = user
+    
+    # Add any anonymous check-in data
+    if data.get("anon_data"):
+        bigdata["anon_checkin"] = data["anon_data"]
 
     return bigdata
 

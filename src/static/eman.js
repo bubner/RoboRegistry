@@ -2,6 +2,7 @@
  * Management page dynamic functionality.
  * @author Lucas Bubner, 2023
  */
+let registeredData = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     tick();
@@ -16,15 +17,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const teamOutput = document.getElementById("team-list");
 
     role.addEventListener("change", () => {
-        const isComp = role.value === "comp";
+        const isTeam = role.value === "team";
         [numPeople, numStudents, numMentors, numAdults].forEach((input) => {
-            input.disabled = !isComp;
-            input.required = isComp;
-            input.value = isComp ? "" : null;
+            input.disabled = !isTeam;
+            input.required = isTeam;
+            input.value = isTeam ? "" : null;
         });
         [teamAdder, teamNum].forEach((input) => {
-            input.disabled = !isComp;
-            teamOutput.innerHTML = isComp ? teamOutput.innerHTML : "";
+            input.disabled = !isTeam;
+            teamOutput.innerHTML = isTeam ? teamOutput.innerHTML : "";
         });
     });
 
@@ -59,11 +60,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }, 1000);
 
-    // setInterval(tick, 10000);
+    // Ping the API every 30 seconds
+    // setInterval(tick, 30000);
 });
 
 function submitForm(e) {
-    if (document.getElementById("role").value !== "comp") return;
+    if (document.getElementById("role").value !== "Team") return;
     const teams = document.querySelectorAll(".team");
     if (teams.length === 0) {
         alert("Please add at least one team!");
@@ -99,7 +101,83 @@ function tick() {
     });
 
     api.safeFetch(`/api/registrations/${EVENT_UID}`).then((data) => {
+        // Little bit of a weird JSON hack, but it works for this application where the data will be in the same order
+        if (JSON.stringify(data) != JSON.stringify(registeredData)) {
+            updateRegistered(data);
+        }
+    });
+}
 
+function updateRegistered(data) {
+    registeredData = data;
+    const tabulatorData = [];
+    for (const [uid, registration] of Object.entries(data)) {
+        if (uid == "anon_checkin") {
+            continue;
+        }
+        if (registration.role === "team") {
+            tabulatorData.push({
+                id: uid,
+                name: registration.repName,
+                time: luxon.DateTime.fromSeconds(registration.registered_time),
+                role: registration.role,
+                contactName: registration.contactName,
+                contactEmail: registration.contactEmail,
+                contactPhone: registration.contactPhone || "N/A",
+                numAdults: registration.numAdults,
+                numMentors: registration.numMentors,
+                numStudents: registration.numStudents,
+                numPeople: registration.numPeople,
+                numTeams: JSON.parse(registration.teams).length,
+                isManual: uid.startsWith("-N")
+            });
+        } else {
+            tabulatorData.push({
+                id: uid,
+                name: registration.repName,
+                time: luxon.DateTime.fromSeconds(registration.registered_time),
+                role: registration.role,
+                contactName: registration.contactName,
+                contactEmail: registration.contactEmail,
+                contactPhone: registration.contactPhone || "N/A",
+                isManual: uid.startsWith("-N")
+            });
+        }
+    }
+    const table = new Tabulator("#registered-table", {
+        data: tabulatorData,
+        layout: "fitColumns",
+        pagination: "local",
+        paginationSize: 10,
+        paginationSizeSelector: [10, 25, 50, 100],
+        initialSort: [{ column: "time" }],
+        columns: [
+            { title: "UID", field: "id", visible: false, download: false },
+            { title: "Representative Name", field: "name" },
+            { title: "Registered Time", field: "time", formatter: "datetime", formatterParams: { outputFormat: "FF" } },
+            { title: "Role", field: "role" },
+            { title: "Contact Name", field: "contactName", visible: false },
+            { title: "Contact Email", field: "contactEmail", visible: false },
+            { title: "Contact Phone", field: "contactPhone", visible: false },
+            { title: "Declared Other Adults", field: "numAdults" },
+            { title: "Declared Mentors", field: "numMentors" },
+            { title: "Declared Students", field: "numStudents" },
+            { title: "Declared People", field: "numPeople" },
+            { title: "Declared FIRST Teams", field: "numTeams" },
+            { title: "Is Manual", field: "isManual", visible: false }
+        ],
+        cssClass: "tabulator",
+        selectable: true
+    });
+
+    table.on("rowClick", (e, row) => {
+        // Select only one row at a time
+        table.deselectRow();
+        row.select();
+        // Get the data for the selected row
+        const data = row.getData();
+        // TODO: Make this look nicer instead of just dumping the JSON
+        document.getElementById("viewbox").textContent = JSON.stringify(data);
     });
 }
 

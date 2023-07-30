@@ -44,7 +44,7 @@ Create Event
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="event_limit">Team registration limit (blank for uncapped, only applies to FIRST
+                        <label for="event_limit">Maximum number of FIRST club registrations (blank for uncapped, only applies to FIRST
                             teams)</label>
                         <input type="number" class="form-control" id="event_limit" name="event_limit" min="1" max="999"
                             value="{{ old_data.limit if old_data.limit != -1 else '' }}">
