@@ -115,6 +115,12 @@ function updateRegistered(data) {
         if (uid == "anon_checkin") {
             continue;
         }
+        let teamLength = null;
+        try {
+            teamLength = Object.keys(JSON.parse(registration.teams)).length;
+        } catch (e) {
+            // Problem parsing JSON, keep as null
+        }
         if (registration.role === "team") {
             tabulatorData.push({
                 id: uid,
@@ -128,7 +134,7 @@ function updateRegistered(data) {
                 numMentors: registration.numMentors,
                 numStudents: registration.numStudents,
                 numPeople: registration.numPeople,
-                numTeams: JSON.parse(registration.teams).length,
+                numTeams: teamLength || "error",
                 isManual: uid.startsWith("-N")
             });
         } else {
@@ -159,15 +165,16 @@ function updateRegistered(data) {
             { title: "Contact Name", field: "contactName", visible: false },
             { title: "Contact Email", field: "contactEmail", visible: false },
             { title: "Contact Phone", field: "contactPhone", visible: false },
-            { title: "Declared Other Adults", field: "numAdults" },
-            { title: "Declared Mentors", field: "numMentors" },
-            { title: "Declared Students", field: "numStudents" },
             { title: "Declared People", field: "numPeople" },
+            { title: "Declared Students", field: "numStudents" },
+            { title: "Declared Mentors", field: "numMentors" },
+            { title: "Declared Other Adults", field: "numAdults" },
             { title: "Declared FIRST Teams", field: "numTeams" },
             { title: "Is Manual", field: "isManual", visible: false }
         ],
         cssClass: "tabulator",
-        selectable: true
+        selectable: true,
+        placeholder: "No data available"
     });
 
     table.on("rowClick", (e, row) => {
@@ -176,7 +183,6 @@ function updateRegistered(data) {
         row.select();
         // Get the data for the selected row
         const data = row.getData();
-        // TODO: Make this look nicer instead of just dumping the JSON
         document.getElementById("viewbox").textContent = JSON.stringify(data);
     });
 }
