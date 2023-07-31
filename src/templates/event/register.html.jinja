@@ -19,6 +19,9 @@ Register for: {{ event.name }}
     <br />
     <p class="text-center">Please fill in the form below to register for this event, either as a visitor or
         team.</p>
+    {% if event.email != "N/A" %}
+    <p class="text-center">Have inquiries? Contact: <b>{{ event.email }}</b></p>
+    {% endif %}
     <form id="regis" action="/events/register/{{ event.uid }}" method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <div class="mb-3">

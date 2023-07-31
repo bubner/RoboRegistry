@@ -68,6 +68,9 @@
                         </p>
                         <p class="card-text">{{ event.date|strftime }} <br /> {{ event.start_time }}
                             to {{ event.end_time }} ({{ timezone }})</p>
+                        {% if event.email != "N/A" %}
+                        <p class="card-text">Have inquiries? Contact: <b>{{ event.email }}</b></p>
+                        {% endif %}
                     </div>
                 </div>
                 <br />
