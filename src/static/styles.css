@@ -347,3 +347,7 @@ nav {
     background-color: #000;
     border-radius: 10px;
 }
+
+#infobox p {
+    margin: 5px;
+}

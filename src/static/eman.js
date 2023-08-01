@@ -135,6 +135,7 @@ function updateRegistered(data) {
                 numStudents: registration.numStudents,
                 numPeople: registration.numPeople,
                 numTeams: teamLength || "error",
+                teamList: registration.teams,
                 isManual: uid.startsWith("-N")
             });
         } else {
@@ -170,6 +171,7 @@ function updateRegistered(data) {
             { title: "Declared Mentors", field: "numMentors" },
             { title: "Declared Other Adults", field: "numAdults" },
             { title: "Declared FIRST Teams", field: "numTeams" },
+            { title: "Team List", field: "teamList", visible: false },
             { title: "Is Manual", field: "isManual", visible: false }
         ],
         cssClass: "tabulator",
@@ -183,9 +185,97 @@ function updateRegistered(data) {
         row.select();
         // Get the data for the selected row
         const data = row.getData();
-        document.getElementById("viewbox").textContent = JSON.stringify(data);
+        let info = data.isManual ? 
+                        `<h5>Viewing manual registration of '${DOMPurify.sanitize(data.name)}'</h5>
+                         <p class="text-muted small"><b>UID:</b> ${DOMPurify.sanitize(data.id)} (manual)</p>`
+                        :
+                        `<h5>Viewing registration of '${DOMPurify.sanitize(data.name)}'</h5>
+                        <p class="text-muted small"><b>UID:</b> ${DOMPurify.sanitize(data.id)}</p>`;
+        info += `
+            <p><b>Registered Time:</b> ${DOMPurify.sanitize(data.time.toLocaleString(luxon.DateTime.DATETIME_FULL))}</p>
+            <p><b>Role:</b> ${DOMPurify.sanitize(data.role)}</p>
+        `;
+        if (data.numPeople) {
+            info += `<p><b>Declared People:</b> ${DOMPurify.sanitize(data.numPeople)}</p>`;
+        }
+        if (data.numStudents) {
+            info += `<p><b>Declared Students:</b> ${DOMPurify.sanitize(data.numStudents)}</p>`;
+        }
+        if (data.numMentors) {
+            info += `<p><b>Declared Mentors:</b> ${DOMPurify.sanitize(data.numMentors)}</p>`;
+        }
+        if (data.numAdults) {
+            info += `<p><b>Declared Other Adults:</b> ${DOMPurify.sanitize(data.numAdults)}</p>`;
+        }
+        if (data.numTeams) {
+            info += `<p><b>Declared FIRST Teams:</b> ${DOMPurify.sanitize(data.numTeams)}</p>`;
+        }
+        document.getElementById("viewbox").innerHTML = info;
+        let secondbox = `
+            <h5>Contact Information</h5>
+            <p><b>Contact Name:</b> ${DOMPurify.sanitize(data.contactName)}</p>
+            <p><b>Contact Email:</b> ${DOMPurify.sanitize(data.contactEmail)}</p>
+            <p><b>Contact Phone:</b> ${DOMPurify.sanitize(data.contactPhone)}</p>
+        `;
+        if (data.numTeams > 0) {
+            const teams = JSON.parse(data.teamList);
+            secondbox += `
+                <br>
+                <h5>Declared Teams</h5>
+                <table class="table table-bordered team-table">
+                    <thead>
+                        <tr>
+                            <th>Team Number</th>
+                            <th>Team Name</th>
+                            <th>Number is FIRST registered?</th>
+                            <th>Team is using a custom name?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            for (const [num, name] of Object.entries(teams)) {
+                // Need to query FIRSTTeamAPI to get verification status
+                _queue_inspection(num, name, (status, name) => {
+                    if (status) {
+                        document.getElementById(DOMPurify.sanitize(num)).innerHTML = "<span class='green'>yes</span>";
+                    } else {
+                        document.getElementById(DOMPurify.sanitize(num)).innerHTML = "<span class='red'>no</span>";
+                    }
+                    if (name) {
+                        document.getElementById(DOMPurify.sanitize(num) + "n").innerHTML = "<span class='red'>yes</span>";
+                    } else {
+                        document.getElementById(DOMPurify.sanitize(num) + "n").innerHTML = "<span class='green'>no</span>";
+                    }
+                });
+                secondbox += `
+                    <tr>
+                        <td>${DOMPurify.sanitize(num)}</td>
+                        <td>${DOMPurify.sanitize(name)}</td>
+                        <td id="${DOMPurify.sanitize(num)}"><div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td>
+                        <td id="${DOMPurify.sanitize(num)}n"><div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td>
+                    </tr>
+                `;
+            }
+            secondbox += `
+                    </tbody>
+                </table>
+            `;
+        }
+        document.getElementById("viewbox2").innerHTML = secondbox;
     });
 }
+
+function _queue_inspection(num, tname, callback) {
+    // TODO: Optimise
+    api.safeFetch(`https://firstteamapi.vercel.app/get_team/${num}`).then((data) => {
+        const status = data.valid;
+        const name = data.data.nickname === tname;
+        // This does not work as it is not accessing the array elems, account for this later when I have time
+        console.log(data.data.nickname, tname, data.data.nickname == tname, data.data.nickname === tname);
+        callback(status, name);
+    });
+}
+
 
 function getTimeData(date, time, offset) {
     // Reused from event_viewer because working with date and time is a nightmare
