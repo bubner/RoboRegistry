@@ -261,10 +261,15 @@ def api_open_checkin(event_id):
     if start_time < datetime.now(tz) < tz.localize(datetime.strptime(f"{event['date']} {event['end_time']}", "%Y-%m-%d %H:%M")):
         flash("Check-in is already open.", "warning")
         return redirect(f"/events/manage/{event_id}")
-    
+        
     # If the event is over then check-in cannot be opened
-    if datetime.now(tz) > tz.localize(datetime.strptime(f"{event['date']} {event['end_time']}", "%Y-%m-%d %H:%M")):
+    if datetime.now(tz) >= tz.localize(datetime.strptime(f"{event['date']} {event['end_time']}", "%Y-%m-%d %H:%M")):
         flash("Check-in cannot be opened after the event has ended.", "danger")
+        return redirect(f"/events/manage/{event_id}")
+
+    # If it is not the event date, we cannot open check-in
+    if datetime.now(tz).date() != start_time.date():
+        flash("Check-in cannot be opened before the event date.", "danger")
         return redirect(f"/events/manage/{event_id}")
 
     # Override the start time based on the event timezone now
