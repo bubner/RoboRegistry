@@ -141,7 +141,7 @@ def api_event_data(event_id):
                 user.update(data[uid])
             user.update(event["registered"][uid])
             bigdata[uid] = user
-    
+
     # Add any anonymous check-in data
     if data.get("anon_data"):
         bigdata["anon_checkin"] = data["anon_data"]
@@ -246,26 +246,27 @@ def api_open_checkin(event_id):
         return {
             "error": "NOT_FOUND"
         }, 404
-    
+
     tz = timezone(event["timezone"])
     start_time = tz.localize(datetime.strptime(
         f"{event['date']} {event['start_time']}", "%Y-%m-%d %H:%M"))
-    
+
     # Check if the event is not visible
     if not event["settings"]["visible"]:
         flash("Your event is not visible, therefore check-in cannot be opened.", "danger")
         return redirect(f"/events/manage/{event_id}")
-    
+
     # Check if check-ins are closed and remind the user
     if not event["settings"]["checkin"]:
         flash("Check-ins are manually closed. Please open them before opening check-in.", "danger")
         return redirect(f"/events/manage/{event_id}")
-    
+
     # If the event has already started then check-in is already open
-    if start_time < datetime.now(tz) < tz.localize(datetime.strptime(f"{event['date']} {event['end_time']}", "%Y-%m-%d %H:%M")):
+    if start_time < datetime.now(tz) < tz.localize(
+            datetime.strptime(f"{event['date']} {event['end_time']}", "%Y-%m-%d %H:%M")):
         flash("Check-in is already open.", "warning")
         return redirect(f"/events/manage/{event_id}")
-        
+
     # If the event is over then check-in cannot be opened
     if datetime.now(tz) >= tz.localize(datetime.strptime(f"{event['date']} {event['end_time']}", "%Y-%m-%d %H:%M")):
         flash("Check-in cannot be opened after the event has ended.", "danger")

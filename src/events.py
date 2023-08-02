@@ -289,7 +289,8 @@ def event_register(event_id: str):
 
     # Check to see if the event is over, and decline registration if it is
     tz = timezone(event["timezone"])
-    if datetime.now(tz) > tz.localize(datetime.strptime(event["date"] + event["start_time"], "%Y-%m-%d%H:%M")) and not override:
+    if datetime.now(tz) > tz.localize(
+            datetime.strptime(event["date"] + event["start_time"], "%Y-%m-%d%H:%M")) and not override:
         return render_template("event/done.html.jinja", event=event, user=user, status="Failed: EVENT_AUTO_CLOSED",
                                message="This event has already started or has concluded. Registration has been automatically disabled. You may ask the event owner to register you manually if desired."), 400
 
@@ -629,7 +630,8 @@ def manage(event_id: str):
     # Calculate the UTC offset for the event, to display time correctly
     offset = timezone(event["timezone"]).utcoffset(datetime.now()).total_seconds() / 3600
 
-    return render_template("event/manage.html.jinja", event=event, data=data, user=getattr(current_user, "data"), offset=offset)
+    return render_template("event/manage.html.jinja", event=event, data=data, user=getattr(current_user, "data"),
+                           offset=offset)
 
 
 @events_bp.route("/events/manage/<string:event_id>/driver")

@@ -148,7 +148,7 @@ def unregister(event_id, auth=None) -> bool:
 
     # Disallow unregistration if event has already started/ended or if it is not accepting registrations
     if datetime.now(tz) > tz.localize(datetime.strptime(event["date"] + event["end_time"], "%Y-%m-%d%H:%M")) or not \
-    event["settings"]["regis"]:
+            event["settings"]["regis"]:
         return False
 
     db.child("events").child(event_id).child("registered").child(utils.get_uid()).remove(auth)
