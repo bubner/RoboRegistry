@@ -300,7 +300,7 @@ nav {
     resize: none;
 }
 
-#noemailwarn {
+#disablewarn {
     display: none;
 }
 
@@ -316,4 +316,38 @@ nav {
 
 #registernow {
     display: inline;
+}
+
+#storer {
+    padding-bottom: 50px;
+}
+
+.green {
+    color: #28a745;
+}
+
+.red {
+    color: #dc3545;
+}
+
+#togo {
+    font-weight: 600;
+}
+
+#barlogoimg {
+    margin-left: 10px;
+}
+
+#infotext {
+    transform: translateY(25%);
+}
+
+.tabulator {
+    color: #000;
+    background-color: #000;
+    border-radius: 10px;
+}
+
+#infobox p {
+    margin: 5px;
 }

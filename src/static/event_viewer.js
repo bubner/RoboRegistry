@@ -12,8 +12,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const offset = (new Date().getTimezoneOffset() * -1) / 60 - parseFloat(OFFSET);
 
     // Get the local start and end times
-    const startLocalTime = getTimeData(EVENT_DATE, EVENT_START_TIME, offset);
-    const endLocalTime = getTimeData(EVENT_DATE, EVENT_END_TIME, offset);
+    const startLocalTime = getTimeData(EVENT_DATE, EVENT_START_TIME, offset).toLocaleString(
+        navigator.language,
+        {
+            year: "numeric",
+            month: "numeric",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+        }
+    );
+    const endLocalTime = getTimeData(EVENT_DATE, EVENT_END_TIME, offset).toLocaleString(
+        navigator.language,
+        {
+            year: "numeric",
+            month: "numeric",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+        }
+    );
 
     // Display local time on the page, if required
     const eventTime = document.querySelector("#event-time");
@@ -34,9 +52,8 @@ document.addEventListener("DOMContentLoaded", () => {
         last = eventState;
 
         // Interpret event times as local times
-        const eventDate = new Date(EVENT_DATE);
-        const eventStartTime = new Date(`${eventDate.toDateString()} ${EVENT_START_TIME}`);
-        const eventEndTime = new Date(`${eventDate.toDateString()} ${EVENT_END_TIME}`);
+        const eventStartTime = getTimeData(EVENT_DATE, EVENT_START_TIME, offset);
+        const eventEndTime = getTimeData(EVENT_DATE, EVENT_END_TIME, offset);
 
         const now = new Date();
         if (now < eventStartTime) {
@@ -69,16 +86,7 @@ class EventStates {
 
 // Convert event time to local time
 function getTimeData(date, time, offset) {
-    return new Date(new Date(`${date} ${time}`).getTime() + offset * 60 * 60 * 1000).toLocaleString(
-        navigator.language,
-        {
-            year: "numeric",
-            month: "numeric",
-            day: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-        }
-    );
+    return new Date(new Date(`${date} ${time}`).getTime() + offset * 60 * 60 * 1000);
 }
 
 // Calculate relative time difference between two dates using humanise-duration

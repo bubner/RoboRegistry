@@ -12,7 +12,7 @@ from pytz import timezone
 from requests.exceptions import HTTPError
 
 import utils
-from firebase_instance import db
+from fb import db
 
 
 def get_user_data(uid, auth=None) -> dict:
@@ -53,23 +53,29 @@ def add_event(uid, event, auth=None):
     db.child("events").child(uid).set(event, auth)
 
 
-def add_entry(event_id, public_data, private_data, auth=None):
+def add_entry(event_id, public_data, private_data, override, auth=None):
     """
         Updates an event in the database to reflect a new registration.
     """
     auth = auth or getattr(current_user, "token", None)
     # Refuse if the event is not accepting registrations
-    if not get_event(event_id)["settings"]["regis"]:
+    if not get_event(event_id)["settings"]["regis"] and not override:
         return
     public_data |= {
-        "entity": f"{private_data['contactName']} | {private_data['repName'].upper()}",
+        # Only show the first name of the contact
+        "entity": f"{private_data['contactName'].split(' ')[0]} | {private_data['repName'].upper()}",
         "checkin_data": {
             "checked_in": False,
             "time": 0
         }
     }
-    db.child("events").child(event_id).child("registered").child(utils.get_uid()).set(public_data, auth)
-    db.child("registered_data").child(event_id).child(utils.get_uid()).set(private_data, auth)
+    if not override:
+        db.child("events").child(event_id).child("registered").child(utils.get_uid()).set(public_data, auth)
+        db.child("registered_data").child(event_id).child(utils.get_uid()).set(private_data, auth)
+    else:
+        # Push instead of setting to allow for multiple registrations
+        public_data_push = db.child("events").child(event_id).child("registered").push(public_data, auth)
+        db.child("registered_data").child(event_id).child(public_data_push["name"]).set(private_data, auth)
 
 
 def check_in(event_id, uid=None, auth=None):
@@ -139,9 +145,10 @@ def unregister(event_id, auth=None) -> bool:
 
     tz = timezone(event["timezone"])
     tz.localize(datetime.strptime(event["date"] + event["start_time"], "%Y-%m-%d%H:%M"))
-    
+
     # Disallow unregistration if event has already started/ended or if it is not accepting registrations
-    if datetime.now(tz) > tz.localize(datetime.strptime(event["date"] + event["end_time"], "%Y-%m-%d%H:%M")) or not event["settings"]["regis"]:
+    if datetime.now(tz) > tz.localize(datetime.strptime(event["date"] + event["end_time"], "%Y-%m-%d%H:%M")) or not \
+            event["settings"]["regis"]:
         return False
 
     db.child("events").child(event_id).child("registered").child(utils.get_uid()).remove(auth)
@@ -166,18 +173,18 @@ def verify_unique(event_id, repname, auth=None) -> bool:
     return True
 
 
-def get_event_data(event_id, auth=None):
+def get_event_data(event_id, auth=None) -> dict:
     """
         Get registered data for an event.
         May only be accessed by the event owner.
     """
     auth = auth or getattr(current_user, "token", None)
+    # Will raise HTTPError if not authorised, but will return an empty object if no data exists
     try:
-        event_data = db.child("registered_data").child(event_id).get(auth).val()
-    except (HTTPError, TypeError):
-        # Event does not exist or cannot be accessed
+        data = dict(db.child("registered_data").child(event_id).get(auth).val())
+    except TypeError:
         return {}
-    return event_data
+    return data
 
 
 def get_uid_for_entity(event_id, entity) -> str:
@@ -208,7 +215,8 @@ def get_my_events(auth=None) -> tuple[dict, dict]:
             if event_data["creator"] == utils.get_uid():
                 owned_events[event_id] = event_data
                 continue
-            if event_data.get("registered") and utils.get_uid() in event_data["registered"] and event_data.get("settings").get("visible") is True:
+            if event_data.get("registered") and utils.get_uid() in event_data["registered"] and event_data.get(
+                    "settings").get("visible") is True:
                 registered_events[event_id] = event_data
     except (HTTPError, TypeError):
         # Events do not exist
@@ -238,7 +246,7 @@ def update_event(event_id, updates: dict, settings: dict, auth=None):
     # Refuse to update if the event is not owned by the user
     if db.child("events").child(event_id).child("creator").get(auth).val() != utils.get_uid():
         return
-    
+
     # Update the event tree based on each node
     for node, value in updates.items():
         db.child("events").child(event_id).child(node).set(value, auth)

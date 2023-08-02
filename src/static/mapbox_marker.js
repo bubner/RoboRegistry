@@ -5,6 +5,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
     mapboxgl.accessToken = MAPBOX_API_KEY;
+    mapboxgl.workerUrl = MAPBOX_WORKER;
     fetch(
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${EVENT_LOCATION}.json?access_token=${mapboxgl.accessToken}`
     )

@@ -9,7 +9,7 @@ from flask_login import current_user, UserMixin, login_required, logout_user, lo
 from requests.exceptions import HTTPError
 
 import db
-from firebase_instance import auth
+from fb import auth
 
 auth_bp = Blueprint("auth", __name__, template_folder="templates")
 
@@ -96,7 +96,8 @@ def register():
             login_user(User(user.get("refreshToken")), remember=session.get("should_remember", False))
             return res
         except Exception:
-            return render_template("auth/register.html.jinja", error="Something went wrong, please try again.")
+            return render_template("auth/register.html.jinja",
+                                   error="Something went wrong, are you sure you don't already have a RoboRegistry account?")
     else:
         return render_template("auth/register.html.jinja")
 
@@ -184,7 +185,7 @@ def create_profile():
 
         if not first_name or not last_name or not role or not affil:
             return render_template("auth/addinfo.html.jinja", error="Please enter required details.", email=auth_email)
-        
+
         if role not in ("student", "mentor", "event_organiser", "other"):
             return render_template("auth/addinfo.html.jinja", error="Invalid role.", email=auth_email)
 
@@ -260,11 +261,12 @@ def deleteaccount():
                     flashes.append(error)
 
             return redirect(url_for("auth.logout", should_persist_flashes=flashes))
-        
+
         db.delete_all_user_events()
         db.delete_user_data()
 
-        return redirect(url_for("auth.logout", should_persist_flashes=["Account deleted. Thank you for using RoboRegistry."]))
+        return redirect(
+            url_for("auth.logout", should_persist_flashes=["Account deleted. Thank you for using RoboRegistry."]))
     else:
         return render_template("auth/deleteaccount.html.jinja", user=getattr(current_user, "data", None), num=num,
                                numevents=numevents)

@@ -15,7 +15,7 @@ Generate '{{ event.name }}'
     </div>
     {% endif %}
     <br />
-    <form method="POST" action="/events/gen/{{ event.uid }}">
+    <form method="POST" action="/events/gen/qr/{{ event.uid }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <div class="form-group">
             <label for="size">Size:</label>
@@ -35,7 +35,7 @@ Generate '{{ event.name }}'
         </div>
         <br />
         <button type="submit" class="btn btn-success">Generate</button>
-        <a href="/events/view" class="btn btn-secondary">Cancel</a>
+        <a href="/events/manage/{{ event.uid }}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 {% endblock %}

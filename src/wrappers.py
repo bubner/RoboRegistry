@@ -43,7 +43,7 @@ def event_must_be_running(f):
                 timezone(event["timezone"])).date()) == event["date"]:
             return render_template("event/done.html.jinja", status="Failed: EVENT_NOT_RUNNING",
                                    message="We are unable to check you in as the event is not running. If the event has already concluded, it is no longer possible to check in. If the event is yet to start, we'll automatically enable check-ins when it is time.",
-                                   event=event, user=logged_out_data)
+                                   event=event, user=getattr(current_user, "data", logged_out_data)), 400
         return f(event_id, *args, **kwargs)
 
     return check

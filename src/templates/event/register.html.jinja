@@ -19,6 +19,9 @@ Register for: {{ event.name }}
     <br />
     <p class="text-center">Please fill in the form below to register for this event, either as a visitor or
         team.</p>
+    {% if event.email != "N/A" %}
+    <p class="text-center">Have inquiries? Contact: <b>{{ event.email }}</b></p>
+    {% endif %}
     <form id="regis" action="/events/register/{{ event.uid }}" method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <div class="mb-3">
@@ -31,8 +34,8 @@ Register for: {{ event.name }}
             <label for="role" class="form-label">I am registering...<span aria-hidden="true"
                     class="text-danger">*</span></label>
             <select class="form-select" id="role" name="role" required>
-                <option value="comp" selected>FIRST team(s) (registered or unregistered)</option>
-                <option value="event">as an Event manager</option>
+                <option value="team" selected>FIRST team(s) (registered or unregistered)</option>
+                <option value="event_manager">as an Event manager</option>
                 <option value="mentor">as an External volunteer or mentor</option>
                 <option value="visitor">as a Visitor</option>
                 <option value="other">as Other</option>
@@ -75,12 +78,12 @@ Register for: {{ event.name }}
                     class="text-danger">*</span></label>
             <select class="form-select" id="numPeople" name="numPeople" required>
                 <option value="" selected disabled>-</option>
-                <option value="lt5">&lt;5</option>
-                <option value="5t10">5-10</option>
-                <option value="10t15">10-15</option>
-                <option value="15t20">15-20</option>
-                <option value="20t25">20-25</option>
-                <option value="gt25">25+</option>
+                <option value="<5">&lt;5</option>
+                <option value="5-10">5-10</option>
+                <option value="10-15">10-15</option>
+                <option value="15-20">15-20</option>
+                <option value="20-25">20-25</option>
+                <option value=">25">25+</option>
             </select>
         </div>
         <div class="mb-3">
@@ -120,16 +123,18 @@ Register for: {{ event.name }}
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js" integrity="sha512-KqUc2WMPF/gxte9xVjVE4TIt1LMUTidO3BrcItFg0Ro24I7pGNzgcXdnWdezNY+8T0/JEmdC79MuwYn+8UdOqw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl-csp.js"></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
 <script nonce="{{ csp_nonce() }}">
+    const MAPBOX_WORKER = "{{ url_for('static', filename='libs/mapbox-gl-csp-worker_v2.3.1.js') }}";
     const MAPBOX_API_KEY = "{{ mapbox_api_key }}";
     const EVENT_LOCATION = "{{ event.location }}";
     const EVENT_LIMIT = parseInt("{{ event.limit }}");
     const EVENT_REGISTRATIONS = parseInt("{{ event.registered|length }}");
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js" integrity="sha512-KqUc2WMPF/gxte9xVjVE4TIt1LMUTidO3BrcItFg0Ro24I7pGNzgcXdnWdezNY+8T0/JEmdC79MuwYn+8UdOqw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js'></script>
-<link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css' rel='stylesheet' />
 <script src="{{ url_for('static', filename='internal_api.js') }}"></script>
 <script src="{{ url_for('static', filename='mapbox_marker.js') }}"></script>
+<script src="{{ url_for('static', filename='form_handler.js') }}"></script>
 <script src="{{ url_for('static', filename='event_regis.js') }}"></script>
 {% endblock %}

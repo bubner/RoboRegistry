@@ -33,6 +33,6 @@ oauth_config = {
     }
 }
 
-fb = firebase.initialize_app(config)
-auth = fb.auth(client_secret=oauth_config)
-db = fb.database()
+fb_instance = firebase.initialize_app(config)
+auth = fb_instance.auth(client_secret=oauth_config)
+db = fb_instance.database()

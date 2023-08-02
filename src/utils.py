@@ -71,12 +71,15 @@ def validate_form(form_data, role):
     # repName, contactName, contactEmail, role required
     if not all(form_data.get(field) for field in ("repName", "contactName", "contactEmail")) or not role:
         return False
-    # numPeople, numStudents, numMentors, teams required if role is "comp"
-    if role == "comp" and not all(
+    # Role must be in ("team", "event_manager", "mentor", "visitor, "other")
+    if role not in ("team", "event_manager", "mentor", "visitor", "other"):
+        return False
+    # numPeople, numStudents, numMentors, teams required if role is "team"
+    if role == "team" and not all(
             form_data.get(field) for field in ("numPeople", "numStudents", "numMentors", "teams")):
         return False
-    # numPeople must be in ["lt5", "5t10", "10t15", "15t20", "20t25", "gt25"]
-    if role == "comp" and form_data.get("numPeople") not in ("lt5", "5t10", "10t15", "15t20", "20t25", "gt25"):
+    # numPeople must be in ["<5", "5-10", "10-15", "15-20", "20-25", ">25"]
+    if role == "team" and form_data.get("numPeople") not in ("<5", "5-10", "10-15", "15-20", "20-25", ">25"):
         return False
     # All values in teams must be non-empty
     if form_data.get("teams") and any(not team for team in form_data.get("teams")):
@@ -102,7 +105,7 @@ def validate_email(email):
     if email.index(".") < email.index("@"):
         return False
     return True
-    
+
 
 def get_uid():
     """
