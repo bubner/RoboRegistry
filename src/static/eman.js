@@ -266,13 +266,17 @@ function updateRegistered(data) {
 }
 
 function _queue_inspection(num, tname, callback) {
-    // TODO: Optimise
+    // TODO: Optimise with cache
     api.safeFetch(`https://firstteamapi.vercel.app/get_team/${num}`).then((data) => {
         const status = data.valid;
-        const name = data.data.nickname === tname;
-        // This does not work as it is not accessing the array elems, account for this later when I have time
-        console.log(data.data.nickname, tname, data.data.nickname == tname, data.data.nickname === tname);
-        callback(status, name);
+        let nameFound = false;
+        for (let i = 0; i < data.data.length; i++) {
+            if (data.data[i].nickname === tname) {
+                nameFound = true;
+                break;
+            }
+        }
+        callback(status, !nameFound);
     });
 }
 

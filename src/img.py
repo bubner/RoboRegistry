@@ -27,7 +27,7 @@ def generate_qrcode(event, size, qr_type) -> BytesIO:
         box_size=20 if size == "large" else 16,
         border=0 if size == "large" else 2,
     )
-    qr.add_data(f"https://rbreg.vercel.app/events/{qr_type}/{event.get('uid')}")
+    qr.add_data(f"https://rbreg.vercel.app/events/{qr_type}/{event.get('uid')}?code={event.get('checkin_code')}")
     qr.make(fit=True)
 
     # Generate QR code image
