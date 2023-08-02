@@ -134,6 +134,11 @@ def generate_man_ci(event):
         for i, values in enumerate(entities):
             name = values[0].split("|")[0]
             affil = values[0].split("|")[1]
+            # Generic limits for length to prevent overrun
+            if len(affil) > 24:
+                affil = affil[:24] + "..."
+            if len(name) > 24:
+                name = name[:24] + "..."
             entities[i] = (name, affil)
 
     def _queue(entities) -> BytesIO:
