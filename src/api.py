@@ -217,6 +217,10 @@ def api_manual_regis(event_id):
         Manually register someone for an event.
         request.form contains the normal registration data.
     """
+    if not db.get_event(event_id):
+        return {
+            "error": "NOT_FOUND"
+        }, 404
     req = {
         **request.form,
         "manual": "true"
