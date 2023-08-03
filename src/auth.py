@@ -56,7 +56,7 @@ def login():
             user = auth.sign_in_with_email_and_password(email, password)
             if not user:
                 return redirect("/login")
-            login_user(User(user.get("refreshToken")), remember=session.get("should_remember", False))
+            login_user(User(user.get("refreshToken")), remember=request.form.get("remember-me", False))
             return redirect("/")
         except Exception:
             return render_template("auth/login.html.jinja", error="Invalid email or password.")
@@ -75,7 +75,6 @@ def register():
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
-        session["should_remember"] = request.form.get("remember-me", False)
 
         if len(password) < 8:
             return render_template("auth/register.html.jinja", error="Password must be at least 8 characters long.")
@@ -93,7 +92,7 @@ def register():
             user = auth.sign_in_with_email_and_password(email, password)
             if not user:
                 return redirect("/login")
-            login_user(User(user.get("refreshToken")), remember=session.get("should_remember", False))
+            login_user(User(user.get("refreshToken")), remember=request.form.get("remember-me", False))
             return res
         except Exception:
             return render_template("auth/register.html.jinja",
