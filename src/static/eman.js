@@ -3,6 +3,7 @@
  * @author Lucas Bubner, 2023
  */
 let registeredData = null;
+let regisTable = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     tick();
@@ -60,12 +61,20 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }, 1000);
 
+    document.getElementById("d-csv").addEventListener("click", () => {
+        regisTable.download("csv", `${EVENT_UID}-regis-export.csv`, { bom: true });
+    });
+
+    document.getElementById("d-xl").addEventListener("click", () => {
+        regisTable.download("xlsx", `${EVENT_UID}-regis-export.xlsx`);
+    });
+
     // Ping the API every 30 seconds
     // setInterval(tick, 30000);
 });
 
 function submitForm(e) {
-    if (document.getElementById("role").value !== "Team") return;
+    if (document.getElementById("role").value !== "team") return;
     const teams = document.querySelectorAll(".team");
     if (teams.length === 0) {
         alert("Please add at least one team!");
@@ -151,7 +160,7 @@ function updateRegistered(data) {
             });
         }
     }
-    const table = new Tabulator("#registered-table", {
+    regisTable = new Tabulator("#registered-table", {
         data: tabulatorData,
         layout: "fitColumns",
         pagination: "local",
@@ -179,9 +188,9 @@ function updateRegistered(data) {
         placeholder: "No data available"
     });
 
-    table.on("rowClick", (e, row) => {
+    regisTable.on("rowClick", (e, row) => {
         // Select only one row at a time
-        table.deselectRow();
+        regisTable.deselectRow();
         row.select();
         // Get the data for the selected row
         const data = row.getData();

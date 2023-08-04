@@ -94,9 +94,13 @@ def register():
                 return redirect("/login")
             login_user(User(user.get("refreshToken")), remember=request.form.get("remember-me", False))
             return res
-        except Exception:
+        except HTTPError as e:
+            # String hack since the HTTP error object refuses to cooperate
+            e = str(e)
+            if "EMAIL_EXISTS" in e:
+                return render_template("auth/register.html.jinja", error="This email already exists. Please log in or reset password.")
             return render_template("auth/register.html.jinja",
-                                   error="Something went wrong, are you sure you don't already have a RoboRegistry account?")
+                                   error="Something went wrong, please try again.")
     else:
         return render_template("auth/register.html.jinja")
 

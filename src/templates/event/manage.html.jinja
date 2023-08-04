@@ -158,9 +158,8 @@ Manage '{{ event.name }}'
             <div class="modal-body">
                 <h5 class="text-center">Click on a registration to view more information.</h5>
                 <div class="d-flex justify-content-center">
-                Export functionality is a WIP!
-                    {# <button type="button" class="btn btn-outline-primary mx-2">Download as CSV</button>
-                    <button type="button" class="btn btn-outline-secondary mx-2">Convert to Excel spreadsheet</button> #}
+                    <button id="d-csv" type="button" class="btn btn-outline-primary mx-2">Download as CSV</button>
+                    <button id="d-xl" type="button" class="btn btn-outline-secondary mx-2">Convert as Excel spreadsheet</button>
                 </div>
                 <hr />
                 <div id="registered-table"></div>
@@ -358,6 +357,7 @@ Manage '{{ event.name }}'
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js" integrity="sha512-KqUc2WMPF/gxte9xVjVE4TIt1LMUTidO3BrcItFg0Ro24I7pGNzgcXdnWdezNY+8T0/JEmdC79MuwYn+8UdOqw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.1/js/tabulator.min.js" integrity="sha512-/vxlwMJ8+fvTLd1sAiVxC7gBi6YWq0ClV7ZVnuKIiwgQGtVhILH9k1aRvyo/yJigWQT4FWMZMvtX9q0NZVNu2Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <link href="https://unpkg.com/tabulator-tables@5.5.1/dist/css/tabulator.min.css" rel="stylesheet" />
+<script type="text/javascript" src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.1/css/tabulator_bootstrap5.min.css" rel="stylesheet" />
 <script src="{{ url_for('static', filename='libs/luxon.min.js') }}"></script>
 <script src="{{ url_for('static', filename='libs/humanize-duration.min.js') }}"></script>
