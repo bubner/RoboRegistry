@@ -68,7 +68,41 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("d-xl").addEventListener("click", () => {
         regisTable.download("xlsx", `${EVENT_UID}-regis-export.xlsx`, {
             documentProcessing: (workbook) => {
-                // TODO
+                // Make a new sheet for for every registration
+                const sheets = [];
+                for (const [uid, registration] of Object.entries(registeredData)) {
+                    if (uid == "anon_checkin") {
+                        continue;
+                    }
+                    let teamLength = 0;
+                    try {
+                        teamLength = Object.keys(JSON.parse(registration.teams)).length;
+                    } catch (e) {}
+                    sheets.push({
+                        name: uid,
+                        data: [
+                            ["Name", registration.repName],
+                            ["Is Manual", uid.startsWith("-N")],
+                            ["Registered Time", luxon.DateTime.fromSeconds(registration.registered_time).toISO()],
+                            ["Role", registration.role],
+                            ["Contact Name", registration.contactName],
+                            ["Contact Email", registration.contactEmail],
+                            ["Contact Phone", registration.contactPhone || "N/A"],
+                            ["Number of People", registration.numPeople],
+                            ["Number of Students", registration.numStudents],
+                            ["Number of Mentors", registration.numMentors],
+                            ["Number of Other Adults", registration.numAdults],
+                            ["Number of Teams", teamLength],
+                            // TODO, parse teams as JSON
+                            ["Teams", registration.teams],
+                        ],
+                    });
+                }
+                workbook.SheetNames = sheets.map((sheet) => sheet.name);
+                // Add info for each page
+                for (const sheet of sheets) {
+                    workbook.Sheets[sheet.name] = XLSX.utils.aoa_to_sheet(sheet.data);
+                }
                 return workbook;
             }
         });
