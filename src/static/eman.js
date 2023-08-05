@@ -66,11 +66,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.getElementById("d-xl").addEventListener("click", () => {
-        regisTable.download("xlsx", `${EVENT_UID}-regis-export.xlsx`);
+        regisTable.download("xlsx", `${EVENT_UID}-regis-export.xlsx`, {
+            documentProcessing: (workbook) => {
+                // TODO
+                return workbook;
+            }
+        });
     });
 
     // Ping the API every 30 seconds
-    // setInterval(tick, 30000);
+    setInterval(tick, 30000);
 });
 
 function submitForm(e) {
@@ -172,16 +177,16 @@ function updateRegistered(data) {
             { title: "Representative Name", field: "name" },
             { title: "Registered Time", field: "time", formatter: "datetime", formatterParams: { outputFormat: "FF" } },
             { title: "Role", field: "role" },
-            { title: "Contact Name", field: "contactName", visible: false },
-            { title: "Contact Email", field: "contactEmail", visible: false },
-            { title: "Contact Phone", field: "contactPhone", visible: false },
+            { title: "Contact Name", field: "contactName", visible: false, download: true },
+            { title: "Contact Email", field: "contactEmail", visible: false, download: true },
+            { title: "Contact Phone", field: "contactPhone", visible: false, download: true },
             { title: "Declared People", field: "numPeople" },
             { title: "Declared Students", field: "numStudents" },
             { title: "Declared Mentors", field: "numMentors" },
             { title: "Declared Other Adults", field: "numAdults" },
             { title: "Declared FIRST Teams", field: "numTeams" },
-            { title: "Team List", field: "teamList", visible: false },
-            { title: "Is Manual", field: "isManual", visible: false }
+            { title: "Team List", field: "teamList", visible: false, download: true },
+            { title: "Is Manual", field: "isManual", visible: false, download: true }
         ],
         cssClass: "tabulator",
         selectable: true,
