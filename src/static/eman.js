@@ -75,28 +75,39 @@ document.addEventListener("DOMContentLoaded", () => {
                         continue;
                     }
                     let teamLength = 0;
+                    let teamData = [];
                     try {
-                        teamLength = Object.keys(JSON.parse(registration.teams)).length;
-                    } catch (e) {}
-                    sheets.push({
-                        name: uid,
-                        data: [
-                            ["Name", registration.repName],
-                            ["Is Manual", uid.startsWith("-N")],
-                            ["Registered Time", luxon.DateTime.fromSeconds(registration.registered_time).toISO()],
-                            ["Role", registration.role],
-                            ["Contact Name", registration.contactName],
-                            ["Contact Email", registration.contactEmail],
-                            ["Contact Phone", registration.contactPhone || "N/A"],
-                            ["Number of People", registration.numPeople],
-                            ["Number of Students", registration.numStudents],
-                            ["Number of Mentors", registration.numMentors],
-                            ["Number of Other Adults", registration.numAdults],
-                            ["Number of Teams", teamLength],
-                            // TODO, parse teams as JSON
-                            ["Teams", registration.teams],
-                        ],
-                    });
+                        const teams = JSON.parse(registration.teams);
+                        teamLength = Object.keys(teams).length;
+                        let i = 1;
+                        for (const [num, name] of Object.entries(teams)) {
+                            teamData.push([`Team ${i}`, `${num} - ${name}`]);
+                            i++;
+                        }
+                    } catch (e) {
+                        // Problem parsing JSON, keep as null
+                    }
+                    const data = [
+                        ["Name", registration.repName],
+                        ["Is Manual", uid.startsWith("-N")],
+                        ["Registered Time", luxon.DateTime.fromSeconds(registration.registered_time).toISO()],
+                        ["Role", registration.role],
+                        ["Contact Name", registration.contactName],
+                        ["Contact Email", registration.contactEmail],
+                        ["Contact Phone", registration.contactPhone || "N/A"],
+                        ["Number of People", registration.numPeople],
+                        ["Number of Students", registration.numStudents],
+                        ["Number of Mentors", registration.numMentors],
+                        ["Number of Other Adults", registration.numAdults],
+                        ["Number of Teams", teamLength],
+                        ...teamData
+                    ].filter(row => row.some(cell => cell !== null && cell !== ''));
+                    if (data.length > 0) {
+                        sheets.push({
+                            name: uid,
+                            data: data,
+                        });
+                    }
                 }
                 workbook.SheetNames = sheets.map((sheet) => sheet.name);
                 // Add info for each page
@@ -227,6 +238,12 @@ function updateRegistered(data) {
             selectable: true,
             placeholder: "No data available"
         });
+        // Hide export buttons if there is no data
+        if (tabulatorData.length === 0) {
+            document.getElementById("d-csv").style.display = "none";
+            document.getElementById("d-xl").style.display = "none";
+            document.getElementById("viewbox").textContent = "No data available.";
+        }
     } catch (e) {
         document.getElementById("registered-table").textContent = "Unable to load Tabulator. Please ensure your browser is not blocking the required scripts."
         return;

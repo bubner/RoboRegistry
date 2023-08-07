@@ -162,7 +162,13 @@ Manage '{{ event.name }}'
                     <button id="d-xl" type="button" class="btn btn-outline-secondary mx-2">Download as Excel spreadsheet</button>
                 </div>
                 <hr />
-                <div id="registered-table"></div>
+                <div id="registered-table">
+                    <div class="d-flex justify-content-center align-items-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
                 <br />
                 <div class="card shadow-sm">
                     <div class="card-body" id="infobox">
