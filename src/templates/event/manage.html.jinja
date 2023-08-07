@@ -77,8 +77,19 @@ Manage '{{ event.name }}'
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h4 class="card-title">Metrics</h4>
-                    This feature is a WIP!
-                    {# <canvas id="metrics"></canvas> #}
+                    <div class="row">
+                        <div class="col-md-2">
+                            <div class="bigtext" id="regiscount">{{ event.registered|length }}</div> registrations. <br />
+                            {# TODO #}
+                            <div class="bigtext" id="teamcount">{{ 0 }}</div> teams attending. <br />
+                            <div class="bigtext" id="cicount">{{ 0 }}</div> check-ins.
+                        </div>
+                        <div class="col-md-6">
+                            <div>
+                                <canvas id="metrics"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -351,3 +351,9 @@ nav {
 #infobox p {
     margin: 5px;
 }
+
+.bigtext {
+    display: inline;
+    font-weight: 800;
+    font-size: 36px;
+}
