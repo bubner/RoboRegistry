@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     role.addEventListener("change", () => {
         const isTeam = role.value === "team";
+        // Hide team registration if not a team
         [numPeople, numStudents, numMentors, numAdults].forEach((input) => {
             input.disabled = !isTeam;
             input.required = isTeam;
@@ -39,8 +40,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("regis").addEventListener("formdata", (e) => addFormData(e));
     document.getElementById("regis").addEventListener("submit", (e) => submitForm(e));
 
+    // Live time to event functionality
     const offset = (new Date().getTimezoneOffset() * -1) / 60 - parseFloat(OFFSET);
-
     setInterval(() => {
         const now = new Date();
         const eventStartTime = getTimeData(EVENT_DATE, EVENT_START_TIME, offset);
@@ -61,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }, 1000);
 
+    // Export functionality
     document.getElementById("d-csv").addEventListener("click", () => {
         regisTable.download("csv", `${EVENT_UID}-regis-export.csv`, { bom: true });
     });
@@ -77,6 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     let teamLength = 0;
                     let teamData = [];
                     try {
+                        // Prettify JSON team data
                         const teams = JSON.parse(registration.teams);
                         teamLength = Object.keys(teams).length;
                         let i = 1;
@@ -85,8 +88,9 @@ document.addEventListener("DOMContentLoaded", () => {
                             i++;
                         }
                     } catch (e) {
-                        // Problem parsing JSON, keep as null
+                        // No teams for this registration, can ignore error
                     }
+                    // Collect all data and filter out empty cells
                     const data = [
                         ["Name", registration.repName],
                         ["Is Manual", uid.startsWith("-N")],
@@ -110,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
                 workbook.SheetNames = sheets.map((sheet) => sheet.name);
-                // Add info for each page
+                // Add info to each page
                 for (const sheet of sheets) {
                     workbook.Sheets[sheet.name] = XLSX.utils.aoa_to_sheet(sheet.data);
                 }
@@ -178,7 +182,7 @@ function updateRegistered(data) {
         try {
             teamLength = Object.keys(JSON.parse(registration.teams)).length;
         } catch (e) {
-            // Problem parsing JSON, keep as null
+            // No teams for this registration, can ignore error
         }
         if (registration.role === "team") {
             tabulatorData.push({
@@ -243,6 +247,7 @@ function updateRegistered(data) {
             document.getElementById("d-csv").style.display = "none";
             document.getElementById("d-xl").style.display = "none";
             document.getElementById("viewbox").textContent = "No data available.";
+            document.getElementById("viewbox2").innerHTML = "";
         }
     } catch (e) {
         document.getElementById("registered-table").textContent = "Unable to load Tabulator. Please ensure your browser is not blocking the required scripts."
@@ -253,7 +258,7 @@ function updateRegistered(data) {
         // Select only one row at a time
         regisTable.deselectRow();
         row.select();
-        // Get the data for the selected row
+        // Get the data for the selected row and display it prettily
         const data = row.getData();
         let info = data.isManual ? 
                         `<h5>Viewing manual registration of '${DOMPurify.sanitize(data.name)}'</h5>
@@ -280,13 +285,19 @@ function updateRegistered(data) {
         if (data.numTeams) {
             info += `<p><b>Declared FIRST Teams:</b> ${DOMPurify.sanitize(data.numTeams)}</p>`;
         }
+
+        // Cancel mutation if we're just gonna show the same info
+        if (info === document.getElementById("viewbox").innerHTML) return;
         document.getElementById("viewbox").innerHTML = info;
+
         let secondbox = `
             <h5>Contact Information</h5>
             <p><b>Contact Name:</b> ${DOMPurify.sanitize(data.contactName)}</p>
             <p><b>Contact Email:</b> ${DOMPurify.sanitize(data.contactEmail)}</p>
             <p><b>Contact Phone:</b> ${DOMPurify.sanitize(data.contactPhone)}</p>
         `;
+
+        // If we have teams we need to display a table with their verification status
         if (data.numTeams > 0) {
             const teams = JSON.parse(data.teamList);
             secondbox += `
@@ -306,15 +317,11 @@ function updateRegistered(data) {
             for (const [num, name] of Object.entries(teams)) {
                 // Need to query FIRSTTeamAPI to get verification status
                 _queue_inspection(num, name, (status, name) => {
-                    if (status) {
-                        document.getElementById(DOMPurify.sanitize(num)).innerHTML = "<span class='green'>yes</span>";
+                    if (document.getElementById(DOMPurify.sanitize(num)) === null) {
+                        // Team data is ready but table is not, wait for it to load
+                        setTimeout(() => updateTeamStatus(status, name, num), 250);
                     } else {
-                        document.getElementById(DOMPurify.sanitize(num)).innerHTML = "<span class='red'>no</span>";
-                    }
-                    if (name) {
-                        document.getElementById(DOMPurify.sanitize(num) + "n").innerHTML = "<span class='red'>yes</span>";
-                    } else {
-                        document.getElementById(DOMPurify.sanitize(num) + "n").innerHTML = "<span class='green'>no</span>";
+                        updateTeamStatus(status, name, num);
                     }
                 });
                 secondbox += `
@@ -333,11 +340,25 @@ function updateRegistered(data) {
         }
         document.getElementById("viewbox2").innerHTML = secondbox;
     });
+
+    const updateTeamStatus = (status, name, num) => {
+        if (status) {
+            document.getElementById(DOMPurify.sanitize(num)).innerHTML = "<span class='green'>yes</span>";
+        } else {
+            document.getElementById(DOMPurify.sanitize(num)).innerHTML = "<span class='red'>no</span>";
+        }
+        if (name) {
+            document.getElementById(DOMPurify.sanitize(num) + "n").innerHTML = "<span class='red'>yes</span>";
+        } else {
+            document.getElementById(DOMPurify.sanitize(num) + "n").innerHTML = "<span class='green'>no</span>";
+        }
+    };
 }
 
+const teamCache = {};
 function _queue_inspection(num, tname, callback) {
-    // TODO: Optimise with cache
-    api.safeFetch(`https://firstteamapi.vercel.app/get_team/${num}`).then((data) => {
+    if (teamCache[num]) {
+        const data = teamCache[num];
         const status = data.valid;
         let nameFound = false;
         for (let i = 0; i < data.data.length; i++) {
@@ -347,9 +368,22 @@ function _queue_inspection(num, tname, callback) {
             }
         }
         callback(status, !nameFound);
-    });
+    } else {
+        api.safeFetch(`https://firstteamapi.vercel.app/get_team/${num}`).then((data) => {
+            const status = data.valid;
+            let nameFound = false;
+            for (let i = 0; i < data.data.length; i++) {
+                if (data.data[i].nickname === tname) {
+                    nameFound = true;
+                    break;
+                }
+            }
+            // Store in cache for recurring calls
+            teamCache[num] = data;
+            callback(status, !nameFound);
+        });
+    }
 }
-
 
 function getTimeData(date, time, offset) {
     // Reused from event_viewer because working with date and time is a nightmare
