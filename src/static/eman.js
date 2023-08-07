@@ -199,33 +199,38 @@ function updateRegistered(data) {
             });
         }
     }
-    regisTable = new Tabulator("#registered-table", {
-        data: tabulatorData,
-        layout: "fitColumns",
-        pagination: "local",
-        paginationSize: 10,
-        paginationSizeSelector: [10, 25, 50, 100],
-        initialSort: [{ column: "time" }],
-        columns: [
-            { title: "UID", field: "id", visible: false, download: false },
-            { title: "Representative Name", field: "name" },
-            { title: "Registered Time", field: "time", formatter: "datetime", formatterParams: { outputFormat: "FF" } },
-            { title: "Role", field: "role" },
-            { title: "Contact Name", field: "contactName", visible: false, download: true },
-            { title: "Contact Email", field: "contactEmail", visible: false, download: true },
-            { title: "Contact Phone", field: "contactPhone", visible: false, download: true },
-            { title: "Declared People", field: "numPeople" },
-            { title: "Declared Students", field: "numStudents" },
-            { title: "Declared Mentors", field: "numMentors" },
-            { title: "Declared Other Adults", field: "numAdults" },
-            { title: "Declared FIRST Teams", field: "numTeams" },
-            { title: "Team List", field: "teamList", visible: false, download: true },
-            { title: "Is Manual", field: "isManual", visible: false, download: true }
-        ],
-        cssClass: "tabulator",
-        selectable: true,
-        placeholder: "No data available"
-    });
+    try {
+        regisTable = new Tabulator("#registered-table", {
+            data: tabulatorData,
+            layout: "fitColumns",
+            pagination: "local",
+            paginationSize: 10,
+            paginationSizeSelector: [10, 25, 50, 100],
+            initialSort: [{ column: "time" }],
+            columns: [
+                { title: "UID", field: "id", visible: false, download: false },
+                { title: "Representative Name", field: "name" },
+                { title: "Registered Time", field: "time", formatter: "datetime", formatterParams: { outputFormat: "FF" } },
+                { title: "Role", field: "role" },
+                { title: "Contact Name", field: "contactName", visible: false, download: true },
+                { title: "Contact Email", field: "contactEmail", visible: false, download: true },
+                { title: "Contact Phone", field: "contactPhone", visible: false, download: true },
+                { title: "Declared People", field: "numPeople" },
+                { title: "Declared Students", field: "numStudents" },
+                { title: "Declared Mentors", field: "numMentors" },
+                { title: "Declared Other Adults", field: "numAdults" },
+                { title: "Declared FIRST Teams", field: "numTeams" },
+                { title: "Team List", field: "teamList", visible: false, download: true },
+                { title: "Is Manual", field: "isManual", visible: false, download: true }
+            ],
+            cssClass: "tabulator",
+            selectable: true,
+            placeholder: "No data available"
+        });
+    } catch (e) {
+        document.getElementById("registered-table").textContent = "Unable to load Tabulator. Please ensure your browser is not blocking the required scripts."
+        return;
+    }
 
     regisTable.on("rowClick", (e, row) => {
         // Select only one row at a time
