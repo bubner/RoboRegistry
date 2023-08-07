@@ -3,6 +3,7 @@
  * @author Lucas Bubner, 2023
  */
 let registeredData = null;
+let regisTable = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     tick();
@@ -60,12 +61,70 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }, 1000);
 
+    document.getElementById("d-csv").addEventListener("click", () => {
+        regisTable.download("csv", `${EVENT_UID}-regis-export.csv`, { bom: true });
+    });
+
+    document.getElementById("d-xl").addEventListener("click", () => {
+        regisTable.download("xlsx", `${EVENT_UID}-regis-export.xlsx`, {
+            documentProcessing: (workbook) => {
+                // Make a new sheet for for every registration
+                const sheets = [];
+                for (const [uid, registration] of Object.entries(registeredData)) {
+                    if (uid == "anon_checkin") {
+                        continue;
+                    }
+                    let teamLength = 0;
+                    let teamData = [];
+                    try {
+                        const teams = JSON.parse(registration.teams);
+                        teamLength = Object.keys(teams).length;
+                        let i = 1;
+                        for (const [num, name] of Object.entries(teams)) {
+                            teamData.push([`Team ${i}`, `${num} - ${name}`]);
+                            i++;
+                        }
+                    } catch (e) {
+                        // Problem parsing JSON, keep as null
+                    }
+                    const data = [
+                        ["Name", registration.repName],
+                        ["Is Manual", uid.startsWith("-N")],
+                        ["Registered Time", luxon.DateTime.fromSeconds(registration.registered_time).toISO()],
+                        ["Role", registration.role],
+                        ["Contact Name", registration.contactName],
+                        ["Contact Email", registration.contactEmail],
+                        ["Contact Phone", registration.contactPhone || "N/A"],
+                        ["Number of People", registration.numPeople],
+                        ["Number of Students", registration.numStudents],
+                        ["Number of Mentors", registration.numMentors],
+                        ["Number of Other Adults", registration.numAdults],
+                        ["Number of Teams", teamLength],
+                        ...teamData
+                    ].filter(row => row.some(cell => cell !== null && cell !== ''));
+                    if (data.length > 0) {
+                        sheets.push({
+                            name: uid,
+                            data: data,
+                        });
+                    }
+                }
+                workbook.SheetNames = sheets.map((sheet) => sheet.name);
+                // Add info for each page
+                for (const sheet of sheets) {
+                    workbook.Sheets[sheet.name] = XLSX.utils.aoa_to_sheet(sheet.data);
+                }
+                return workbook;
+            }
+        });
+    });
+
     // Ping the API every 30 seconds
-    // setInterval(tick, 30000);
+    setInterval(tick, 30000);
 });
 
 function submitForm(e) {
-    if (document.getElementById("role").value !== "Team") return;
+    if (document.getElementById("role").value !== "team") return;
     const teams = document.querySelectorAll(".team");
     if (teams.length === 0) {
         alert("Please add at least one team!");
@@ -151,37 +210,48 @@ function updateRegistered(data) {
             });
         }
     }
-    const table = new Tabulator("#registered-table", {
-        data: tabulatorData,
-        layout: "fitColumns",
-        pagination: "local",
-        paginationSize: 10,
-        paginationSizeSelector: [10, 25, 50, 100],
-        initialSort: [{ column: "time" }],
-        columns: [
-            { title: "UID", field: "id", visible: false, download: false },
-            { title: "Representative Name", field: "name" },
-            { title: "Registered Time", field: "time", formatter: "datetime", formatterParams: { outputFormat: "FF" } },
-            { title: "Role", field: "role" },
-            { title: "Contact Name", field: "contactName", visible: false },
-            { title: "Contact Email", field: "contactEmail", visible: false },
-            { title: "Contact Phone", field: "contactPhone", visible: false },
-            { title: "Declared People", field: "numPeople" },
-            { title: "Declared Students", field: "numStudents" },
-            { title: "Declared Mentors", field: "numMentors" },
-            { title: "Declared Other Adults", field: "numAdults" },
-            { title: "Declared FIRST Teams", field: "numTeams" },
-            { title: "Team List", field: "teamList", visible: false },
-            { title: "Is Manual", field: "isManual", visible: false }
-        ],
-        cssClass: "tabulator",
-        selectable: true,
-        placeholder: "No data available"
-    });
+    try {
+        regisTable = new Tabulator("#registered-table", {
+            data: tabulatorData,
+            layout: "fitColumns",
+            pagination: "local",
+            paginationSize: 10,
+            paginationSizeSelector: [10, 25, 50, 100],
+            initialSort: [{ column: "time" }],
+            columns: [
+                { title: "UID", field: "id", visible: false, download: false },
+                { title: "Representative Name", field: "name" },
+                { title: "Registered Time", field: "time", formatter: "datetime", formatterParams: { outputFormat: "FF" } },
+                { title: "Role", field: "role" },
+                { title: "Contact Name", field: "contactName", visible: false, download: true },
+                { title: "Contact Email", field: "contactEmail", visible: false, download: true },
+                { title: "Contact Phone", field: "contactPhone", visible: false, download: true },
+                { title: "Declared People", field: "numPeople" },
+                { title: "Declared Students", field: "numStudents" },
+                { title: "Declared Mentors", field: "numMentors" },
+                { title: "Declared Other Adults", field: "numAdults" },
+                { title: "Declared FIRST Teams", field: "numTeams" },
+                { title: "Team List", field: "teamList", visible: false, download: true },
+                { title: "Is Manual", field: "isManual", visible: false, download: true }
+            ],
+            cssClass: "tabulator",
+            selectable: true,
+            placeholder: "No data available"
+        });
+        // Hide export buttons if there is no data
+        if (tabulatorData.length === 0) {
+            document.getElementById("d-csv").style.display = "none";
+            document.getElementById("d-xl").style.display = "none";
+            document.getElementById("viewbox").textContent = "No data available.";
+        }
+    } catch (e) {
+        document.getElementById("registered-table").textContent = "Unable to load Tabulator. Please ensure your browser is not blocking the required scripts."
+        return;
+    }
 
-    table.on("rowClick", (e, row) => {
+    regisTable.on("rowClick", (e, row) => {
         // Select only one row at a time
-        table.deselectRow();
+        regisTable.deselectRow();
         row.select();
         // Get the data for the selected row
         const data = row.getData();

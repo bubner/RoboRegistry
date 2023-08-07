@@ -67,7 +67,7 @@ footer a:not(p > a) {
 #logoimg,
 #logoimgr {
     height: 125px;
-    width: 250px;
+    width: 262.5px; /* 125 * 2.1 */
     position: relative;
     left: 50%;
     transform: translateX(-50%);
