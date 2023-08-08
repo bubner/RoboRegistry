@@ -7,6 +7,7 @@ import math
 import os
 import random
 import re
+import json
 from datetime import datetime
 from io import BytesIO
 from time import time
@@ -534,7 +535,7 @@ def dynamic(event_id: str):
         anon_affil = request.form.get("visit-reason")
         anon_name = request.form.get("anon-name")
 
-        if not entity or (entity == "anon" and not anon_affil or not anon_name):
+        if not entity or (entity == "anon" and not (anon_affil or not anon_name)):
             return render_template("event/done.html.jinja", event=event, status="Failed: CI_INVALID",
                                    message="You have provided insufficient data! If trouble persists, try registration email check-in or asking the event owner to record you as attended manually.",
                                    user=getattr(current_user, "data", db.logged_out_data)), 400
@@ -630,8 +631,24 @@ def manage(event_id: str):
     # Calculate the UTC offset for the event, to display time correctly
     offset = timezone(event["timezone"]).utcoffset(datetime.now()).total_seconds() / 3600
 
+    # Calculate other attributes such as the number of people checked in and team registration count
+    checked_in = 0
+    for registration in event.get("registered", {}).values():
+        if registration.get("checkin_data", {}).get("checked_in"):
+            checked_in += 1
+
+    checked_in += len(data.get("anon_data", []))
+
+    teams_attending = 0
+    for registration in data.values():
+        if not registration.get("teams"):
+            continue
+        # Length of teams is the number of teams registered
+        # Must parse as JSON as it is currently stringified
+        teams_attending += len(json.loads(registration["teams"]))
+
     return render_template("event/manage.html.jinja", event=event, data=data, user=getattr(current_user, "data"),
-                           offset=offset)
+                           offset=offset, checked_in=checked_in, teams_attending=teams_attending)
 
 
 @events_bp.route("/events/manage/<string:event_id>/driver")

@@ -356,6 +356,7 @@ function updateRegistered(data) {
 }
 
 const teamCache = {};
+// TODO: Cache doesnt work when the team is in multiple registrations
 function _queue_inspection(num, tname, callback) {
     if (teamCache[num]) {
         const data = teamCache[num];
