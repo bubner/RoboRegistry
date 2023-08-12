@@ -316,13 +316,10 @@ function updateRegistered(data) {
             `;
             for (const [num, name] of Object.entries(teams)) {
                 // Need to query FIRSTTeamAPI to get verification status
-                _queue_inspection(num, name, (status, name) => {
-                    if (document.getElementById(DOMPurify.sanitize(num)) === null) {
-                        // Team data is ready but table is not, wait for it to load
-                        setTimeout(() => updateTeamStatus(status, name, num), 250);
-                    } else {
-                        updateTeamStatus(status, name, num);
-                    }
+                _queue_inspection(num, name).then((res) => {
+                    updateTeamStatus(res.status, res.name, num); 
+                }).catch((_) => {
+                    updateErrorStatus(num);
                 });
                 secondbox += `
                     <tr>
@@ -353,24 +350,18 @@ function updateRegistered(data) {
             document.getElementById(DOMPurify.sanitize(num) + "n").innerHTML = "<span class='green'>no</span>";
         }
     };
+
+    const updateErrorStatus = (num) => {
+        document.getElementById(DOMPurify.sanitize(num)).innerHTML = "<span class='red'>error</span>";
+        document.getElementById(DOMPurify.sanitize(num) + "n").innerHTML = "<span class='red'>error</span>";
+    };
 }
 
 const teamCache = {};
-// TODO: Cache doesnt work when the team is in multiple registrations
-function _queue_inspection(num, tname, callback) {
-    if (teamCache[num]) {
-        const data = teamCache[num];
-        const status = data.valid;
-        let nameFound = false;
-        for (let i = 0; i < data.data.length; i++) {
-            if (data.data[i].nickname === tname) {
-                nameFound = true;
-                break;
-            }
-        }
-        callback(status, !nameFound);
-    } else {
-        api.safeFetch(`https://firstteamapi.vercel.app/get_team/${num}`).then((data) => {
+function _queue_inspection(num, tname) {
+    return new Promise((resolve, reject) => {
+        if (teamCache[num]) {
+            const data = teamCache[num];
             const status = data.valid;
             let nameFound = false;
             for (let i = 0; i < data.data.length; i++) {
@@ -379,11 +370,30 @@ function _queue_inspection(num, tname, callback) {
                     break;
                 }
             }
-            // Store in cache for recurring calls
-            teamCache[num] = data;
-            callback(status, !nameFound);
-        });
-    }
+            resolve({
+                "status": status, 
+                "name": !nameFound
+            });
+        } else {
+            api.safeFetch(`https://firstteamapi.vercel.app/get_team/${num}`).then((data) => {
+                if (!data) return reject();
+                const status = data.valid;
+                let nameFound = false;
+                for (let i = 0; i < data.data.length; i++) {
+                    if (data.data[i].nickname === tname) {
+                        nameFound = true;
+                        break;
+                    }
+                }
+                // Store in cache for recurring calls
+                teamCache[num] = data;
+                resolve({
+                    "status": status, 
+                    "name": !nameFound
+                });
+            });
+        }
+    });
 }
 
 function getTimeData(date, time, offset) {
