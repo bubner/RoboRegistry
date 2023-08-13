@@ -26,6 +26,8 @@ from wrappers import must_be_event_owner, event_must_be_running, validate_user
 
 events_bp = Blueprint("events", __name__, template_folder="templates")
 
+# Maximum number of events a user can have within one account
+MAX_EVENTS = 20
 
 @events_bp.route("/events/view")
 @login_required
@@ -132,6 +134,13 @@ def create():
     """
         Create a new event on the system.
     """
+    my_events = db.get_my_events()
+    if len(my_events[1]) >= MAX_EVENTS:
+        return render_template("event/done.html.jinja", user=getattr(current_user, "data"),
+                                 event={"name": "tmp", "uid": "n/a"},
+                                 status="Failed: MAX_EVENTS",
+                                 message="You have reached the maximum number of events you can create. Please export and delete an event to create a new one.")
+
     user = getattr(current_user, "data")
     mapbox_api_key = os.getenv("MAPBOX_API_KEY")
     if request.method == "POST":
