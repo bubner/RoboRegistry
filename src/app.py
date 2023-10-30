@@ -234,6 +234,11 @@ def exportall():
     raise NotImplementedError
 
 
+@app.route("/privacy")
+def privacy():
+    return render_template("misc/privacy.html.jinja")
+
+
 def error_handler(code, reason):
     def decorator(f):
         @app.errorhandler(code)
