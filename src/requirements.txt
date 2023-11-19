@@ -53,7 +53,7 @@ trio==0.22.1
 trio-websocket==0.10.3
 typing_extensions==4.6.2
 urllib3==1.26.18
-Werkzeug==2.3.4
+Werkzeug==2.3.8
 wrapt==1.15.0
 wsproto==1.2.0
 WTForms==3.0.1
