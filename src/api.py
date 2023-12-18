@@ -149,6 +149,40 @@ def api_event_data(event_id):
     return bigdata
 
 
+@api_bp.route("/api/checkins/<string:event_id>")
+@login_required
+@must_be_event_owner
+def api_get_checkins(event_id):
+    """
+        Returns all check-ins for an event.
+    """
+    event = db.get_event(event_id)
+    if not event:
+        return {
+            "error": "NOT_FOUND"
+        }, 404
+    
+    registered = event.get("registered", {})
+    allcheckins = {}
+
+    if registered:
+        for uid in registered:
+            if registered[uid].get("checkin_data"):
+                allcheckins[uid] = registered[uid]["checkin_data"]
+    
+    try:
+        data = db.get_event_data(event_id)
+    except HTTPError:
+        return {
+            "error": "FORBIDDEN"
+        }, 403
+    
+    if data.get("anon_data"):
+        allcheckins["anon_checkin"] = data["anon_data"]
+
+    return allcheckins
+
+
 @api_bp.route("/api/changevis/<string:event_id>", methods=["POST"])
 @login_required
 @must_be_event_owner
