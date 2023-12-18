@@ -3,7 +3,9 @@
  * @author Lucas Bubner, 2023
  */
 let registeredData = null;
+let checkinData = null;
 let regisTable = null;
+let checkinTable = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     tick();
@@ -163,6 +165,12 @@ function tick() {
         // Little bit of a weird JSON hack, but it works for this application where the data will be in the same order
         if (JSON.stringify(data) != JSON.stringify(registeredData)) {
             updateRegistered(data);
+        }
+    });
+
+    api.safeFetch(`/api/checkins/${EVENT_UID}`).then((data) => {
+        if (JSON.stringify(data) != JSON.stringify(checkinData)) {
+            updateCheckins(data);
         }
     });
 }
@@ -334,6 +342,27 @@ function updateRegistered(data) {
             `;
         }
         document.getElementById("viewbox2").innerHTML = secondbox;
+    });
+}
+
+function updateCheckins(data) {
+    // use event now2-20230730 for testing
+    console.log(data);
+    checkinData = data;
+    checkinTable = new Tabulator("#checkin-table", {
+        data: checkinData,
+        layout: "fitColumns",
+        pagination: "local",
+        paginationSize: 10,
+        paginationSizeSelector: [10, 25, 50, 100],
+        initialSort: [{ column: "time" }],
+        columns: [
+            { title: "UID", field: "id", visible: false, download: false },
+            { title: "Check-in Time", field: "time", formatter: "datetime", formatterParams: { outputFormat: "FF" } },
+        ],
+        cssClass: "tabulator",
+        selectable: true,
+        placeholder: "No data available"
     });
 }
 
