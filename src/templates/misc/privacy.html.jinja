@@ -1,0 +1,125 @@
+{% extends "layout.html.jinja" %}
+
+{% block title %}
+Privacy Policy
+{% endblock %}
+
+{% block body %}
+<div class="container position-absolute top-50 start-50 translate-middle col-md-5 h-75 text-center">
+    <a href="/">Go back</a> <br /> <br />
+    <img src="{{ url_for('static', filename='assets/rr.png') }}" alt="logo" class="mb-3" width="200" />
+    <h1>Privacy Policy</h1>
+    <p class="text-muted">Last updated: 30/10/23 by <a href="https://lucasbubner.me" target="_blank">Lucas Bubner</a>.
+    </p>
+    <div class="text-start">
+        <h2>1. Introduction</h2>
+        <p>Welcome to RoboRegistry ("we," "our," or "us"). RoboRegistry is a service designed for collating data from
+            scrimmages by FIRST (For Inspiration and Recognition of Science and Technology).</p>
+        <p>RoboRegistry is maintained and developed by <a href="https://lucasbubner.me" target="_blank">Lucas
+                Bubner</a>. By using RoboRegistry, you acknowledge and accept
+            this policy.</p>
+        <p>This service has been designed with integrity and security in mind, and this Privacy Policy exists to explain
+            how we collect and process Personally Identifiable Information.</p>
+        <h2>2. Data We Collect</h2>
+        <p>RoboRegistry collects the following personal information in relation to using our service:</p>
+        <ul>
+            <li>Names, including first and last names</li>
+            <li>Contact details, such as email addresses and phone numbers</li>
+            <li>User-specified affiliations in FIRST robotics contexts</li>
+        </ul>
+        <p>RoboRegistry also collects additional information in the processsing of an event, which include:</p>
+        <ul>
+            <li>Event details, including location, date, and time</li>
+            <li>Team details, including team numbers and name</li>
+            <li>Attendance estimates</li>
+            <li>Required contact details</li>
+            <li>Check-in specific information, including times, declared names, and declared affiliations from external
+                sources</li>
+        </ul>
+        <p>This data is utilised for the event registration system, described in Section 4.</p>
+        <p>We do not collect usage information on the RoboRegistry service.</p>
+        <h2>3. How We Use Your Information</h2>
+        <p>RoboRegistry collects information in order to provide functionality to the service.</p>
+        <p>All data we collect is essential in providing event data for event creators, and all collected data is
+            explicitly requested from users.</p>
+        <p>RoboRegistry does not disclose or sell your information.</p>
+        <h2>4. Events</h2>
+        <p>An Event can be created by any RoboRegistry user, and have options to modify and manage their event details.
+            An event
+            consists of a time, location, and name, where users may be able to register through the Registration Form.
+        </p>
+        <p>Registered data stored in an event can be be used for gathering insights into attendance at an event,
+            which support in making decisions regarding catering, funding, or venue for the Event Creator.</p>
+        <p>Event Creators will have access to all explicitly mentioned information listed by your enrolment with the
+            Registration Form.</p>
+        <p>No additional data outside the Registration Form is accessible to event creators.</p>
+        <p>If desired by the Event Creator, the check-in system provides a secondary source of event attendance
+            information on the event day.</p>
+        <p>Users that have registered for the event have the option to check-in based on their first name, while users
+            that are
+            not on RoboRegistry
+            have the option to declare external event attendance (as described in Section 2).</p>
+        <h2>5. Data Retention & Modification</h2>
+        <p>You have the right to access and modify your user information, including permanent removal of your account
+            from RoboRegistry. These changes can be performed from the <a href="/settings" target="_blank">settings</a>
+            page.</p>
+        <p>Events your RoboRegistry account are registered for will not reflect your modified data, but can be removed
+            by unregistering from an event.</p>
+        <p>RoboRegistry events with their registration window closed cannot be unregistered from, and removal of your
+            account will
+            not remove any data stored for the event.</p>
+        <h2>6. Data Storage & Authentication</h2>
+        <p>RoboRegistry utilises Google Firebase as a database and authentication service, a cloud-based platform to
+            offer secure and reliable data storage solutions.</p>
+        <p>By using RoboRegistry, you acknowledge and agree to the following:</p>
+        <ul>
+            <li>Data you provide to RoboRegistry may be stored on Google Firebase servers</li>
+            <li>Your login details are stored and processed through Google Firebase Authentication to ensure account
+                security</li>
+        </ul>
+        <p>To learn more about how Google Firebase handles data and authentication, you can review Google's privacy
+            policy and terms of service.</p>
+        <h2>7. Data Security</h2>
+        <p>We utilise modern security standards to protect your information from unauthorised usage, which includes:</p>
+        <ul>
+            <li>Comprehensive Firebase Database security rules</li>
+            <li>OWASP Web Security practices</li>
+            <li>SSL-encrypted communications</li>
+            <li>Cross-Site Scripting (XSS) protection</li>
+            <li>Secure and HTTP-only tamper-proof session cookies</li>
+            <li>Cross-Site Request Forgery (CSRF) protection</li>
+            <li>Content Security Policies to prevent unauthorised scripts</li>
+            <li>Additional web protections to ensure data integrity and security</li>
+        </ul>
+        <p>RoboRegistry has been reviewed for common web vulnerabilities, which include XSS, CSRF, and session
+            hijacking, passing
+            all testing.</p>
+        <h2>8. Disclaimer of Liability and Warranty</h2>
+        <p>While we take reasonable measures to maintain the security and accuracy of data collected through
+            RoboRegistry, we want to make it clear that:</p>
+        <ul>
+            <li>The data provided through our project is for informational and convenience purposes only.</li>
+            <li>We do not make any warranties or representations regarding the accuracy, completeness, or reliability of
+                the data.</li>
+            <li>You use the data at your own discretion and assume all risk associated with its use.</li>
+        </ul>
+        <p>We expressly disclaim all liability for any errors or omissions in the data, or for any loss or damage
+            resulting from its use.</p>
+        <h2>9. Amendments to this Privacy Policy</h2>
+        <p>We may update this Privacy Policy from time to time to reflect changes to our practices or for other
+            operational, legal, or regulatory reasons. Any changes will be posted on this page with an updated "Last
+            updated" date.</p>
+        <h2>10. Contact Us</h2>
+        <p>If you have any questions regarding RoboRegistry or this Privacy Policy, please contact us below.</p>
+        <p><b>RoboRegistry</b> <br /> Lucas Bubner <br /><a href="mailto:lkbubner@proton.me">lkbubner@proton.me</a>
+            <hr />
+        <p class="text-muted">RoboRegistry. Copyright (c) 2023 <a href="https://lucasbubner.me" target="_blank">Lucas
+                Bubner</a>
+            under the <a href="https://raw.githubusercontent.com/hololb/RoboRegistry/prod/LICENSE" target="_blank">GNU
+                GPL-3</a>
+            license. <br /> <small>RoboRegistry is not affiliated with FIRST.</small>
+        </p>
+    </div>
+    <br />
+</div>
+{% endblock %}

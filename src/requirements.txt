@@ -5,7 +5,7 @@ certifi==2023.7.22
 cffi==1.15.1
 charset-normalizer==3.1.0
 click==8.1.3
-cryptography==41.0.3
+cryptography==41.0.6
 Deprecated==1.2.13
 exceptiongroup==1.1.2
 firebase-rest-api==1.10.1
@@ -31,7 +31,7 @@ Jinja2==3.1.2
 jwcrypto==1.4.2
 MarkupSafe==2.1.2
 outcome==1.2.0
-Pillow==9.5.0
+Pillow==10.0.1
 pkce==1.0.3
 proto-plus==1.22.2
 protobuf==4.23.0
@@ -52,8 +52,8 @@ sortedcontainers==2.4.0
 trio==0.22.1
 trio-websocket==0.10.3
 typing_extensions==4.6.2
-urllib3==1.26.15
-Werkzeug==2.3.4
+urllib3==1.26.18
+Werkzeug==2.3.8
 wrapt==1.15.0
 wsproto==1.2.0
 WTForms==3.0.1
