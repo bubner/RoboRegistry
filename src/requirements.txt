@@ -28,7 +28,7 @@ idna==3.4
 importlib-metadata==6.6.0
 itsdangerous==2.1.2
 Jinja2==3.1.2
-jwcrypto==1.4.2
+jwcrypto==1.5.1
 MarkupSafe==2.1.2
 outcome==1.2.0
 Pillow==10.0.1
