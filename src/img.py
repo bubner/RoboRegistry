@@ -22,7 +22,7 @@ def generate_qrcode(event, size, qr_type) -> BytesIO:
         @return: QR code image as a BytesIO object
     """
     img = qrcode.make(
-        f"https://rbreg.vercel.app/events/{qr_type}/{event.get('uid')}?code={event.get('checkin_code')}",
+        f"https://rbreg.vercel.app/events/{qr_type}/{event.get('uid')}" + f"?code={event.get('checkin_code')}" if qr_type == "ci" else "",
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L if size == "large" else qrcode.constants.ERROR_CORRECT_H,
         box_size=20 if size == "large" else 16,
