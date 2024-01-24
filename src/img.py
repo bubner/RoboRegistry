@@ -22,7 +22,7 @@ def generate_qrcode(event, size, qr_type) -> BytesIO:
         @return: QR code image as a BytesIO object
     """
     img = qrcode.make(
-        f"https://rbreg.vercel.app/events/{qr_type}/{event.get('uid')}" + f"?code={event.get('checkin_code')}" if qr_type == "ci" else "",
+        f"https://rbreg.vercel.app/events/{qr_type}/{event.get('uid')}" + (f"?code={event.get('checkin_code')}" if qr_type == "ci" else ""),
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L if size == "large" else qrcode.constants.ERROR_CORRECT_H,
         box_size=20 if size == "large" else 16,
@@ -83,10 +83,11 @@ def generate_qrcode(event, size, qr_type) -> BytesIO:
                       font=smallfont if len(text) > 90 else font)
 
             # Add email
-            text = "For inquiries contact: " + event.get("email")
-            text_width, text_height = draw.textlength(text, boldfont), boldfont.size
-            draw.text(((template_width - text_width) // 2, template_height - text_height - 480), text, (0, 0, 0),
-                      font=boldfont)
+            if event.get("email") != "N/A":
+                text = "For inquiries contact: " + event.get("email")
+                text_width, text_height = draw.textlength(text, boldfont), boldfont.size
+                draw.text(((template_width - text_width) // 2, template_height - text_height - 480), text, (0, 0, 0),
+                        font=boldfont)
         else:
             # Add event check-in code
             text = str(event.get("checkin_code"))
