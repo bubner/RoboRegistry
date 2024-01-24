@@ -56,7 +56,7 @@ def login():
             user = auth.sign_in_with_email_and_password(email, password)
             if not user:
                 return redirect("/login")
-            login_user(User(user.get("refreshToken")), remember=request.form.get("remember-me", False))
+            login_user(User(user.get("refreshToken")), remember=bool(request.form.get("remember-me", False)))
             return redirect("/")
         except Exception:
             return render_template("auth/login.html.jinja", error="Invalid email or password.")
@@ -92,7 +92,7 @@ def register():
             user = auth.sign_in_with_email_and_password(email, password)
             if not user:
                 return redirect("/login")
-            login_user(User(user.get("refreshToken")), remember=request.form.get("remember-me", False))
+            login_user(User(user.get("refreshToken")), remember=bool(request.form.get("remember-me", False)))
             return res
         except HTTPError as e:
             # String hack since the HTTP error object refuses to cooperate

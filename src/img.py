@@ -21,17 +21,13 @@ def generate_qrcode(event, size, qr_type) -> BytesIO:
         Generates a QR code for RoboRegistry registration or check-in
         @return: QR code image as a BytesIO object
     """
-    qr = qrcode.QRCode(
+    img = qrcode.make(
+        f"https://rbreg.vercel.app/events/{qr_type}/{event.get('uid')}" + (f"?code={event.get('checkin_code')}" if qr_type == "ci" else ""),
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L if size == "large" else qrcode.constants.ERROR_CORRECT_H,
         box_size=20 if size == "large" else 16,
         border=0 if size == "large" else 2,
     )
-    qr.add_data(f"https://rbreg.vercel.app/events/{qr_type}/{event.get('uid')}?code={event.get('checkin_code')}")
-    qr.make(fit=True)
-
-    # Generate QR code image
-    img = qr.make_image(fill_color="black", back_color="white")
 
     # Open the RoboRegistry template depending on size and type
     if size == "large" and qr_type == "register":
@@ -64,37 +60,38 @@ def generate_qrcode(event, size, qr_type) -> BytesIO:
 
         # Add URL
         text = f"https://roboregistry.vercel.app/events/{qr_type}/{event.get('uid')}"
-        text_width, text_height = draw.textsize(text, boldfont)
+        text_width, text_height = draw.textlength(text, boldfont), boldfont.size
         draw.text(((template_width - text_width) // 2, template_height - text_height - 1000), text, (0, 0, 0),
                   font=boldfont)
 
         # Add event name
         text = event.get("name").upper()
-        text_width, text_height = draw.textsize(text, bigfont)
+        text_width, text_height = draw.textlength(text, bigfont), bigfont.size
         draw.text(((template_width - text_width) // 2, 800 + text_height), text, (0, 0, 0), font=bigfont)
 
         if qr_type == "register":
             # Add event details
             text = f"{event.get('date')} | {event.get('start_time')} - {event.get('end_time')}"
-            text_width, text_height = draw.textsize(text, font)
+            text_width, text_height = draw.textlength(text, font), font.size
             draw.text(((template_width - text_width) // 2, template_height - text_height - 700), text, (0, 0, 0),
                       font=font)
 
             # Add location
             text = event.get("location")
-            text_width, text_height = draw.textsize(text, smallfont if len(text) > 90 else font)
+            text_width, text_height = draw.textlength(text, smallfont if len(text) > 90 else font), smallfont.size if len(text) > 90 else font.size
             draw.text(((template_width - text_width) // 2, template_height - text_height - 600), text, (0, 0, 0),
                       font=smallfont if len(text) > 90 else font)
 
             # Add email
-            text = "For inquiries contact: " + event.get("email")
-            text_width, text_height = draw.textsize(text, boldfont)
-            draw.text(((template_width - text_width) // 2, template_height - text_height - 480), text, (0, 0, 0),
-                      font=boldfont)
+            if event.get("email") != "N/A":
+                text = "For inquiries contact: " + event.get("email")
+                text_width, text_height = draw.textlength(text, boldfont), boldfont.size
+                draw.text(((template_width - text_width) // 2, template_height - text_height - 480), text, (0, 0, 0),
+                        font=boldfont)
         else:
             # Add event check-in code
             text = str(event.get("checkin_code"))
-            text_width, text_height = draw.textsize(text, bigfont)
+            text_width, text_height = draw.textlength(text, bigfont), bigfont.size
             draw.text(((template_width - text_width) // 2, template_height - text_height - 480), text, (0, 0, 0),
                       font=bigfont)
 
@@ -193,11 +190,11 @@ def generate_man_ci(event):
 
         # Draw a table header for the extra walk-ins, with the values Name, Affiliation, and Time
         font = ImageFont.truetype("static/assets/Roboto-Black.ttf", 40)
-        draw.text((100 + 200 + maxlen * 20 + 100 + (500 - font.getsize("Name")[0]) // 2, 400), "Name", (0, 0, 0),
+        draw.text((100 + 200 + maxlen * 20 + 100 + (500 - font.getbbox("Name")[2]) // 2, 400), "Name", (0, 0, 0),
                   font=font)
-        draw.text((100 + 200 + maxlen * 20 + 100 + 500 + (500 - font.getsize("Affiliation")[0]) // 2, 400),
+        draw.text((100 + 200 + maxlen * 20 + 100 + 500 + (500 - font.getbbox("Affiliation")[2]) // 2, 400),
                   "Affiliation", (0, 0, 0), font=font)
-        draw.text((100 + 200 + maxlen * 20 + 100 + 500 + 500 + (500 - font.getsize("Time")[0]) // 2, 400), "Time",
+        draw.text((100 + 200 + maxlen * 20 + 100 + 500 + 500 + (500 - font.getbbox("Time")[2]) // 2, 400), "Time",
                   (0, 0, 0), font=font)
 
         # Draw table cells
