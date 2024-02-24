@@ -39,7 +39,7 @@ class API {
     }
 
     async getTeamData(number) {
-        // FIRSTTeamAPI: https://github.com/hololb/FIRSTTeamAPI
+        // FIRSTTeamAPI: https://github.com/bubner/FIRSTTeamAPI
         return this.safeFetch(`https://firstteamapi.vercel.app/get_team/${number}`);
     }
 }
