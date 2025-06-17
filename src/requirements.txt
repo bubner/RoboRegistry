@@ -29,7 +29,7 @@ MarkupSafe==2.1.5
 pillow==10.3.0
 pkce==1.0.3
 proto-plus==1.23.0
-protobuf==4.25.3
+protobuf==4.25.8
 pyasn1==0.6.0
 pyasn1_modules==0.4.0
 pycparser==2.22
