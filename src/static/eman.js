@@ -337,7 +337,7 @@ function updateRegistered(data) {
 
 function _queue_inspection(num, tname, callback) {
     // TODO: Optimise with cache
-    api.safeFetch(`https://firstteamapi.vercel.app/get_team/${num}`).then((data) => {
+    api.safeFetch(`https://firstteam.api.bubner.me/get_team/${num}`).then((data) => {
         const status = data.valid;
         let nameFound = false;
         for (let i = 0; i < data.data.length; i++) {

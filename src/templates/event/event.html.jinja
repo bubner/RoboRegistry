@@ -105,12 +105,12 @@
     }
 
     document.getElementById('copyregis').addEventListener('click', () => {
-        const url = `https://roboregistry.vercel.app/events/register/${"{{ event.uid }}"}`;
+        const url = `https://roboregistry.app.bubner.me/events/register/${"{{ event.uid }}"}`;
         copyToClipboard(url);
     });
 
     document.getElementById('copyci').addEventListener('click', () => {
-        const url = `https://roboregistry.vercel.app/events/ci/${"{{ event.uid }}"}`;
+        const url = `https://roboregistry.app.bubner.me/events/ci/${"{{ event.uid }}"}`;
         copyToClipboard(url);
     });
 </script>

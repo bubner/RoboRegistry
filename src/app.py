@@ -5,10 +5,11 @@
 
 import os
 import warnings
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, session, make_response, flash
+from flask import (Flask, flash, make_response, redirect, render_template,
+                   request, session, url_for)
 from flask_login import LoginManager, current_user, login_required
 from flask_talisman import Talisman
 from flask_wtf.csrf import CSRFProtect
@@ -18,7 +19,7 @@ import api
 import db
 import events
 import utils
-from auth import auth_bp, User
+from auth import User, auth_bp
 from wrappers import validate_user
 
 load_dotenv()
@@ -86,7 +87,7 @@ csp = {
         "'self'",
         "api.mapbox.com",
         "events.mapbox.com",
-        "firstteamapi.vercel.app"
+        "firstteam.api.bubner.me"
     ],
     "img-src": [
         "'self'",

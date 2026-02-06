@@ -40,7 +40,7 @@ class API {
 
     async getTeamData(number) {
         // FIRSTTeamAPI: https://github.com/bubner/FIRSTTeamAPI
-        return this.safeFetch(`https://firstteamapi.vercel.app/get_team/${number}`);
+        return this.safeFetch(`https://firstteam.api.bubner.me/get_team/${number}`);
     }
 }
 
