@@ -8,6 +8,7 @@ from io import BytesIO
 
 import qrcode
 import qrcode.constants
+import qrcode.image.pil
 from flask import abort
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from pytz import timezone
@@ -21,13 +22,18 @@ def generate_qrcode(event, size, qr_type) -> BytesIO:
         Generates a QR code for RoboRegistry registration or check-in
         @return: QR code image as a BytesIO object
     """
+    # TODO: text overflow prevention would be useful
     img = qrcode.make(
         f"https://roboregistry.app.bubner.me/events/{qr_type}/{event.get('uid')}" + (f"?code={event.get('checkin_code')}" if qr_type == "ci" else ""),
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L if size == "large" else qrcode.constants.ERROR_CORRECT_H,
         box_size=20 if size == "large" else 16,
         border=0 if size == "large" else 2,
+        image_factory=qrcode.image.pil.PilImage,
     )
+
+    # Backwards compatibility with older code using Pillow
+    qr_img = img.get_image()
 
     # Open the RoboRegistry template depending on size and type
     if size == "large" and qr_type == "register":
@@ -36,18 +42,18 @@ def generate_qrcode(event, size, qr_type) -> BytesIO:
         template = Image.open("static/assets/rr_qr_template_large_checkin.png")
     else:
         # Make a fresh template for small QR codes
-        template = Image.new("RGB", (img.size[0] + 20, img.size[1] + 20), color="white")
+        template = Image.new("RGB", (qr_img.size[0] + 20, qr_img.size[1] + 20), color="white")
         # Give it a yellow border
         template = ImageOps.expand(template, border=15, fill=(255, 217, 0))
 
     # Calculate the position to place the QR code in the center
-    qr_width, qr_height = img.size
+    qr_width, qr_height = qr_img.size
     template_width, template_height = template.size
     x = (template_width - qr_width) // 2
     y = (template_height - qr_height) // 2
 
     # Paste the QR code onto the template
-    template.paste(img, (x, y))
+    template.paste(qr_img, (x, y, x + qr_width, y + qr_height))
 
     # Only add extra metadata if the image is large
     if size == "large":
@@ -157,7 +163,7 @@ def generate_man_ci(event):
         # RoboRegistry logo in the top right
         logo = Image.open("static/assets/rr.png")
         logo = logo.resize((int(logo.size[0] * 0.5), int(logo.size[1] * 0.5)))
-        template.paste(logo, (2000, 100), logo)
+        template.paste(logo, (2000, 100, 2000 + logo.width, 100 + logo.height), logo)
 
         # For every entity, write their name and affilliation
         font = ImageFont.truetype("static/assets/Roboto-Regular.ttf", 40)
