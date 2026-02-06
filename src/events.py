@@ -13,7 +13,8 @@ from time import time
 from urllib.parse import urlparse
 from zipfile import ZipFile
 
-from flask import Blueprint, render_template, request, session, redirect, abort, send_file, make_response
+from flask import (Blueprint, abort, make_response, redirect, render_template,
+                   request, send_file, session)
 from flask_login import current_user, login_required, logout_user
 from pytz import all_timezones, timezone
 from requests.exceptions import HTTPError
@@ -21,7 +22,7 @@ from requests.exceptions import HTTPError
 import db
 import img
 import utils
-from wrappers import must_be_event_owner, event_must_be_running, validate_user
+from wrappers import event_must_be_running, must_be_event_owner, validate_user
 
 events_bp = Blueprint("events", __name__, template_folder="templates")
 
@@ -115,7 +116,7 @@ def redirector():
             res = make_response(redirect(target))
             # Test to see if it is a url and/or if it is a 404
             target = urlparse(target).hostname
-            if target and target not in ["roboregistry.vercel.app", "rbreg.vercel.app"] or res.status_code == 404:
+            if target and target != "roboregistry.app.bubner.me" or res.status_code == 404:
                 return render_template("dash/redirector.html.jinja", user=getattr(current_user, "data"),
                                        error="Hmm, we can't seem to find that event.")
             return res
@@ -605,8 +606,7 @@ def ci():
         # Redirect to the link found in the QR code
         link = request.form.get("event_url")
         target = urlparse(link)
-        if not link or not target or (
-                target.hostname and target.hostname not in ["roboregistry.vercel.app", "rbreg.vercel.app"]):
+        if not link or not target or (target.hostname and target.hostname != "roboregistry.app.bubner.me"):
             return render_template("event/qr.html.jinja")
         return redirect(str(target.geturl()))
     else:

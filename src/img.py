@@ -8,8 +8,8 @@ from io import BytesIO
 
 import qrcode
 import qrcode.constants
-from PIL import Image, ImageDraw, ImageFont, ImageOps
 from flask import abort
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 from pytz import timezone
 from requests.exceptions import HTTPError
 
@@ -22,7 +22,7 @@ def generate_qrcode(event, size, qr_type) -> BytesIO:
         @return: QR code image as a BytesIO object
     """
     img = qrcode.make(
-        f"https://rbreg.vercel.app/events/{qr_type}/{event.get('uid')}" + (f"?code={event.get('checkin_code')}" if qr_type == "ci" else ""),
+        f"https://roboregistry.app.bubner.me/events/{qr_type}/{event.get('uid')}" + (f"?code={event.get('checkin_code')}" if qr_type == "ci" else ""),
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L if size == "large" else qrcode.constants.ERROR_CORRECT_H,
         box_size=20 if size == "large" else 16,
@@ -59,7 +59,7 @@ def generate_qrcode(event, size, qr_type) -> BytesIO:
         bigfont = ImageFont.truetype("static/assets/Roboto-Black.ttf", 140)
 
         # Add URL
-        text = f"https://roboregistry.vercel.app/events/{qr_type}/{event.get('uid')}"
+        text = f"https://roboregistry.app.bubner.me/events/{qr_type}/{event.get('uid')}"
         text_width, text_height = draw.textlength(text, boldfont), boldfont.size
         draw.text(((template_width - text_width) // 2, template_height - text_height - 1000), text, (0, 0, 0),
                   font=boldfont)
