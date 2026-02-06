@@ -1,5 +1,5 @@
 # FLL/FTC/FRC Event Attendance Registrar
-### https://roboregistry.vercel.app/
+### https://roboregistry.app.bubner.me
 ##### Automated Registry for Recording and Tracking FIRST Scrimmage Attendance
 [![CodeFactor](https://www.codefactor.io/repository/github/bubner/roboregistry/badge)](https://www.codefactor.io/repository/github/bubner/roboregistry)
 ___
