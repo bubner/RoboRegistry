@@ -6,9 +6,10 @@
 class API {
     constructor() {
         this.controller = new AbortController();
+        this.teamCache = new Map();
     }
 
-    async safeFetch(endpoint) {
+    safeFetch(endpoint) {
         return new Promise((resolve, _) => {
             let data = null;
             const timeout = setTimeout(() => {
@@ -38,10 +39,13 @@ class API {
         this.controller = new AbortController();
     }
 
-    async getTeamData(number) {
-        // TODO: Optimise with cache
+    getTeamData(number) {
+        const hit = this.teamCache.get(number);
+        if (hit) return hit;
         // FIRSTTeamAPI: https://github.com/bubner/FIRSTTeamAPI
-        return this.safeFetch(`https://firstteam.api.bubner.me/get_team/${number}`);
+        const miss = this.safeFetch(`https://firstteam.api.bubner.me/get_team/${number}`);
+        this.teamCache.set(number, miss);
+        return miss;
     }
 }
 
