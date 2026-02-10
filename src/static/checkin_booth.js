@@ -7,6 +7,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("iframe").addEventListener("load", handleLoad);
     function handleLoad() {
         const iframe = document.querySelector("iframe");
+        if (iframe.contentDocument.getElementById("error") !== null) {
+            iframe.remove();
+            alert("Check-in booth failure. This event may not have check-ins open at this time.");
+            return;
+        }
 
         // Remove the footer from the iframe as it is already on the page
         const footer = iframe.contentDocument.querySelector("footer");

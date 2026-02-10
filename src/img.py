@@ -17,12 +17,94 @@ from requests.exceptions import HTTPError
 import db
 
 
+def _wrap_text(draw, text, font, max_width):
+    """Word-wrap text to fit within max_width."""
+    words = text.split()
+    if not words:
+        return [text]
+    lines = []
+    current_line = words[0]
+    for word in words[1:]:
+        test_line = f"{current_line} {word}"
+        if draw.textlength(test_line, font) <= max_width:
+            current_line = test_line
+        else:
+            lines.append(current_line)
+            current_line = word
+    lines.append(current_line)
+    return lines
+
+
+def _char_wrap(draw, text, font, max_width):
+    """Character-level wrapping as a last resort for text without spaces."""
+    lines = []
+    current_line = ""
+    for char in text:
+        test_line = current_line + char
+        if draw.textlength(test_line, font) <= max_width:
+            current_line = test_line
+        else:
+            if current_line:
+                lines.append(current_line)
+            current_line = char
+    if current_line:
+        lines.append(current_line)
+    return lines if lines else [text]
+
+
+def _fit_text(draw, text, font_path, font_size, max_width, min_font_size=20,
+              max_height=None, line_spacing=1.3):
+    """
+    Fit text within max_width (and optionally max_height) by word-wrapping
+    and scaling down the font size.
+    Returns (lines, font) where lines is a list of wrapped text lines.
+    """
+    def _fits(lines, font):
+        if not all(draw.textlength(line, font) <= max_width for line in lines):
+            return False
+        if max_height is not None:
+            total_height = len(lines) * int(font.size * line_spacing)
+            if total_height > max_height:
+                return False
+        return True
+
+    font = ImageFont.truetype(font_path, font_size)
+    if _fits([text], font):
+        return [text], font
+
+    while font_size >= min_font_size:
+        font = ImageFont.truetype(font_path, font_size)
+        lines = _wrap_text(draw, text, font, max_width)
+        if _fits(lines, font):
+            return lines, font
+        font_size -= 2
+
+    # Final fallback: character-level wrapping at minimum size
+    font = ImageFont.truetype(font_path, min_font_size)
+    return _char_wrap(draw, text, font, max_width), font
+
+
+def _draw_fitted_text(draw, text, font_path, font_size, max_width, template_width, y,
+                      color=(0, 0, 0), min_font_size=20, line_spacing=1.3, max_height=None):
+    """
+    Draw text centered horizontally, wrapping and scaling to fit within max_width
+    and optionally max_height. Returns the total height consumed by the drawn text.
+    """
+    lines, font = _fit_text(draw, text, font_path, font_size, max_width, min_font_size,
+                            max_height=max_height, line_spacing=line_spacing)
+    line_height = int(font.size * line_spacing)
+    for i, line in enumerate(lines):
+        line_width = draw.textlength(line, font)
+        x = (template_width - line_width) / 2
+        draw.text((x, y + i * line_height), line, color, font=font)
+    return len(lines) * line_height
+
+
 def generate_qrcode(event, size, qr_type) -> BytesIO:
     """
         Generates a QR code for RoboRegistry registration or check-in
         @return: QR code image as a BytesIO object
     """
-    # TODO: text overflow prevention would be useful
     img = qrcode.make(
         f"https://roboregistry.app.bubner.me/events/{qr_type}/{event.get('uid')}" + (f"?code={event.get('checkin_code')}" if qr_type == "ci" else ""),
         version=1,
@@ -59,47 +141,52 @@ def generate_qrcode(event, size, qr_type) -> BytesIO:
     if size == "large":
         # Add text using PIL library
         draw = ImageDraw.Draw(template)
-        smallfont = ImageFont.truetype("static/assets/Roboto-Regular.ttf", 36)
         font = ImageFont.truetype("static/assets/Roboto-Regular.ttf", 54)
         boldfont = ImageFont.truetype("static/assets/Roboto-Black.ttf", 54)
         bigfont = ImageFont.truetype("static/assets/Roboto-Black.ttf", 140)
 
+        # Maximum text width with padding on each side
+        max_text_width = template_width - 200
+
         # Add URL
         text = f"https://roboregistry.app.bubner.me/events/{qr_type}/{event.get('uid')}"
-        text_width, text_height = draw.textlength(text, boldfont), boldfont.size
-        draw.text(((template_width - text_width) // 2, template_height - text_height - 1000), text, (0, 0, 0),
-                  font=boldfont)
+        _draw_fitted_text(draw, text, "static/assets/Roboto-Black.ttf", 54,
+                          max_text_width, template_width, template_height - boldfont.size - 1000,
+                          min_font_size=24)
 
-        # Add event name
+        # Add event name and constrain height so it doesn't overflow into the QR code
+        title_y = 800 + bigfont.size
+        title_max_height = y - title_y - 120  # Template gap
         text = event.get("name").upper()
-        text_width, text_height = draw.textlength(text, bigfont), bigfont.size
-        draw.text(((template_width - text_width) // 2, 800 + text_height), text, (0, 0, 0), font=bigfont)
+        _draw_fitted_text(draw, text, "static/assets/Roboto-Black.ttf", 140,
+                          max_text_width, template_width, title_y,
+                          min_font_size=40, max_height=title_max_height)
 
         if qr_type == "register":
             # Add event details
             text = f"{event.get('date')} | {event.get('start_time')} - {event.get('end_time')}"
-            text_width, text_height = draw.textlength(text, font), font.size
-            draw.text(((template_width - text_width) // 2, template_height - text_height - 700), text, (0, 0, 0),
-                      font=font)
+            _draw_fitted_text(draw, text, "static/assets/Roboto-Regular.ttf", 54,
+                              max_text_width, template_width, template_height - font.size - 700,
+                              min_font_size=30)
 
             # Add location
             text = event.get("location")
-            text_width, text_height = draw.textlength(text, smallfont if len(text) > 90 else font), smallfont.size if len(text) > 90 else font.size
-            draw.text(((template_width - text_width) // 2, template_height - text_height - 600), text, (0, 0, 0),
-                      font=smallfont if len(text) > 90 else font)
+            _draw_fitted_text(draw, text, "static/assets/Roboto-Regular.ttf", 54,
+                              max_text_width, template_width, template_height - font.size - 600,
+                              min_font_size=24)
 
             # Add email
             if event.get("email") != "N/A":
                 text = "For inquiries contact: " + event.get("email")
-                text_width, text_height = draw.textlength(text, boldfont), boldfont.size
-                draw.text(((template_width - text_width) // 2, template_height - text_height - 480), text, (0, 0, 0),
-                        font=boldfont)
+                _draw_fitted_text(draw, text, "static/assets/Roboto-Black.ttf", 54,
+                                  max_text_width, template_width, template_height - boldfont.size - 480,
+                                  min_font_size=24)
         else:
             # Add event check-in code
             text = str(event.get("checkin_code"))
-            text_width, text_height = draw.textlength(text, bigfont), bigfont.size
-            draw.text(((template_width - text_width) // 2, template_height - text_height - 480), text, (0, 0, 0),
-                      font=bigfont)
+            _draw_fitted_text(draw, text, "static/assets/Roboto-Black.ttf", 140,
+                              max_text_width, template_width, template_height - bigfont.size - 480,
+                              min_font_size=60)
 
     # Save image to an in memory object
     img_file = BytesIO()
