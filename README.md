@@ -1,6 +1,6 @@
-# <img align="left" src="/src/static/assets/favicon.ico" width="100" /> FLL/FTC/FRC Robotics Event Attendance Registrar
+# <img align="left" src="/src/static/assets/favicon.ico" width="100" /> FLL/FTC/FRC Robotics Event Registrar
 ### https://roboregistry.app.bubner.me
-##### Automated Registry for Recording and Tracking FIRST Scrimmage Attendance
+##### Automated Registry for Recording and Tracking FIRST® Scrimmage Attendance
 [![CodeFactor](https://www.codefactor.io/repository/github/bubner/roboregistry/badge)](https://www.codefactor.io/repository/github/bubner/roboregistry)
 ___
 
