@@ -101,30 +101,6 @@ def viewevent(uid: str):
                            can_register=can_register, timezone=tz, offset=offset)
 
 
-@events_bp.route("/events", methods=["GET", "POST"])
-@login_required
-@validate_user
-def redirector():
-    """
-        Manage redirector for /events
-    """
-    if request.method == "POST":
-        if not (target := request.form.get("event_url")):
-            return render_template("dash/redirector.html.jinja", user=getattr(current_user, "data"),
-                                   error="Missing url!")
-        if not (event := db.get_event(target)):
-            res = make_response(redirect(target))
-            # Test to see if it is a url and/or if it is a 404
-            target = urlparse(target).hostname
-            if target and target != "roboregistry.app.bubner.me" or res.status_code == 404:
-                return render_template("dash/redirector.html.jinja", user=getattr(current_user, "data"),
-                                       error="Hmm, we can't seem to find that event.")
-            return res
-        return redirect(f"/events/view/{event['uid']}")
-    else:
-        return render_template("dash/redirector.html.jinja", user=getattr(current_user, "data"))
-
-
 @events_bp.route("/events/create", methods=["GET", "POST"])
 @login_required
 @validate_user
@@ -157,6 +133,9 @@ def create():
         # UIDs are in the form of <event name seperated by dashes><date seperated by dashes>
         event_uid = re.sub(r'[^a-zA-Z0-9]+', '-', name.lower()
                            ) + "-" + date.replace("-", "")
+        if urlparse(target := event_uid.replace("\\", "")).netloc or urlparse(target).scheme:
+            return render_template("event/create.html.jinja", error="Invalid event name.", user=user,
+                                   mapbox_api_key=mapbox_api_key)
 
         # Determine if we need to store an email
         email = "N/A"

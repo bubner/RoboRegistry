@@ -6,10 +6,10 @@
 from datetime import datetime, timedelta
 
 import requests
-from flask import request, redirect, Blueprint, abort, flash
+from flask import Blueprint, abort, flash, redirect, request
 from flask_login import login_required, login_user
 from pytz import timezone
-from requests.exceptions import MissingSchema, HTTPError
+from requests.exceptions import HTTPError, MissingSchema
 
 import db
 from auth import User
@@ -67,10 +67,6 @@ def api_dashboard():
     if len(should_display) == 0:
         # No events, show the standard dashboard messages
         should_display = [
-            {
-                "text": "🔍 Have an event link?",
-                "path": "/events"
-            },
             {
                 "text": "⚙️ Manage your settings and preferences",
                 "path": "/settings"

@@ -205,7 +205,7 @@ def settings():
         getattr(current_user, "refresh")()
 
         # Use cookies to store user preferences
-        res.set_cookie("darkmode", darkmode or "off", secure=True,
+        res.set_cookie("darkmode", "on" if darkmode else "off", secure=True, samesite="Strict",
                        expires=datetime.now() + timedelta(days=365))
         return res
     else:

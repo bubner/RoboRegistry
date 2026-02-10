@@ -75,7 +75,7 @@ Login
         const date = new Date();
         date.setTime(date.getTime() + (365 * 24 * 60 * 60 * 1000));
         const oneYear = date.toUTCString();
-        document.cookie = "darkmode=on;path=/;expires=" + oneYear;
+        document.cookie = "darkmode=on;path=/;SameSite=Strict;Secure;expires=" + oneYear;
         window.location.reload();
     }
 </script>

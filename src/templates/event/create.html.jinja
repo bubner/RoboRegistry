@@ -70,8 +70,7 @@ Create Event
                     <div class="form-group">
                         <br />
                         <div class="form-group form-check">
-                            <input type="checkbox" class="form-check-input" id="display_email" name="display_email" {% if
-                                not old_data.display_email %}checked{% endif %}>
+                            <input type="checkbox" class="form-check-input" id="display_email" name="display_email" {% if old_data.email != "N/A" %}checked{% endif %}>
                             <label class="form-check-label" for="display_email">Display your email with the event?</label>
                             <p class="text-muted" id="disablewarn">People registering through
                                 RoboRegistry will not be able to see your email address for contact.</p>
