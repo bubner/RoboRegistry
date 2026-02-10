@@ -5,7 +5,7 @@ Register for: {{ event.name }}
 {% endblock %}
 
 {% block body %}
-<div class="container border rounded-3 p-5">
+<div class="container border rounded-3 p-5 mb-12">
     <h1 class="text-center mb-4">Register for '{{ event.name }}'</h1>
     <h5 class="text-center">{{ event.date }} from {{ event.start_time }} to {{ event.end_time }}
         ({{ event.timezone }})
@@ -28,16 +28,16 @@ Register for: {{ event.name }}
             <label for="repName" class="form-label">Club or Representing Name<span aria-hidden="true"
                     class="text-danger">*</span></label>
             <input type="text" class="form-control" id="repName" name="repName"
-                placeholder="e.g. FIRST, Murray Bridge High School, General Public" required>
+                placeholder="e.g. FIRST, Murray Bridge High School, General Public" required value="{{ user.affil }}">
         </div>
         <div class="mb-3">
             <label for="role" class="form-label">I am registering...<span aria-hidden="true"
                     class="text-danger">*</span></label>
             <select class="form-select" id="role" name="role" required>
-                <option value="team" selected>FIRST team(s) (registered or unregistered)</option>
-                <option value="event_manager">as an Event manager</option>
-                <option value="mentor">as an External volunteer or mentor</option>
-                <option value="visitor">as a Visitor</option>
+                <option value="team" {% if user.role == "mentor" %}selected{% endif %}>FIRST team(s) (registered or unregistered)</option>
+                <option value="event_manager" {% if user.role == "event_organiser" %}selected{% endif %}>as an Event manager</option>
+                <option value="mentor" {% if user.role == "student" %}selected{% endif %}>as an External volunteer or other mentor</option>
+                <option value="visitor" {% if user.role == "other" %}selected{% endif %}>as a Visitor</option>
                 <option value="other">as Other</option>
             </select>
         </div>
