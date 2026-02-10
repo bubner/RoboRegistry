@@ -1,4 +1,4 @@
-# FLL/FTC/FRC Event Attendance Registrar
+# <img align="left" src="/src/static/assets/favicon.ico" width="100" /> FLL/FTC/FRC Robotics Event Attendance Registrar
 ### https://roboregistry.app.bubner.me
 ##### Automated Registry for Recording and Tracking FIRST Scrimmage Attendance
 [![CodeFactor](https://www.codefactor.io/repository/github/bubner/roboregistry/badge)](https://www.codefactor.io/repository/github/bubner/roboregistry)
@@ -6,7 +6,7 @@ ___
 
 RoboRegistry is a digital registrar designed to hold information regarding schools and teams participating in a FIRST scrimmage event. The primary goal of this application is to avoid the need for manual data collection by exporting and using data to determine event statistics, all from one centralised place.
 
-![RoboRegistry](https://i.imgur.com/8mau56s.png)
+![RoboRegistry](/src/static/assets/rrshowcase.png)
 
 The register can be used to compile data for planning, reporting, and/or inclusion in funding grant proposals. For instance, prior to the event, teams are required to register for attendance and provide information such as their FIRST Team Number (if registered), estimated number of people attending, and nominated point of contact for teams (email and mobile).
 
