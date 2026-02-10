@@ -39,6 +39,7 @@ class API {
     }
 
     async getTeamData(number) {
+        // TODO: Optimise with cache
         // FIRSTTeamAPI: https://github.com/bubner/FIRSTTeamAPI
         return this.safeFetch(`https://firstteam.api.bubner.me/get_team/${number}`);
     }

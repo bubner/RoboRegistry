@@ -56,7 +56,7 @@ Settings
                         </div>
                         <div class="mb-3 d-flex flex-column flex-md-row justify-content-evenly">
                             <a href="/changepassword" class="btn btn-outline-primary mb-2 mb-md-0">Change Password</a>
-                            <a href="/exportall" class="btn btn-outline-secondary mb-2 mb-md-0">Export All Data</a>
+                            <a href="#" class="btn btn-outline-secondary mb-2 mb-md-0" data-bs-toggle="modal" data-bs-target="#export">Export All Data</a>
                             <a href="/deleteaccount" class="btn btn-outline-danger mb-2 mb-md-0">Delete Account</a>
                         </div>
                     </div>
@@ -82,6 +82,29 @@ Settings
             </div>
         </div>
     </form>
+</div>
+<div class="modal fade" id="export" tabindex="-1" aria-labelledby="export-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filters-label">Export all user data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form class="modal-body" action="/exportall" method="POST">
+                <p>
+                    You are able to export all data associated with your RoboRegistry account through this option.
+                </p>
+                <p>
+                    This includes all personal information, your full event data, and any data you have personally supplied to other events.
+                </p>
+                <p>
+                    The export will be returned to you in a <code>json</code> format.
+                </p>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <button type="submit" class="btn btn-success w-100">Export .json</a>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
 

@@ -113,3 +113,14 @@ def get_uid():
     """
     # current_user.acc.users[0].localId
     return getattr(current_user, "acc", {}).get("users", [{}])[0].get("localId", None)
+
+
+def filter_kv(obj, predicate, pk = None):
+    """
+        Recursively removes KV pairs that match the predicate for the given parent key (pk), current key (k) and value (v).
+    """
+    if isinstance(obj, dict):
+        return { k: filter_kv(v, predicate, k) for k, v in obj.items() if predicate(pk, k, v) }
+    if isinstance(obj, list):
+        return [filter_kv(i, predicate, None) for i in obj]
+    return obj

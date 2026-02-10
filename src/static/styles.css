@@ -126,7 +126,7 @@ footer a:not(p > a) {
 }
 
 .bordered {
-    border: 2px solid rgb(228, 228, 228);
+    border: 1px solid rgb(143, 143, 143);
     border-radius: 10px;
     padding: 40px;
 }

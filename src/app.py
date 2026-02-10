@@ -226,13 +226,21 @@ def about():
     return render_template("misc/about.html.jinja")
 
 
-@app.route("/exportall")
+@app.route("/exportall", methods=["POST"])
 @login_required
+@validate_user
 def exportall():
     """
         Export all user data available for the current user.
     """
-    raise NotImplementedError
+    all_registered_events, created_events = db.get_my_events()
+    registered_events = utils.filter_kv(all_registered_events, lambda pk, k, _: pk != "registered" or k == utils.get_uid())
+    user = utils.filter_kv(current_user.__dict__, lambda _, k, __: k not in ("id", "token", "passwordHash"))
+    return {
+        "personal": user,
+        "events": created_events,
+        "registrations": registered_events
+    }
 
 
 @app.route("/privacy")
