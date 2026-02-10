@@ -50,18 +50,19 @@ footer a:not(p > a) {
     transform: translateY(-50%);
 }
 
-/* caution: using this centercontainer implementation may cause minor nuclear disaster when the ui is smaller */
+/* will no longer cause nuclear meltdown upon evolution of my flexbox skills */
 .centercontainer {
-    /* flexbox align to the center, stacked on top config */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 72px);
+}
+
+.centercontainer > div {
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    /* align to center of page */
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
 }
 
 #logoimg,
@@ -126,8 +127,8 @@ footer a:not(p > a) {
 }
 
 .bordered {
-    border: 1px solid rgb(143, 143, 143);
-    border-radius: 10px;
+    border: 1px solid rgb(120, 120, 120);
+    border-radius: 24px;
     padding: 40px;
 }
 

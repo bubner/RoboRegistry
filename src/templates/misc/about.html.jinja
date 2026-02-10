@@ -5,30 +5,31 @@ About
 {% endblock %}
 
 {% block body %}
-<div class="centercontainer bordered">
-     <p class="headertext">About RoboRegistry</p>
-     <img src="{{ url_for('static', filename='assets/favicon.ico') }}" alt="logo" width="80" class="mb-4" />
-     <p class="text-center">RoboRegistry is a web application designed to make FLL/FTC/FRC scrimmage and event
-          management easier. Manually collecting data on event attendance for scrimmages can be a stressful and overly
-          complex task, and it is our goal is to minimise that complexity as much as possible.</p>
-     <div class="infogrid mb-3">
-          <img class="imglink" title="Python 3.9" alt="Python 3.9"
-               src="{{ url_for('static', filename='assets/py.png') }}" />
-          <img class="imglink" title="Firebase" alt="Firebase"
-               src="{{ url_for('static', filename='assets/fb.svg') }}" />
-          <img class="imglink" title="Vercel" alt="Vercel"
-               src="{{ url_for('static', filename='assets/ve.svg') }}" />
-          <img class="imglink" title="Flask" alt="Flask"
-               src="{{ url_for('static', filename='assets/fl.png') }}" />
-          <img class="imglink" title="Jinja" alt="Jinja"
-               src="{{ url_for('static', filename='assets/ji.png') }}" />
-          <img class="imglink" title="Bootstrap 5" alt="Bootstrap 5"
-               src="{{ url_for('static', filename='assets/bs.svg') }}" />
-     </div>
-     <p>Developed by <a href="https://bubner.me" target="_blank">Lucas Bubner</a>, 2023. View the source code <a href="https://github.com/bubner/RoboRegistry" target="_blank">here</a>.</p>
-     <div class="container text-center">
-          <a href="/dashboard" class="btn btn-secondary">Go to dashboard</a>
-          <a href="/privacy" class="btn btn-success">Privacy Policy</a>
+<div class="centercontainer">
+     <div class="bordered">
+          <p class="headertext">About RoboRegistry</p>
+          <img src="{{ url_for('static', filename='assets/favicon.ico') }}" alt="logo" width="80" class="mb-4" />
+          <p class="text-center">RoboRegistry is a web application designed to make FLL/FTC/FRC scrimmage and event
+               management easier.<br />Manually collecting data on event attendance for scrimmages can be a stressful
+               and overly complex task,<br /> and it is our goal is to minimise that complexity as much as possible.</p>
+          <div class="infogrid mb-3">
+               <img class="imglink" title="Python 3.9" alt="Python 3.9"
+                    src="{{ url_for('static', filename='assets/py.png') }}" />
+               <img class="imglink" title="Firebase" alt="Firebase"
+                    src="{{ url_for('static', filename='assets/fb.svg') }}" />
+               <img class="imglink" title="Vercel" alt="Vercel"
+                    src="{{ url_for('static', filename='assets/ve.svg') }}" />
+               <img class="imglink" title="Flask" alt="Flask" src="{{ url_for('static', filename='assets/fl.png') }}" />
+               <img class="imglink" title="Jinja" alt="Jinja" src="{{ url_for('static', filename='assets/ji.png') }}" />
+               <img class="imglink" title="Bootstrap 5" alt="Bootstrap 5"
+                    src="{{ url_for('static', filename='assets/bs.svg') }}" />
+          </div>
+          <p>Developed by <a href="https://bubner.me" target="_blank">Lucas Bubner</a>, 2023. View the source code <a
+                    href="https://github.com/bubner/RoboRegistry" target="_blank">here</a>.</p>
+          <div class="container text-center">
+               <a href="/dashboard" class="btn btn-secondary">Go to dashboard</a>
+               <a href="/privacy" class="btn btn-success">Privacy Policy</a>
+          </div>
      </div>
 </div>
 {% endblock %}
