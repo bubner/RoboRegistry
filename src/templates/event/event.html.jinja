@@ -1,5 +1,7 @@
 {% extends "nav_layout.html.jinja" %}
-{% block title %}{{ event.name }}{% endblock %}
+{% block title %}
+    {{ event.name }}
+{% endblock title %}
 {% block body %}
     <div id="storer">
         <div class="maxtext dashheading">
@@ -7,11 +9,14 @@
             <h5>{{ event.uid }}</h5>
             {% if owned %}<h6>Event check-in code: {{ event.checkin_code }}</h6>{% endif %}
             {% if not registered and not owned and can_register %}
-                <a href="/events/register/{{ event.uid }}" class="btn btn-success">Register</a>
+                <a href="{{ url_for('events.event_register', event_id=event.uid) }}"
+                   class="btn btn-success">Register</a>
             {% elif registered and can_register %}
-                <a href="/events/unregister/{{ event.uid }}" class="btn btn-danger">Unregister</a>
+                <a href="{{ url_for('events.event_unregister', event_id=event.uid) }}"
+                   class="btn btn-danger">Unregister</a>
             {% elif owned %}
-                <a href="/events/manage/{{ event.uid }}" class="btn btn-primary">Manage</a>
+                <a href="{{ url_for('events.manage', event_id=event.uid) }}"
+                   class="btn btn-primary">Manage</a>
             {% endif %}
             {% if can_register %}
                 <button id="copyregis" class="btn btn-secondary">
@@ -30,51 +35,44 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <div class="card sync {% if is_running %}border-success{% elif not can_register %}border-danger{% else %}border-primary{% endif %}">
+                    <div class="card sync mb-4 {% if is_running %}border-success{% elif not can_register %}border-danger{% else %}border-primary{% endif %}">
                         <div class="card-body">
                             <h5 class="card-title">
                                 {% if is_running %}
                                     Event is running!
                                 {% elif not can_register %}
-                                    Event has
-                                    ended!
+                                    Event has ended!
                                 {% else %}
-                                    Time until
-                                    event
+                                    Time until event
                                 {% endif %}
                             </h5>
                             <p class="card-text" id="relative-event-time"></p>
                             <p id="event-time"></p>
                         </div>
                     </div>
-                    <br />
-                    <div class="card">
+                    <div class="card mb-5">
                         <div class="card-body">
                             <h5 class="card-title">Event Description</h5>
                             <pre class="card-text">{{ event.description }}</pre>
                         </div>
                     </div>
-                    <br />
-                    <br />
                 </div>
                 <div class="col-md-6">
-                    <div class="card">
+                    <div class="card mb-4">
                         <div class="card-body">
                             <h5 class="card-title">Event Details</h5>
-                            <p class="card-text">
+                            <div class="card-text mb-3">
                                 {{ team_regis_count }}{{ ' / ' + event.limit|string if event.limit != -1 else '' }}
                                 team registration(s)
                                 {% if event.registered|length != team_regis_count %}
-                                    <br />
-                                    {{ event.registered|length - team_regis_count }} other registration(s)
+                                    <div>{{ event.registered|length - team_regis_count }} other registration(s)</div>
                                 {% endif %}
-                            </p>
-                            <p class="card-text">
-                                {{ event.date|strftime }}
-                                <br />
+                            </div>
+                            <div class="card-text mb-3">
+                                <div>{{ event.date|strftime }}</div>
                                 {{ event.start_time }}
                                 to {{ event.end_time }} ({{ timezone }})
-                            </p>
+                            </div>
                             {% if event.email != "N/A" %}
                                 <p class="card-text">
                                     Have inquiries? Contact: <b>{{ event.email }}</b>
@@ -82,7 +80,6 @@
                             {% endif %}
                         </div>
                     </div>
-                    <br />
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">Location</h5>
@@ -94,7 +91,7 @@
             </div>
         </div>
     </div>
-{% endblock %}
+{% endblock body %}
 {% block scripts %}
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl-csp.js"></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css'
@@ -130,4 +127,4 @@
     <script src="{{ url_for('static', filename='libs/humanize-duration.min.js') }}"></script>
     <script src="{{ url_for('static', filename='mapbox_marker.js') }}"></script>
     <script src="{{ url_for('static', filename='event_viewer.js') }}"></script>
-{% endblock %}
+{% endblock scripts %}

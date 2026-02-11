@@ -1,11 +1,13 @@
 {% extends "nav_layout.html.jinja" %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}
+    Dashboard
+{% endblock title %}
 {% block body %}
-    <div class="maxtext dashheading"
+    <div class="dashheading mb-3"
          id="{{ 'darkmodebg' if request.cookies.get('darkmode') == 'on' else 'lightmodebg' }}">
-        <p>Welcome aboard, {{ user.first_name.upper() }}.</p>
+        <p class="maxtext mb-0">Welcome aboard, {{ user.first_name }}.</p>
+        <p class="mx-1 text-muted">{{ random_subtitle }}</p>
     </div>
-    <br />
     <div class="container" id="dashboardboxes">
         {% for i in range(3) %}
             <div class="row">
@@ -17,7 +19,7 @@
             </div>
         {% endfor %}
     </div>
-{% endblock %}
+{% endblock body %}
 {% block scripts %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js"
             integrity="sha512-KqUc2WMPF/gxte9xVjVE4TIt1LMUTidO3BrcItFg0Ro24I7pGNzgcXdnWdezNY+8T0/JEmdC79MuwYn+8UdOqw=="
@@ -25,4 +27,4 @@
             referrerpolicy="no-referrer"></script>
     <script src="{{ url_for('static', filename='internal_api.js') }}"></script>
     <script src="{{ url_for('static', filename='dashboard_renderer.js') }}"></script>
-{% endblock %}
+{% endblock scripts %}

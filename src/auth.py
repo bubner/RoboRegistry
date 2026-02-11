@@ -11,6 +11,7 @@ from flask_login import (UserMixin, current_user, login_required, login_user,
 from requests.exceptions import HTTPError
 
 import db
+import utils
 from fb import auth
 
 auth_bp = Blueprint("auth", __name__, template_folder="templates")
@@ -77,6 +78,9 @@ def register():
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
+        
+        if not email or not utils.validate_email(email):
+            return render_template("auth/register.html.jinja", error="Invalid email.")
 
         if len(password) < 8:
             return render_template("auth/register.html.jinja", error="Password must be at least 8 characters long.")

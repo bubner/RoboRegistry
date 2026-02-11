@@ -1,5 +1,7 @@
 {% extends "nav_layout.html.jinja" %}
-{% block title %}Delete your account{% endblock %}
+{% block title %}
+    Delete your account
+{% endblock title %}
 {% block body %}
     <div class="centercontainer">
         <div class="bordered">
@@ -10,8 +12,10 @@
             <h5>All data related to your name, including your {{ numevents }} event(s), will be destroyed.</h5>
             <h6>This action can not be undone. Please export any wanted data before deleting.</h6>
             <i>Events other users have created that you have registered for will not have your deletion reflected.</i>
-            <br />
-            <form method="POST" action="/deleteaccount" id="delaction">
+            <form method="post"
+                  action="{{ url_for('auth.deleteaccount') }}"
+                  id="delaction"
+                  class="my-3">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <input type="hidden" name="num" value="{{ num }}" />
                 <p>Type '{{ num }}' to confirm your account deletion.</p>
@@ -25,12 +29,12 @@
                            required />
                     <button class="btn btn-outline-danger" type="submit" id="del-button">Delete</button>
                 </div>
-                <a href="/settings" class="btn btn-outline-primary w-100">Take me back</a>
+                <a href="{{ url_for('settings') }}"
+                   class="btn btn-outline-primary w-100">Take me back</a>
             </form>
-            <br />
         </div>
     </div>
-{% endblock %}
+{% endblock body %}
 {% block scripts %}
     <script defer nonce="{{ csp_nonce() }}">
         document.getElementById("delaction").addEventListener("submit", (e) => {
@@ -39,4 +43,4 @@
             }
         });
     </script>
-{% endblock %}
+{% endblock scripts %}

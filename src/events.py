@@ -190,7 +190,7 @@ def create():
             # Make sure start time is before end time
             if datetime.strptime(event["start_time"], "%H:%M") > datetime.strptime(event["end_time"], "%H:%M"):
                 return render_template("event/create.html.jinja",
-                                       error="Please enter a start time before the end time.",
+                                       error="Please enter a start time that occurs before the end time.",
                                        user=user, mapbox_api_key=mapbox_api_key, timezones=all_timezones,
                                        old_data=event)
 

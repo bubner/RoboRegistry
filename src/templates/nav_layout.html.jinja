@@ -2,9 +2,11 @@
 {% block navbar %}
     <nav class="navbar navbar-expand-lg navbar-light {{ 'bg-dark' if request.cookies.get("darkmode") == 'on' else 'bg-light' }}">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/dashboard">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
                 <img src="{{ url_for('static', filename='assets/rr.png') }}"
                      alt="RoboRegistry"
+                     width="100"
+                     height="100"
                      id="brand" />
             </a>
             <button class="navbar-toggler"
@@ -19,10 +21,10 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="/events/create">➕ Create an event</a>
+                        <a class="nav-link" href="{{ url_for('events.create') }}">➕ Create an event</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/events/view">🔎 View your events</a>
+                        <a class="nav-link" href="{{ url_for('events.viewall') }}">🔎 View your events</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
@@ -45,13 +47,13 @@
                                 Logged in as <b>{{ user.email }}</b>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="/about">📖 About</a>
+                                <a class="dropdown-item" href="{{ url_for('about') }}">📖 About</a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="/settings">⚙️ Settings</a>
+                                <a class="dropdown-item" href="{{ url_for('settings') }}">⚙️ Settings</a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="/logout">👋 Log out</a>
+                                <a class="dropdown-item" href="{{ url_for('auth.logout') }}">👋 Log out</a>
                             </li>
                         </ul>
                     </li>
@@ -59,4 +61,4 @@
             </div>
         </div>
     </nav>
-{% endblock %}
+{% endblock navbar %}

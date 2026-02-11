@@ -1,5 +1,7 @@
 {% extends "layout.html.jinja" %}
-{% block title %}{{ event.name|upper }} Secure Check-in Booth{% endblock %}
+{% block title %}
+    {{ event.name|upper }} Secure Check-in Booth
+{% endblock title %}
 {% block body %}
     <div class="container-fluid p-0">
         <div class="d-flex justify-content-between align-items-center">
@@ -8,10 +10,11 @@
                      alt="RoboRegistry"
                      class="img-fluid mt-3 me-3"
                      id="barlogoimg"
+                     height="auto"
                      width="100px" />
                 <span class="fs-4" id="infotext">Secure Check-in Booth for <strong>{{ event.name|upper }}</strong></span>
             </div>
-            <a href="/" class="btn btn-danger mt-3 me-3">Exit</a>
+            <a href="{{ url_for('index') }}" class="btn btn-danger mt-3 me-3">Exit</a>
         </div>
         <hr />
         <div class="container bg-dark p-5 vh-100">
@@ -19,5 +22,7 @@
                     class="w-100 h-100 border-0"></iframe>
         </div>
     </div>
-{% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='checkin_booth.js') }}"></script>{% endblock %}
+{% endblock body %}
+{% block scripts %}
+    <script src="{{ url_for('static', filename='checkin_booth.js') }}"></script>
+{% endblock scripts %}

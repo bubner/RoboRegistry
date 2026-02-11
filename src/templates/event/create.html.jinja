@@ -1,139 +1,141 @@
 {% extends "nav_layout.html.jinja" %}
-{% block title %}Create Event{% endblock %}
+{% block title %}
+    Create Event
+{% endblock title %}
 {% block body %}
-    <div class="container position-absolute top-50 start-50 translate-middle h-75">
-        <form method="POST" action="/events/create">
-            <div class="bordered p-3">
-                <div class="row">
-                    <div class="col-md-6">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                        <p class="headertext">Create a new event</p>
-                        <div class="form-group">
-                            <label for="event_name">Event Name</label>
-                            <span aria-hidden="true" class="text-danger">*</span>
-                            <input type="text"
-                                   class="form-control"
-                                   id="event_name"
-                                   name="event_name"
-                                   value="{{ old_data.name }}"
-                                   maxlength="32"
-                                   required />
-                        </div>
-                        <div class="form-group">
-                            <label for="event_date">Event Date</label>
-                            <span aria-hidden="true" class="text-danger">*</span>
-                            <input type="date"
-                                   class="form-control"
-                                   id="event_date"
-                                   name="event_date"
-                                   value="{{ old_data.date }}"
-                                   required />
-                        </div>
-                        <div class="form-group">
-                            <label for="event_start_time">Event Start Time</label>
-                            <span aria-hidden="true" class="text-danger">*</span>
-                            <input type="time"
-                                   class="form-control"
-                                   id="event_start_time"
-                                   name="event_start_time"
-                                   value="{{ old_data.start_time }}"
-                                   required />
-                        </div>
-                        <div class="form-group">
-                            <label for="event_end_time">Event End Time</label>
-                            <span aria-hidden="true" class="text-danger">*</span>
-                            <input type="time"
-                                   class="form-control"
-                                   id="event_end_time"
-                                   name="event_end_time"
-                                   value="{{ old_data.end_time }}"
-                                   required />
-                        </div>
-                        <div class="form-group">
-                            <label for="event_timezone">Timezone</label>
-                            <span aria-hidden="true" class="text-danger">*</span>
-                            <select class="form-control"
-                                    id="event_timezone"
-                                    name="event_timezone"
-                                    required>
-                                {% for tz in timezones %}
-                                    <option value="{{ tz }}" {{ "selected" if tz==old_data.timezone else '' }}>{{ tz }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="event_limit">
-                                Maximum number of FIRST club registrations (blank for uncapped, only applies to FIRST
-                                teams)
-                            </label>
-                            <input type="number"
-                                   class="form-control"
-                                   id="event_limit"
-                                   name="event_limit"
-                                   min="1"
-                                   max="999"
-                                   value="{{ old_data.limit if old_data.limit != -1 else '' }}" />
-                        </div>
-                        <div class="form-group">
-                            <label for="event_description">Event Description</label>
-                            <span aria-hidden="true" class="text-danger">*</span>
-                            <textarea class="form-control"
-                                      id="event_description"
-                                      name="event_description"
-                                      rows="3"
-                                      required>{{ old_data.description }}</textarea>
-                        </div>
-                        <br />
-                        <a class="btn btn-secondary" href="/dashboard">Cancel</a>
-                        <button type="submit" class="btn btn-primary">Create Event</button>
-                        <br />
-                        <br />
-                    </div>
-                    <div class="col-md-6">
-                        <br />
-                        {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
-                        <div class="form-group">
-                            <br />
-                            <div class="form-group form-check">
-                                <input type="checkbox"
-                                       class="form-check-input"
-                                       id="display_email"
-                                       name="display_email"
-                                       {% if old_data.email != "N/A" %}checked{% endif %} />
-                                <label class="form-check-label" for="display_email">Display your email with the event?</label>
-                                <p class="text-muted" id="disablewarn">
-                                    People registering through
-                                    RoboRegistry will not be able to see your email address for contact.
-                                </p>
+    <div class="centercontainer">
+        <div>
+            <form method="post" action="{{ url_for('events.create') }}">
+                <div class="bordered p-4">
+                    <p class="headertext">Create a new event</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                            <div class="form-group">
+                                <label for="event_name">Event Name</label>
+                                <span aria-hidden="true" class="text-danger">*</span>
+                                <input type="text"
+                                       class="form-control"
+                                       id="event_name"
+                                       name="event_name"
+                                       value="{{ old_data.name }}"
+                                       maxlength="32"
+                                       required />
                             </div>
-                            <label for="email">Display email</label>
-                            <input class="form-control"
-                                   id="email"
-                                   name="event_email"
-                                   placeholder="{{ user.email }}"
-                                   value="{{ old_data.email if old_data.email != 'N/A' }}"
-                                   type="email"
-                                   autocomplete="username" />
+                            <div class="form-group mt-2">
+                                <label for="event_date">Event Date</label>
+                                <span aria-hidden="true" class="text-danger">*</span>
+                                <input type="date"
+                                       class="form-control"
+                                       id="event_date"
+                                       name="event_date"
+                                       value="{{ old_data.date }}"
+                                       required />
+                            </div>
+                            <div class="form-group mt-2">
+                                <label for="event_start_time">Event Start Time</label>
+                                <span aria-hidden="true" class="text-danger">*</span>
+                                <input type="time"
+                                       class="form-control"
+                                       id="event_start_time"
+                                       name="event_start_time"
+                                       value="{{ old_data.start_time }}"
+                                       required />
+                            </div>
+                            <div class="form-group mt-2">
+                                <label for="event_end_time">Event End Time</label>
+                                <span aria-hidden="true" class="text-danger">*</span>
+                                <input type="time"
+                                       class="form-control"
+                                       id="event_end_time"
+                                       name="event_end_time"
+                                       value="{{ old_data.end_time }}"
+                                       required />
+                            </div>
+                            <div class="form-group mt-2">
+                                <label for="event_timezone">Timezone</label>
+                                <span aria-hidden="true" class="text-danger">*</span>
+                                <select class="form-control"
+                                        id="event_timezone"
+                                        name="event_timezone"
+                                        required>
+                                    {% for tz in timezones %}
+                                        <option value="{{ tz }}" {{ "selected" if tz==old_data.timezone else '' }}>{{ tz }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group mt-2">
+                                <label for="event_limit" class="d-flex flex-column">
+                                    <span>Maximum number of FIRST® club registrations</span>
+                                    <small class="text-muted">Leave blank to uncap, only applies to FIRST® clubs that register</small>
+                                </label>
+                                <input type="number"
+                                       class="form-control"
+                                       id="event_limit"
+                                       name="event_limit"
+                                       min="1"
+                                       max="999"
+                                       value="{{ old_data.limit if old_data.limit != -1 else '' }}" />
+                            </div>
+                            <div class="form-group mb-4 mt-2">
+                                <label for="event_description">Event Description</label>
+                                <span aria-hidden="true" class="text-danger">*</span>
+                                <textarea class="form-control"
+                                          id="event_description"
+                                          name="event_description"
+                                          rows="3"
+                                          required>{{ old_data.description }}</textarea>
+                            </div>
                         </div>
-                        <br />
-                        <div class="form-group">
-                            <label for="event_location">Event Location</label>
-                            <span aria-hidden="true" class="text-danger">*</span>
-                            <input type="text"
-                                   class="form-control"
-                                   id="event_location"
-                                   name="event_location"
-                                   required
-                                   value="{{ old_data.location or '' }}" />
+                        <div class="col-md-6 mb-4">
+                            <div class="form-group">
+                                {% if error %}
+                                    <div class="alert alert-danger" role="alert">{{ error }}</div>
+                                {% endif %}
+                                <div class="form-group form-check">
+                                    <input type="checkbox"
+                                           class="form-check-input"
+                                           id="display_email"
+                                           name="display_email"
+                                           {% if old_data.email != "N/A" %}checked{% endif %} />
+                                    <label class="form-check-label" for="display_email">Display your email with the event?</label>
+                                    <p class="text-muted" id="disablewarn">
+                                        People registering through
+                                        RoboRegistry will not be able to see your email address for contact.
+                                    </p>
+                                </div>
+                                <label for="email">Display email</label>
+                                <input class="form-control"
+                                       id="email"
+                                       name="event_email"
+                                       placeholder="{{ user.email }}"
+                                       value="{{ old_data.email if old_data.email != 'N/A' }}"
+                                       type="email"
+                                       autocomplete="username" />
+                            </div>
+                            <div class="form-group mt-2">
+                                <label for="event_location">Event Location</label>
+                                <span aria-hidden="true" class="text-danger">*</span>
+                                <input type="text"
+                                       class="form-control"
+                                       id="event_location"
+                                       name="event_location"
+                                       required
+                                       value="{{ old_data.location or '' }}" />
+                            </div>
+                            <div id="map" class="rounded"></div>
                         </div>
-                        <div id="map"></div>
+                        <div>
+                            <a class="btn btn-secondary" href="{{ url_for('dashboard') }}">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Create Event</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-{% endblock %}
+{% endblock body %}
 {% block scripts %}
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl-csp.js"></script>
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css"
@@ -144,4 +146,4 @@
         const OLD_DATA_TIMEZONE = "{{ old_data.timezone }}";
     </script>
     <script src="{{ url_for('static', filename='event_creator.js') }}"></script>
-{% endblock %}
+{% endblock scripts %}

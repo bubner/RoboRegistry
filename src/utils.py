@@ -71,6 +71,9 @@ def validate_form(form_data, role):
     # repName, contactName, contactEmail, role required
     if not all(form_data.get(field) for field in ("repName", "contactName", "contactEmail")) or not role:
         return False
+    # Email must be valid
+    if not validate_email(form_data.get("contactEmail")):
+        return False
     # Role must be in ("team", "event_manager", "mentor", "visitor, "other")
     if role not in ("team", "event_manager", "mentor", "visitor", "other"):
         return False

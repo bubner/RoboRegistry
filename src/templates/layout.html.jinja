@@ -24,95 +24,42 @@
                 async
                 integrity="sha384-yBhgDqxM50qJV5JPdayci8wCfooqvhFYbIKhv0hTtLvfeeyJMJCscRfFNKIxt43M"
                 crossorigin="anonymous"></script>
+        <meta name="keywords" content="first,robotics,events,ftc,roboregistry" />
         <meta name="author" content="Lucas Bubner, 2023" />
         <meta name="description"
               content="Registry for Recording and Tracking FLL/FTC/FRC Event Attendance" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>
-            {% block title %}{% endblock %}
+            {% block title %}
+            {% endblock title %}
         | RoboRegistry</title>
     </head>
     <body>
-        {% block navbar %}{% endblock %}
+        {% block navbar %}
+        {% endblock navbar %}
         <noscript>
-            <style>
-                #modal-toggle~.modal-container,
-                #modal-toggle~.modal-box {
-                    visibility: hidden;
-                }
-
-                #modal-toggle:checked~.modal-container,
-                #modal-toggle:checked~.modal-box {
-                    visibility: visible;
-                }
-
-                #modal-toggle:checked~.modal-box .modal-message {
-                    transform: translateY(0);
-                }
-
-                .modal-box {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    z-index: 4;
-                    background-color: rgba(0, 0, 0, .5);
-                }
-
-                .modal-message {
-                    position: relative;
-                    border-radius: 5px;
-                    background-color: white;
-                    z-index: 5;
-                    color: black;
-                    padding: 40px;
-                    max-width: 100%;
-                    font-size: 1.5rem;
-                    transform: translateY(-500px);
-                    transition: transform .3s ease-in-out;
-                }
-
-                #modal .modal-message .close-modal {
-                    color: black;
-                    top: 0;
-                    right: 20px;
-                    position: absolute;
-                    cursor: pointer;
-                }
-
-                .container input[type="checkbox"] {
-                    visibility: hidden;
-                }
-            </style>
-            <div class="container">
-                <div id="modal">
-                    <input type="checkbox" id="modal-toggle" checked />
-                    <label for="modal-toggle" class="modal-container"></label>
-                    <div class="modal-box">
-                        <div class="modal-message">
-                            <label for="modal-toggle" class="close-modal">x</label>
+            <div class="__ns_container">
+                <div id="__ns_modal">
+                    <input type="checkbox" id="__ns_modal-toggle" checked />
+                    <label for="__ns_modal-toggle" class="__ns_modal-container"></label>
+                    <div class="__ns_modal-box">
+                        <div class="__ns_modal-message">
+                            <label for="__ns_modal-toggle" class="__ns_close-modal">x</label>
                             <h2>JavaScript</h2>
-                            <p>
-                                JavaScript is required for proper RoboRegistry usage.
-                                <br />
-                                Some functionality will be
-                                unstable/missing.
-                            </p>
+                            <p>JavaScript is required for proper RoboRegistry usage.</p>
+                            <p>Some functionality will be unstable or missing.</p>
                         </div>
                     </div>
                 </div>
             </div>
         </noscript>
         <main>
-            {% block body %}{% endblock %}
+            {% block body %}
+            {% endblock body %}
         </main>
         <footer id="{{ 'darkbar' if request.cookies.get('darkmode') == 'on' else 'lightbar' }}">
             <p id="{{ 'lighttext' if request.cookies.get('darkmode') == 'on' else 'darktext' }}">
-                RoboRegistry. © 2023 Lucas Bubner. <a href="/privacy">Privacy Policy</a>.
+                RoboRegistry. © 2023 Lucas Bubner. <a href="{{ url_for('privacy') }}">Privacy Policy</a>.
                 <noscript> Running without JavaScript.</noscript>
             </p>
         </footer>
@@ -120,6 +67,6 @@
                 integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
                 crossorigin="anonymous"></script>
         {% block scripts %}
-        {% endblock %}
+        {% endblock scripts %}
     </body>
 </html>

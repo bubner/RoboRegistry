@@ -1,5 +1,7 @@
 {% extends "nav_layout.html.jinja" %}
-{% block title %}Your Events{% endblock %}
+{% block title %}
+    Your Events
+{% endblock title %}
 {% block body %}
     {% if created_events %}
         <div class="maxtext dashheading">
@@ -18,7 +20,8 @@
                                     <small class="text-muted">{{ event.date }}</small>
                                     <div class="btn-group">
                                         <div class="dropdown btn-group">
-                                            <a href="/events/view/{{ uid }}" class="btn btn-sm btn-outline-success">View</a>
+                                            <a href="{{ url_for('events.viewevent', uid=uid) }}"
+                                               class="btn btn-sm btn-outline-success">View</a>
                                             &nbsp;
                                             <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
                                                     type="button"
@@ -27,8 +30,10 @@
                                                     aria-haspopup="true"
                                                     aria-expanded="false">Options</button>
                                             <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                                <a class="dropdown-item" href="/events/manage/{{ uid }}">Manage event</a>
-                                                <a class="dropdown-item text-danger" href="/events/delete/{{ uid }}">Delete</a>
+                                                <a class="dropdown-item"
+                                                   href="{{ url_for('events.manage', event_id=uid) }}">Manage event</a>
+                                                <a class="dropdown-item text-danger"
+                                                   href="{{ url_for('events.delete', event_id=uid) }}">Delete</a>
                                             </div>
                                         </div>
                                     </div>
@@ -56,9 +61,10 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <small class="text-muted">{{ event.date }}</small>
                                     <div class="btn-group">
-                                        <a href="/events/view/{{ uid }}" class="btn btn-sm btn-outline-success">View</a>
+                                        <a href="{{ url_for('events.viewevent', uid=uid) }}"
+                                           class="btn btn-sm btn-outline-success">View</a>
                                         &nbsp;
-                                        <a href="/events/unregister/{{ uid }}"
+                                        <a href="{{ url_for('events.event_unregister', uid=uid) }}"
                                            class="btn btn-sm btn-outline-danger">Unregister</a>
                                     </div>
                                 </div>
@@ -85,7 +91,8 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <small class="text-muted">{{ event.date }}</small>
                                     <div class="btn-group">
-                                        <a href="/events/view/{{ uid }}" class="btn btn-sm btn-outline-primary">View</a>
+                                        <a href="{{ url_for('events.viewevent', uid=uid) }}"
+                                           class="btn btn-sm btn-outline-primary">View</a>
                                     </div>
                                 </div>
                             </div>
@@ -102,4 +109,4 @@
             <hr />
         </div>
     {% endif %}
-{% endblock %}
+{% endblock body %}

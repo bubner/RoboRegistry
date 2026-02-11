@@ -4,6 +4,7 @@
 """
 
 import os
+import random
 import warnings
 from datetime import datetime, timedelta
 
@@ -134,7 +135,7 @@ def unauthorized():
         Redirects the user to the login page if they try to access a page that requires login.
     """
     session["next"] = "/" + request.full_path.lstrip("/").rstrip("?")
-    flash("Login required or session expired. Please log in to continue.")
+    flash("Please log in to continue.")
     return redirect(url_for("auth.login"))
 
 
@@ -163,7 +164,14 @@ def dashboard():
         Primary landing page for logged-in users, including a list of their own events.
         For users that haven't completed the profile creation process, they will be redirected by the index.
     """
-    return render_template("dash/dash.html.jinja", user=getattr(current_user, "data", None))
+    subtitles = [
+        "We're ready when you are.",
+        "Ready to prepare a new event?",
+        "We're ready on your mark.",
+        "We're ready to record your next big event.",
+        "We're ready to go."
+    ]
+    return render_template("dash/dash.html.jinja", user=getattr(current_user, "data", None), random_subtitle=random.choice(subtitles))
 
 
 @app.route("/settings", methods=["GET", "POST"])

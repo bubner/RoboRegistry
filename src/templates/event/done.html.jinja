@@ -1,21 +1,25 @@
 {% extends "layout.html.jinja" %}
-{% block title %}Event Register{% endblock %}
+{% block title %}
+    Event Register
+{% endblock title %}
 {% block body %}
-    <div class="container position-absolute top-50 start-50 translate-middle h-80">
+    <div class="centercontainer">
         <div class="bordered p-3 text-center">
             <h6>
                 RoboRegistry Event '{{ event.name }}' ({{ event.uid }}) for user
                 '{{ user.first_name }} {{ user.last_name }}'
             </h6>
             <p class="headertext">{{ status }}</p>
-            <p>{{ message }}</p>
-            <button id="goback" class="btn btn-primary">Go Back</button>
-            <a class="btn btn-success" href="/dashboard">Return to home page</a>
+            <p class="limit-w text-center m-auto mb-4">{{ message }}</p>
+            <div class="d-flex gap-3">
+                <button id="goback" class="btn btn-primary">Go Back</button>
+                <a class="btn btn-success" href="{{ url_for('dashboard') }}">Return to home page</a>
+            </div>
         </div>
     </div>
-{% endblock %}
+{% endblock body %}
 {% block scripts %}
     <script defer nonce="{{ csp_nonce() }}">
         document.getElementById("goback").onclick = () => window.history.back();
     </script>
-{% endblock %}
+{% endblock scripts %}

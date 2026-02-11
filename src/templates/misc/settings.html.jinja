@@ -1,99 +1,110 @@
 {% extends "nav_layout.html.jinja" %}
-{% block title %}Settings{% endblock %}
+{% block title %}
+    Settings
+{% endblock title %}
 {% block body %}
-    <div class="container position-absolute top-50 start-50 translate-middle col-md-5 h-75">
-        <form action="/settings" method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <div class="row justify-content-center">
-                <div class="col">
-                    {% with messages = get_flashed_messages() %}
-                        {% if messages %}
-                            {% for message in messages %}<div class="alert alert-danger" role="alert">{{ message }}</div>{% endfor %}
-                        {% endif %}
-                    {% endwith %}
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Account</h5>
-                            <div class="mb-3">
-                                <div class="d-flex flex-row justify-content-center align-items-center mb-3">
-                                    <svg data-jdenticon-value="{{ user.first_name }} {{ user.last_name }}"
-                                         width="40"
-                                         height="40"
-                                         id="dpfp"
-                                         class="flex-shrink-0">
-                                    </svg>
-                                    <div class="col-md-3 ms-3">
-                                        <label for="first" class="form-label visually-hidden">First name</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               id="first"
-                                               name="first"
-                                               value="{{ settings['first'] }}"
-                                               maxlength="16"
-                                               required />
-                                    </div>
-                                    <div class="col-md-3 ms-3">
-                                        <label for="last" class="form-label visually-hidden">Last name</label>
-                                        <input type="text"
-                                               class="form-control"
-                                               id="last"
-                                               name="last"
-                                               value="{{ settings['last'] }}"
-                                               maxlength="16"
-                                               required />
+    <div class="centercontainer">
+        <div class="col-md-5">
+            <form action="{{ url_for('settings') }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <div class="row justify-content-center">
+                    <div class="col">
+                        {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                {% for message in messages %}<div class="alert alert-danger" role="alert">{{ message }}</div>{% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Account</h5>
+                                <div class="mb-3">
+                                    <div class="d-flex flex-row justify-content-center align-items-center mb-3">
+                                        <svg data-jdenticon-value="{{ user.first_name }} {{ user.last_name }}"
+                                             width="40"
+                                             height="40"
+                                             id="dpfp"
+                                             class="flex-shrink-0">
+                                        </svg>
+                                        <div class="col-md-3 ms-3">
+                                            <label for="first" class="form-label visually-hidden">First name</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="first"
+                                                   name="first"
+                                                   value="{{ settings['first'] }}"
+                                                   maxlength="16"
+                                                   required />
+                                        </div>
+                                        <div class="col-md-3 ms-3">
+                                            <label for="last" class="form-label visually-hidden">Last name</label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="last"
+                                                   name="last"
+                                                   value="{{ settings['last'] }}"
+                                                   maxlength="16"
+                                                   required />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="affil" class="form-label">Affiliation</label>
-                                <input type="text"
-                                       class="form-control"
-                                       id="affil"
-                                       name="affil"
-                                       value="{{ settings['affil'] }}"
-                                       required />
-                            </div>
-                            <div class="mb-3">
-                                <label for="role" class="form-label">Role</label>
-                                <select class="form-select" id="role" name="role" required>
-                                    <option value="student"
-                                            {% if settings["role"] == "student" %}selected{% endif %}>Student</option>
-                                    <option value="mentor"
-                                            {% if settings["role"] == "mentor" %}selected{% endif %}>Mentor</option>
-                                    <option value="event_organiser"
-                                            {% if settings["role"] == "event_organiser" %}selected{% endif %}>
-                                        Event Organiser
-                                    </option>
-                                    <option value="other" {% if settings["role"] == "other" %}selected{% endif %}>Other</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input"
-                                           type="checkbox"
-                                           id="promotion-checkbox"
-                                           name="promotion"
-                                           {% if settings['promotion'] %}checked{% endif %} />
-                                    <label class="form-check-label" for="promotion-checkbox">Consent to promotional content by RoboRegistry</label>
+                                <div class="mb-3">
+                                    <label for="affil" class="form-label">Affiliation</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="affil"
+                                           name="affil"
+                                           value="{{ settings['affil'] }}"
+                                           required />
                                 </div>
-                            </div>
-                            <div class="mb-3 d-flex flex-column flex-md-row justify-content-evenly">
-                                <a href="/changepassword" class="btn btn-outline-primary mb-2 mb-md-0">Change Password</a>
-                                <a href="#"
-                                   class="btn btn-outline-secondary mb-2 mb-md-0"
-                                   data-bs-toggle="modal"
-                                   data-bs-target="#export">Export All Data</a>
-                                <a href="/deleteaccount" class="btn btn-outline-danger mb-2 mb-md-0">Delete Account</a>
+                                <div class="mb-3">
+                                    <label for="role" class="form-label">Role</label>
+                                    <select class="form-select" id="role" name="role" required>
+                                        <option value="student"
+                                                {% if settings["role"] == "student" %}selected{% endif %}>
+                                            Student
+                                        </option>
+                                        <option value="mentor"
+                                                {% if settings["role"] == "mentor" %}selected{% endif %}>
+                                            Mentor
+                                        </option>
+                                        <option value="event_organiser"
+                                                {% if settings["role"] == "event_organiser" %}selected{% endif %}>
+                                            Event Organiser
+                                        </option>
+                                        <option value="other" {% if settings["role"] == "other" %}selected{% endif %}>Other</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               id="promotion-checkbox"
+                                               name="promotion"
+                                               {% if settings['promotion'] %}checked{% endif %} />
+                                        <label class="form-check-label" for="promotion-checkbox">Consent to promotional content by RoboRegistry</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3 d-flex flex-column flex-md-row justify-content-evenly">
+                                    <a href="{{ url_for('auth.changepassword') }}"
+                                       class="btn btn-outline-primary mb-2 mb-md-0">Change Password</a>
+                                    <a href="#"
+                                       class="btn btn-outline-secondary mb-2 mb-md-0"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#export">Export All Data</a>
+                                    <a href="{{ url_for('auth.deleteaccount') }}"
+                                       class="btn btn-outline-danger mb-2 mb-md-0">Delete Account</a>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <br />
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Preferences</h5>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="dark-mode-switch" name="darkmode" {% if
-                                    settings['darkmode'] == 'on' %}checked{% endif %}>
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Preferences</h5>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="dark-mode-switch"
+                                           name="darkmode"
+                                           {% if settings['darkmode'] == 'on' %}checked{% endif %} />
                                     <label class="form-check-label" for="dark-mode-switch">Enable Dark Mode</label>
                                 </div>
                             </div>
@@ -101,49 +112,46 @@
                     </div>
                 </div>
                 <div class="row justify-content-center mt-3">
-                    <div class="col-auto">
+                    <div class="col-auto mb-5">
                         <button id="goback" type="button" class="btn btn-secondary">Cancel</button>
                         <button type="submit" class="btn btn-primary">Save</button>
-                        <br />
-                        <br />
-                        <br />
                     </div>
                 </div>
             </form>
         </div>
-        <div class="modal fade"
-             id="export"
-             tabindex="-1"
-             aria-labelledby="export-label"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="filters-label">Export all user data</h5>
-                        <button type="button"
-                                class="btn-close"
-                                data-bs-dismiss="modal"
-                                aria-label="Close"></button>
-                    </div>
-                    <form class="modal-body" action="/exportall" method="POST">
-                        <p>You are able to export all data associated with your RoboRegistry account through this option.</p>
-                        <p>
-                            This includes all personal information, your full event data, and any data you have personally supplied to other events.
-                        </p>
-                        <p>
-                            The export will be returned to you in a <code>json</code> format.
-                        </p>
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                        <button type="submit" class="btn btn-success w-100">
-                        Export .json</a>
-                    </form>
+    </div>
+    <div class="modal fade"
+         id="export"
+         tabindex="-1"
+         aria-labelledby="export-label"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filters-label">Export all user data</h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
                 </div>
+                <form class="modal-body" action="{{ url_for('exportall') }}" method="post">
+                    <p>You are able to export all data associated with your RoboRegistry account through this option.</p>
+                    <p>
+                        This includes all personal information, your full event data, and any data you have personally supplied to other events.
+                    </p>
+                    <p>
+                        The export will be returned to you in a <code>json</code> format.
+                    </p>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <button type="submit" class="btn btn-success w-100">Export .json</button>
+                </form>
             </div>
         </div>
-    {% endblock %}
-    {% block scripts %}
-        <script src="{{ url_for('static', filename='dynamic_pfp.js') }}"></script>
-        <script defer nonce="{{ csp_nonce() }}">
-            document.getElementById("goback").onclick = () => window.history.back();
-        </script>
-    {% endblock %}
+    </div>
+{% endblock body %}
+{% block scripts %}
+    <script src="{{ url_for('static', filename='dynamic_pfp.js') }}"></script>
+    <script defer nonce="{{ csp_nonce() }}">
+        document.getElementById("goback").onclick = () => window.history.back();
+    </script>
+{% endblock scripts %}

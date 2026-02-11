@@ -1,39 +1,42 @@
 {% extends "nav_layout.html.jinja" %}
-{% block title %}Generate '{{ event.name }}'{% endblock %}
+{% block title %}
+    QR Generate '{{ event.name }}'
+{% endblock title %}
 {% block body %}
     <div class="centercontainer">
         <div class="bordered">
-            <p class="headertext">QR Codes for '{{ event.name }}'</p>
-            <p class="text-center">
+            <p class="headertext mb-0">Generate QR Codes</p>
+            <small class="mb-4">for '{{ event.name }}'</small>
+            <p class="text-center limit-w">
                 Please select options for QR code generation.
-                <br />
-                Once generated, Right Click > Save
-                image as... to save the file.
+                Once generated, <code>Right Click > Save image as...</code> to save the file.
             </p>
             {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
-            <br />
-            <form method="POST" action="/events/gen/qr/{{ event.uid }}">
+            <form method="post"
+                  action="{{ url_for('events.gen', event_id=event.uid) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <div class="form-group">
                     <label for="size">Size:</label>
+                    <span aria-hidden="true" class="text-danger">*</span>
                     <select class="form-control" id="size" name="size" required>
                         <option value="" disabled selected>QR Code Size</option>
                         <option value="small">Just QR Code</option>
                         <option value="large">Full Page</option>
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="type">Type:</label>
+                    <span aria-hidden="true" class="text-danger">*</span>
                     <select class="form-control" id="type" name="type" required>
                         <option value="" disabled selected>Event Link</option>
                         <option value="register">Registration Link</option>
                         <option value="ci">Check In Link</option>
                     </select>
                 </div>
-                <br />
+                <a href="{{ url_for('events.manage', event_id=event.uid) }}"
+                   class="btn btn-secondary">Cancel</a>
                 <button type="submit" class="btn btn-success">Generate</button>
-                <a href="/events/manage/{{ event.uid }}" class="btn btn-secondary">Cancel</a>
             </form>
         </div>
     </div>
-{% endblock %}
+{% endblock body %}

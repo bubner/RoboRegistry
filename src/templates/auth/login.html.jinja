@@ -1,5 +1,7 @@
 {% extends "layout.html.jinja" %}
-{% block title %}Login{% endblock %}
+{% block title %}
+    Login
+{% endblock title %}
 {% block body %}
     <div class="centercontainer">
         <div class="border-top border-bottom rounded">
@@ -7,9 +9,11 @@
                 <div class="col-md-6 text-center d-flex justify-content-center flex-column">
                     <img src="{{ url_for('static', filename='assets/rr.png') }}"
                          id="logoimg"
+                         width="100"
+                         height="100"
                          alt="RoboRegistry" />
                     <div class="alert alert-primary mb-2 mt-3" role="alert">
-                        At an event? <a href="/events/ci">Check in here</a>
+                        At an event? <a href="{{ url_for('events.ci') }}">Check in here</a>
                     </div>
                     <div class="col-md-12 text-center">
                         {% with messages = get_flashed_messages(with_categories=True) %}
@@ -28,7 +32,9 @@
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <form action="/login" method="post" class="text-center py-5">
+                        <form action="{{ url_for('auth.login') }}"
+                              method="post"
+                              class="text-center py-5">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                             <h6>Log into RoboRegistry</h6>
                             {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
@@ -39,6 +45,7 @@
                                        name="email"
                                        placeholder="Email"
                                        type="email"
+                                       required
                                        autocomplete="username" />
                             </div>
                             <div class="mb-3">
@@ -48,6 +55,7 @@
                                        name="password"
                                        placeholder="Password"
                                        autocomplete="current-password"
+                                       required
                                        type="password" />
                             </div>
                             <div class="mb-3">
@@ -58,30 +66,31 @@
                                 <label class="form-check-label" for="remember-me">&nbsp; Remember me</label>
                             </div>
                             <div class="mb-3">
-                                <a href="/forgotpassword">Forgot password?</a>
+                                <a href="{{ url_for('auth.forgotpassword') }}">Forgot password?</a>
                             </div>
-                            <button class="btn btn-success" type="submit">Log in</button>
-                            <br />
-                            <br />
-                            <a href="/googleauth" id="google">Continue with Google</a>
+                            <div class="mb-3">
+                                <button class="btn btn-success w-100" type="submit">Log in</button>
+                            </div>
                             <p class="mt-3">
-                                Don't have an account? <a href="/register">Register</a>
+                                No account? <a href="{{ url_for('auth.register') }}">Register</a>, or:
                             </p>
+                            <a href="{{ url_for('auth.googleauth') }}" id="google">Continue with Google</a>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-    {% endblock %}
-    {% block scripts %}
-        <script nonce="{{ csp_nonce() }}">
-            // Set dark mode cookie if user has dark mode preference
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches && !document.cookie.includes("darkmode")) {
-                const date = new Date();
-                date.setTime(date.getTime() + (365 * 24 * 60 * 60 * 1000));
-                const oneYear = date.toUTCString();
-                document.cookie = "darkmode=on;path=/;SameSite=Strict;Secure;expires=" + oneYear;
-                window.location.reload();
-            }
-        </script>
-    {% endblock %}
+    </div>
+{% endblock body %}
+{% block scripts %}
+    <script nonce="{{ csp_nonce() }}">
+        // Set dark mode cookie if user has dark mode preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches && !document.cookie.includes("darkmode")) {
+            const date = new Date();
+            date.setTime(date.getTime() + (365 * 24 * 60 * 60 * 1000));
+            const oneYear = date.toUTCString();
+            document.cookie = "darkmode=on;path=/;SameSite=Strict;Secure;expires=" + oneYear;
+            window.location.reload();
+        }
+    </script>
+{% endblock scripts %}

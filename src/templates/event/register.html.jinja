@@ -1,178 +1,192 @@
 {% extends "nav_layout.html.jinja" %}
-{% block title %}Register for: {{ event.name }}{% endblock %}
+{% block title %}
+    Register for: {{ event.name }}
+{% endblock title %}
 {% block body %}
-    <div class="container border rounded-3 p-5 mb-12">
-        <h1 class="text-center mb-4">Register for '{{ event.name }}'</h1>
-        <h5 class="text-center">
-            {{ event.date }} from {{ event.start_time }} to {{ event.end_time }}
-            ({{ event.timezone }})
-        </h5>
-        <a href="/events/view/{{ event.uid }}"
-           class="btn btn-outline-success w-100 mt-3">View Event Page</a>
-        <br />
-        <br />
-        <div class="container border rounded-3 p-3">
-            <h5 class="text-center">{{ event.location }}</h5>
-            <div id="map"></div>
-        </div>
-        <br />
-        <p class="text-center">
-            Please fill in the form below to register for this event, either as a visitor or
-            team.
-        </p>
-        {% if event.email != "N/A" %}
+    <div class="pb-5">
+        <div class="container border rounded-3 p-5">
+            <h1 class="text-center mb-4">Register for '{{ event.name }}'</h1>
+            <h5 class="text-center">
+                {{ event.date }} from {{ event.start_time }} to {{ event.end_time }}
+                ({{ event.timezone }})
+            </h5>
+            <a href="{{ url_for('events.viewevent', uid=event.uid) }}"
+               class="btn btn-outline-success w-100 mt-3">View Event Page</a>
+            <div class="container border rounded-3 p-3 mt-4 mb-2">
+                <h5 class="text-center">{{ event.location }}</h5>
+                <div id="map"></div>
+            </div>
             <p class="text-center">
-                Have inquiries? Contact: <b>{{ event.email }}</b>
+                Please fill in the form below to register for this event, either as a visitor or
+                team.
             </p>
-        {% endif %}
-        <form id="regis" action="/events/register/{{ event.uid }}" method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <div class="mb-3">
-                <label for="repName" class="form-label">
-                    Club or Representing Name<span aria-hidden="true" class="text-danger">*</span>
-                </label>
-                <input type="text"
-                       class="form-control"
-                       id="repName"
-                       name="repName"
-                       placeholder="e.g. FIRST, Murray Bridge High School, General Public"
-                       required
-                       value="{{ user.affil }}" />
-            </div>
-            <div class="mb-3">
-                <label for="role" class="form-label">
-                    I am registering...<span aria-hidden="true" class="text-danger">*</span>
-                </label>
-                <select class="form-select" id="role" name="role" required>
-                    <option value="team" {% if user.role == "mentor" %}selected{% endif %}>
-                        FIRST team(s) (registered or unregistered)
-                    </option>
-                    <option value="event_manager"
-                            {% if user.role == "event_organiser" %}selected{% endif %}>as an Event manager</option>
-                    <option value="mentor" {% if user.role == "student" %}selected{% endif %}>
-                        as an External volunteer or other mentor
-                    </option>
-                    <option value="visitor" {% if user.role == "other" %}selected{% endif %}>as a Visitor</option>
-                    <option value="other">as Other</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <button type="button"
-                        id="addteams"
-                        class="btn btn-outline-primary w-100"
-                        data-bs-toggle="modal"
-                        data-bs-target="#modal">Add FIRST Team Numbers</button>
-                <div class="modal fade"
-                     id="modal"
-                     tabindex="-1"
-                     aria-labelledby="modalLabel"
-                     aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="modalLabel">FIRST Team Numbers</h5>
-                            </div>
-                            <div class="modal-body">
-                                <div class="input-group mb-3">
-                                    <input type="text"
-                                           id="tnum"
-                                           class="form-control"
-                                           placeholder="Enter team number"
-                                           aria-label="Enter text"
-                                           aria-describedby="add-button" />
-                                    <button class="btn btn-outline-secondary" type="submit" id="add-button">Add</button>
+            {% if event.email != "N/A" %}
+                <p class="text-center">
+                    Have inquiries? Contact: <b>{{ event.email }}</b>
+                </p>
+            {% endif %}
+            <form id="regis"
+                  action="{{ url_for('events.event_register', event_id=event.uid) }}"
+                  method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <div class="mb-3">
+                    <label for="repName" class="form-label">
+                        Club or Representing Name<span aria-hidden="true" class="text-danger">*</span>
+                    </label>
+                    <input type="text"
+                           class="form-control"
+                           id="repName"
+                           name="repName"
+                           placeholder="e.g. FIRST, Murray Bridge High School, General Public"
+                           required
+                           value="{{ user.affil }}" />
+                </div>
+                <div class="mb-3">
+                    <label for="role" class="form-label">
+                        I am registering...<span aria-hidden="true" class="text-danger">*</span>
+                    </label>
+                    <select class="form-select" id="role" name="role" required>
+                        <option value="team" {% if user.role == "mentor" %}selected{% endif %}>
+                            FIRST team(s) (registered or unregistered)
+                        </option>
+                        <option value="event_manager"
+                                {% if user.role == "event_organiser" %}selected{% endif %}>as an Event manager</option>
+                        <option value="mentor" {% if user.role == "student" %}selected{% endif %}>
+                            as an External volunteer or other mentor
+                        </option>
+                        <option value="visitor" {% if user.role == "other" %}selected{% endif %}>as a Visitor</option>
+                        <option value="other">as Other</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <button type="button"
+                            id="addteams"
+                            class="btn btn-outline-primary w-100"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modal">Add FIRST Team Numbers</button>
+                    <div class="modal fade"
+                         id="modal"
+                         tabindex="-1"
+                         aria-labelledby="modalLabel"
+                         aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="modalLabel">FIRST Team Numbers</h5>
                                 </div>
-                                <div class="text-center">
-                                    <ul class="list-unstyled" id="team-list">
-                                        <li>Populate with your FIRST team number(s)</li>
-                                        <li>If your team is not registered, you'll need to enter a name.</li>
-                                        <hr />
-                                    </ul>
+                                <div class="modal-body">
+                                    <div class="input-group mb-3">
+                                        <input type="text"
+                                               id="tnum"
+                                               class="form-control"
+                                               placeholder="Enter team number"
+                                               aria-label="Enter text"
+                                               aria-describedby="add-button" />
+                                        <button class="btn btn-outline-secondary" type="submit" id="add-button">Add</button>
+                                    </div>
+                                    <div class="text-center">
+                                        <ul class="list-unstyled" id="team-list">
+                                            <li>Populate with your FIRST team number(s)</li>
+                                            <li>If your team is not registered, you'll need to enter a name.</li>
+                                            <hr />
+                                        </ul>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="mb-3">
-                <label for="numPeople" class="form-label">
-                    Estimated number of attendees<span aria-hidden="true" class="text-danger">*</span>
-                </label>
-                <select class="form-select" id="numPeople" name="numPeople" required>
-                    <option value="" selected disabled>-</option>
-                    <option value="<5">&lt;5</option>
-                    <option value="5-10">5-10</option>
-                    <option value="10-15">10-15</option>
-                    <option value="15-20">15-20</option>
-                    <option value="20-25">20-25</option>
-                    <option value=">25">25+</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="numStudents" class="form-label">
-                    Number of Students Attending<span aria-hidden="true" class="text-danger">*</span>
-                </label>
-                <input type="number"
-                       class="form-control"
-                       id="numStudents"
-                       name="numStudents"
-                       min="0"
-                       max="999"
-                       required />
-            </div>
-            <div class="mb-3">
-                <label for="numMentors" class="form-label">
-                    Number of Mentors Attending<span aria-hidden="true" class="text-danger">*</span>
-                </label>
-                <input type="number"
-                       class="form-control"
-                       id="numMentors"
-                       name="numMentors"
-                       min="0"
-                       max="999"
-                       required />
-            </div>
-            <div class="mb-3">
-                <label for="numAdults" class="form-label">Number of Other Adults Attending</label>
-                <input type="number"
-                       class="form-control"
-                       id="numAdults"
-                       name="numAdults"
-                       min="0"
-                       max="999" />
-            </div>
-            <div class="mb-3">
-                <label for="contactName" class="form-label">Contact Name</label>
-                <span aria-hidden="true" class="text-danger">*</span>
-            </label>
-            <input type="text"
-                   class="form-control"
-                   id="contactName"
-                   name="contactName"
-                   placeholder="Enter your preferred contact name"
-                   value="{{ user.first_name }} {{ user.last_name }}"
-                   required />
+                <div class="mb-3">
+                    <label for="numPeople" class="form-label">
+                        Estimated number of attendees<span aria-hidden="true" class="text-danger">*</span>
+                    </label>
+                    <select class="form-select" id="numPeople" name="numPeople" required>
+                        <option value="" selected disabled>-</option>
+                        <option value="<5">&lt;5</option>
+                        <option value="5-10">5-10</option>
+                        <option value="10-15">10-15</option>
+                        <option value="15-20">15-20</option>
+                        <option value="20-25">20-25</option>
+                        <option value=">25">25+</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="numStudents" class="form-label">
+                        Number of Students Attending<span aria-hidden="true" class="text-danger">*</span>
+                    </label>
+                    <input type="number"
+                           class="form-control"
+                           id="numStudents"
+                           name="numStudents"
+                           min="0"
+                           max="999"
+                           required />
+                </div>
+                <div class="mb-3">
+                    <label for="numMentors" class="form-label">
+                        Number of Mentors Attending<span aria-hidden="true" class="text-danger">*</span>
+                    </label>
+                    <input type="number"
+                           class="form-control"
+                           id="numMentors"
+                           name="numMentors"
+                           min="0"
+                           max="999"
+                           required />
+                </div>
+                <div class="mb-3">
+                    <label for="numAdults" class="form-label">Number of Other Adults Attending</label>
+                    <input type="number"
+                           class="form-control"
+                           id="numAdults"
+                           name="numAdults"
+                           min="0"
+                           max="999" />
+                </div>
+                <div class="mb-3">
+                    <label for="contactName" class="form-label">Contact Name</label>
+                    <span aria-hidden="true" class="text-danger">*</span>
+                    <input type="text"
+                           class="form-control"
+                           id="contactName"
+                           name="contactName"
+                           placeholder="Enter your preferred contact name"
+                           value="{{ user.first_name }} {{ user.last_name }}"
+                           required />
+                </div>
+                <div class="mb-3">
+                    <label for="contactEmail" class="form-label">Contact Email</label>
+                    <span aria-hidden="true" class="text-danger">*</span>
+                    <input type="email"
+                           class="form-control"
+                           id="contactEmail"
+                           name="contactEmail"
+                           placeholder="{{ user.email }}"
+                           value="{{ user.email }}"
+                           required />
+                </div>
+                <div class="mb-3">
+                    <label for="contactPhone" class="form-label">Contact Phone Number</label>
+                    <input type="tel" class="form-control" id="contactPhone" name="contactPhone" />
+                </div>
+                <i>In case of unexpected event changes, the event owner can choose to contact your preferred contact email
+                and/or phone number listed here.</i>
+                <div class="mt-4">
+                    <a class="btn btn-secondary" href="{{ url_for('dashboard') }}">Cancel</a>
+                    <button id="registernow" type="submit" class="btn btn-primary">Register</button>
+                    &nbsp;
+                    <div id="waitmsg">
+                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                        <span class="text-muted">Waiting for 'Add FIRST Team Numbers'</span>
+                    </div>
+                </div>
+            </form>
         </div>
-        <div class="mb-3">
-            <label for="contactPhone" class="form-label">Contact Phone Number</label>
-            <input type="tel" class="form-control" id="contactPhone" name="contactPhone" />
-        </div>
-        <i>In case of unexpected event changes, the event owner can choose to contact your preferred contact email
-        and/or phone number listed here.</i>
-        <br />
-        <br />
-        <a class="btn btn-secondary" href="/dashboard">Cancel</a>
-        <button id="registernow" type="submit" class="btn btn-primary">Register</button>
-        <div id="waitmsg">
-            <div class="spinner-border spinner-border-sm" role="status"></div>
-            <span class="text-muted">Waiting for 'Add FIRST Team Numbers'</span>
-        </div>
-    </form>
-</div>
-{% endblock %}
+    </div>
+{% endblock body %}
 {% block scripts %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js"
             integrity="sha512-KqUc2WMPF/gxte9xVjVE4TIt1LMUTidO3BrcItFg0Ro24I7pGNzgcXdnWdezNY+8T0/JEmdC79MuwYn+8UdOqw=="
@@ -192,4 +206,4 @@
     <script src="{{ url_for('static', filename='mapbox_marker.js') }}"></script>
     <script src="{{ url_for('static', filename='form_handler.js') }}"></script>
     <script src="{{ url_for('static', filename='event_regis.js') }}"></script>
-{% endblock %}
+{% endblock scripts %}
