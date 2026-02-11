@@ -20,7 +20,10 @@ document.addEventListener("DOMContentLoaded", () => {
         // Check the DOM to see if the form has been submitted and it has gone through successfully
         // Also reload the page if the user navigates away from the page and onto the view page
         const success = iframe.contentDocument.querySelector(".headertext");
-        if ((success && success.textContent === "Check in successful") || (!iframe.contentDocument.title.includes("Checking in") && !iframe.contentDocument.title.includes("Event Register"))) {
+        if (
+            (success && success.textContent === "Check in successful") ||
+            (!iframe.contentDocument.title.includes("Checking in") && !iframe.contentDocument.title.includes("Event Register"))
+        ) {
             // Restart the iframe by making a brand new one
             const newIframe = document.createElement("iframe");
             newIframe.src = iframe.src;

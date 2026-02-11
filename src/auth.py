@@ -4,8 +4,10 @@
 """
 import random
 
-from flask import Blueprint, render_template, request, redirect, session, make_response, url_for, flash
-from flask_login import current_user, UserMixin, login_required, logout_user, login_user
+from flask import (Blueprint, flash, make_response, redirect, render_template,
+                   request, session, url_for)
+from flask_login import (UserMixin, current_user, login_required, login_user,
+                         logout_user)
 from requests.exceptions import HTTPError
 
 import db

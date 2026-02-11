@@ -5,12 +5,12 @@
 from datetime import datetime
 from functools import wraps
 
-from flask import session, request, redirect, abort, render_template, url_for
-from flask_login import current_user, AnonymousUserMixin
+from flask import abort, redirect, render_template, request, session, url_for
+from flask_login import AnonymousUserMixin, current_user
 from pytz import timezone
 
 import utils
-from db import get_uid_for, get_event, logged_out_data
+from db import get_event, get_uid_for, logged_out_data
 
 
 def must_be_event_owner(f):

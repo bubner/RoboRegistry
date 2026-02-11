@@ -12,26 +12,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const offset = (new Date().getTimezoneOffset() * -1) / 60 - parseFloat(OFFSET);
 
     // Get the local start and end times
-    const startLocalTime = getTimeData(EVENT_DATE, EVENT_START_TIME, offset).toLocaleString(
-        navigator.language,
-        {
-            year: "numeric",
-            month: "numeric",
-            day: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-        }
-    );
-    const endLocalTime = getTimeData(EVENT_DATE, EVENT_END_TIME, offset).toLocaleString(
-        navigator.language,
-        {
-            year: "numeric",
-            month: "numeric",
-            day: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-        }
-    );
+    const startLocalTime = getTimeData(EVENT_DATE, EVENT_START_TIME, offset).toLocaleString(navigator.language, {
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+    });
+    const endLocalTime = getTimeData(EVENT_DATE, EVENT_END_TIME, offset).toLocaleString(navigator.language, {
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+    });
 
     // Display local time on the page, if required
     const eventTime = document.querySelector("#event-time");

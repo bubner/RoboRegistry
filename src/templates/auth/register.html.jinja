@@ -1,43 +1,48 @@
 {% extends "layout.html.jinja" %}
-
-{% block title %}
-Register
-{% endblock %}
-
+{% block title %}Register{% endblock %}
 {% block body %}
-<div class="centercontainer">
-    <div class="border-bottom rounded">
-        <img src="{{ url_for('static', filename='assets/rr.png') }}" id="logoimgr" alt="RoboRegistry" />
-        <form action="/register" method="post" class="text-center py-5">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <div class="mb-2 alert alert-secondary">
-                Already have an account? <a href="/login">Login here</a> <hr />
-                Looking to check in at an event? <a href="/events/ci">Check in here</a>
-            </div>
-            <br />
-            <h6>You are creating a new RoboRegistry account.</h6>
-            {% if error %}
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
-            {% endif %}
-            <div class="mb-2">
-                <label for="email" class="form-label visually-hidden">Email</label>
-                <input class="form-control mx-auto w-auto" id="email" name="email" placeholder="Email" type="email" />
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label visually-hidden">Password</label>
-                <input class="form-control mx-auto w-auto" id="password" name="password" placeholder="Password"
-                    type="password" />
-            </div>
-            <div class="mb-3">
-                <input type="checkbox" class="form-check-input" id="remember-me" name="remember-me">
-                <label class="form-check-label" for="remember-me">&nbsp; Remember me</label>
-            </div>
-            <button class="btn btn-primary" type="submit">Register</button>
-            <h6 id="regisor">or</h6>
-            <a href="/googleauth" id="google">Continue with Google</a>
-        </form>
+    <div class="centercontainer">
+        <div class="border-bottom rounded">
+            <img src="{{ url_for('static', filename='assets/rr.png') }}"
+                 id="logoimgr"
+                 alt="RoboRegistry" />
+            <form action="/register" method="post" class="text-center py-5">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <div class="mb-2 alert alert-secondary">
+                    Already have an account? <a href="/login">Login here</a>
+                    <hr />
+                    Looking to check in at an event? <a href="/events/ci">Check in here</a>
+                </div>
+                <br />
+                <h6>You are creating a new RoboRegistry account.</h6>
+                {% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+                <div class="mb-2">
+                    <label for="email" class="form-label visually-hidden">Email</label>
+                    <input class="form-control mx-auto w-auto"
+                           id="email"
+                           name="email"
+                           placeholder="Email"
+                           type="email" />
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label visually-hidden">Password</label>
+                    <input class="form-control mx-auto w-auto"
+                           id="password"
+                           name="password"
+                           placeholder="Password"
+                           type="password" />
+                </div>
+                <div class="mb-3">
+                    <input type="checkbox"
+                           class="form-check-input"
+                           id="remember-me"
+                           name="remember-me" />
+                    <label class="form-check-label" for="remember-me">&nbsp; Remember me</label>
+                </div>
+                <button class="btn btn-primary" type="submit">Register</button>
+                <h6 id="regisor">or</h6>
+                <a href="/googleauth" id="google">Continue with Google</a>
+            </form>
+        </div>
     </div>
-</div>
 {% endblock %}

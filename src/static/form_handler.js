@@ -44,6 +44,7 @@ function handleAddTeamNumber(e) {
     `;
     newTeam.querySelector("button").addEventListener("click", (e) => removeTeam(e.target));
     teamList.appendChild(newTeam);
+    tryUpdateButton(currentTeams.length + 1);
 
     // Disable submitting
     document.getElementById("add-button").disabled = true;
@@ -152,5 +153,19 @@ function removeTeam(e) {
     } catch (e) {
         // Error propagates when modal is not being used, we can ignore it.
     }
+    tryUpdateButton(document.querySelectorAll("#team-list li label").length);
 }
 
+function tryUpdateButton(currentTeams) {
+    const addButton = document.getElementById("addteams");
+    if (!addButton) return;
+    if (currentTeams > 0) {
+        addButton.classList.remove("btn-outline-primary");
+        addButton.classList.add("btn-outline-success");
+        addButton.innerHTML = currentTeams + " FIRST Team Number(s) added";
+    } else {
+        addButton.classList.remove("btn-outline-success");
+        addButton.classList.add("btn-outline-primary");
+        addButton.innerHTML = "Add FIRST Team Numbers";
+    }
+}

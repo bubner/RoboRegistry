@@ -6,9 +6,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     mapboxgl.accessToken = MAPBOX_API_KEY;
     mapboxgl.workerUrl = MAPBOX_WORKER;
-    fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${EVENT_LOCATION}.json?access_token=${mapboxgl.accessToken}`
-    )
+    fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${EVENT_LOCATION}.json?access_token=${mapboxgl.accessToken}`)
         .then((response) => response.json())
         .then((data) => {
             const coordinates = data.features[0].center;

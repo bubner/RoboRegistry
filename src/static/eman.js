@@ -45,10 +45,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const now = new Date();
         const eventStartTime = getTimeData(EVENT_DATE, EVENT_START_TIME, offset);
         const eventEndTime = getTimeData(EVENT_DATE, EVENT_END_TIME, offset);
-        
+
         const toStartDiff = humanizeDuration(eventStartTime - now, { round: true });
         const toEndDiff = humanizeDuration(eventEndTime - now, { round: true });
-        
+
         if (eventStartTime - now >= 0) {
             document.getElementById("status").textContent = "Registration will automatically close and check-in will auto-open in:";
             document.getElementById("togo").textContent = toStartDiff;
@@ -100,8 +100,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         ["Number of Mentors", registration.numMentors],
                         ["Number of Other Adults", registration.numAdults],
                         ["Number of Teams", teamLength],
-                        ...teamData
-                    ].filter(row => row.some(cell => cell !== null && cell !== ''));
+                        ...teamData,
+                    ].filter((row) => row.some((cell) => cell !== null && cell !== ""));
                     if (data.length > 0) {
                         sheets.push({
                             name: uid,
@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     workbook.Sheets[sheet.name] = XLSX.utils.aoa_to_sheet(sheet.data);
                 }
                 return workbook;
-            }
+            },
         });
     });
 
@@ -195,7 +195,7 @@ function updateRegistered(data) {
                 numPeople: registration.numPeople,
                 numTeams: teamLength || "error",
                 teamList: registration.teams,
-                isManual: uid.startsWith("-N")
+                isManual: uid.startsWith("-N"),
             });
         } else {
             tabulatorData.push({
@@ -206,7 +206,7 @@ function updateRegistered(data) {
                 contactName: registration.contactName,
                 contactEmail: registration.contactEmail,
                 contactPhone: registration.contactPhone || "N/A",
-                isManual: uid.startsWith("-N")
+                isManual: uid.startsWith("-N"),
             });
         }
     }
@@ -232,11 +232,11 @@ function updateRegistered(data) {
                 { title: "Declared Other Adults", field: "numAdults" },
                 { title: "Declared FIRST Teams", field: "numTeams" },
                 { title: "Team List", field: "teamList", visible: false, download: true },
-                { title: "Is Manual", field: "isManual", visible: false, download: true }
+                { title: "Is Manual", field: "isManual", visible: false, download: true },
             ],
             cssClass: "tabulator",
             selectable: true,
-            placeholder: "No data available"
+            placeholder: "No data available",
         });
         // Hide export buttons if there is no data
         if (tabulatorData.length === 0) {
@@ -245,7 +245,8 @@ function updateRegistered(data) {
             document.getElementById("viewbox").textContent = "No data available.";
         }
     } catch (e) {
-        document.getElementById("registered-table").textContent = "Unable to load Tabulator. Please ensure your browser is not blocking the required scripts."
+        document.getElementById("registered-table").textContent =
+            "Unable to load Tabulator. Please ensure your browser is not blocking the required scripts.";
         return;
     }
 
@@ -255,11 +256,10 @@ function updateRegistered(data) {
         row.select();
         // Get the data for the selected row
         const data = row.getData();
-        let info = data.isManual ? 
-                        `<h5>Viewing manual registration of '${DOMPurify.sanitize(data.name)}'</h5>
+        let info = data.isManual
+            ? `<h5>Viewing manual registration of '${DOMPurify.sanitize(data.name)}'</h5>
                          <p class="text-muted small"><b>UID:</b> ${DOMPurify.sanitize(data.id)} (manual)</p>`
-                        :
-                        `<h5>Viewing registration of '${DOMPurify.sanitize(data.name)}'</h5>
+            : `<h5>Viewing registration of '${DOMPurify.sanitize(data.name)}'</h5>
                         <p class="text-muted small"><b>UID:</b> ${DOMPurify.sanitize(data.id)}</p>`;
         info += `
             <p><b>Registered Time:</b> ${DOMPurify.sanitize(data.time.toLocaleString(luxon.DateTime.DATETIME_FULL))}</p>
@@ -348,7 +348,6 @@ function _queue_inspection(num, tname, callback) {
         callback(status, !nameFound);
     });
 }
-
 
 function getTimeData(date, time, offset) {
     // Reused from event_viewer because working with date and time is a nightmare

@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     "," +
                     userLocation.lat +
                     ".json?access_token=" +
-                    mapboxgl.accessToken
+                    mapboxgl.accessToken,
             )
                 .then((response) => response.json())
                 .then((data) => {
@@ -77,29 +77,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (OLD_DATA_TIMEZONE === "") {
         document.getElementById("event_timezone").value = Intl.DateTimeFormat().resolvedOptions().timeZone;
     }
-
-    const startTimeInput = document.getElementById("event_start_time");
-    const endTimeInput = document.getElementById("event_end_time");
-
-    // Add an event listener to the start time input to check if it's after the end time
-    startTimeInput.addEventListener("change", () => {
-        const startTime = new Date(`1970-01-01T${startTimeInput.value}:00`);
-        const endTime = new Date(`1970-01-01T${endTimeInput.value}:00`);
-        if (startTime >= endTime) {
-            alert("Start time cannot be before or the same as the end time.");
-            startTimeInput.value = "";
-        }
-    });
-
-    // Add an event listener to the end time input to check if it's before the start time
-    endTimeInput.addEventListener("change", () => {
-        const startTime = new Date(`1970-01-01T${startTimeInput.value}:00`);
-        const endTime = new Date(`1970-01-01T${endTimeInput.value}:00`);
-        if (endTime <= startTime) {
-            alert("End time cannot be before or the same as the start time.");
-            endTimeInput.value = "";
-        }
-    });
 
     // Manage dynamic elements of email display checkbox
     const displayEmail = document.getElementById("display_email");
