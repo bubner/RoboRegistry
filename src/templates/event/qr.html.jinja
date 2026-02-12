@@ -3,26 +3,28 @@
     Scan QR
 {% endblock title %}
 {% block body %}
-    <div class="container">
-        <p class="headertext text-center mb-0">Event Check In</p>
-        <h6 class="text-center">Scan QR Code</h6>
-        <form method="post" action="{{ url_for('events.ci') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <div class="form-group">
-                <label for="event_url" class="form-label visually-hidden">Event URL</label>
-                <input type="text"
-                       class="form-control"
-                       id="event_url"
-                       name="event_url"
-                       placeholder="https://roboregistry.app.bubner.me/events/ci/your-event-1234"
-                       required />
-            </div>
-            <div id="reader" class="bg-white"></div>
-            <div class="text-center mt-3">
-                <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Cancel</a>
-                <button type="submit" class="btn btn-success">Go</button>
-            </div>
-        </form>
+    <div class="centercontainer">
+        <div class="w-100">
+            <p class="headertext text-center mb-0">Event Check In</p>
+            <h6 class="text-center">Scan QR Code or Paste</h6>
+            <form method="post" action="{{ url_for('events.ci') }}" class="w-sm-75">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <div class="form-group">
+                    <label for="event_url" class="form-label visually-hidden">Event URL</label>
+                    <input type="text"
+                           class="form-control"
+                           id="event_url"
+                           name="event_url"
+                           placeholder="https://roboregistry.app.bubner.me/events/ci/your-event-1234"
+                           required />
+                </div>
+                <div id="reader" class="bg-white"></div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-success">Go</button>
+                </div>
+            </form>
+        </div>
     </div>
 {% endblock body %}
 {% block scripts %}

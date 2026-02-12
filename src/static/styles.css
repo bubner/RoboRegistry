@@ -388,6 +388,16 @@ big {
     font-size: 18px;
 }
 
+.w-sm-75 {
+    width: 100%;
+}
+
+@media (min-width: 576px) {
+    .w-sm-75 {
+        width: 75%;
+    }
+}
+
 #__ns_modal-toggle ~ .__ns_modal-container,
 #__ns_modal-toggle ~ .__ns_modal-box {
     visibility: hidden;
