@@ -378,6 +378,16 @@ nav {
     text-align: center;
 }
 
+big {
+    font-size: 36px;
+    font-weight: 800;
+    padding: 1px;
+}
+
+.large {
+    font-size: 18px;
+}
+
 #__ns_modal-toggle ~ .__ns_modal-container,
 #__ns_modal-toggle ~ .__ns_modal-box {
     visibility: hidden;

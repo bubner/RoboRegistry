@@ -607,10 +607,36 @@ def manage(event_id: str):
         abort(403)
 
     # Calculate the UTC offset for the event, to display time correctly
-    offset = timezone(event["timezone"]).utcoffset(datetime.now()).total_seconds() / 3600
+    tz = timezone(event["timezone"])
+    offset = tz.utcoffset(datetime.now()).total_seconds() / 3600
+    
+    start_time = tz.localize(datetime.strptime(
+        f"{event['date']} {event['start_time']}", "%Y-%m-%d %H:%M"))
+    end_time = tz.localize(datetime.strptime(
+        f"{event['date']} {event['end_time']}", "%Y-%m-%d %H:%M"))
+    
+    can_register = start_time > datetime.now(tz)
+    is_running = start_time < datetime.now(tz) < end_time
+    
+    registrations = event.get("registered", {}).values()
+    registered_clubs = list(filter(lambda r: r.get("role", "") == "team", registrations))
+    checked_in = list(filter(lambda c: c.get("checkin_data", {}).get("checked_in", False), registrations))
+    clubs_checked_in = len([club for club in registered_clubs if club in checked_in])
+    others_checked_in = len(list(checked_in)) - clubs_checked_in + len(data.get("anon_data", {}))
+    lower_people = len(registrations) + sum(map(lambda r: int(r.get("numPeople", "0-0").split("-")[0]), data.values()))
+    declared_people = sum(map(lambda r: int(r.get("numAdults", "0")) + int(r.get("numMentors", "0")) + int(r.get("numStudents", "0")), data.values()))
+    upper_people = len(registrations) + max(sum(map(lambda r: int(r.get("numPeople", "0-0").split("-")[1]), data.values())), declared_people)
+    
+    metrics = {
+        "registrations": len(registrations),
+        "registrations_clubs": len(registered_clubs),
+        "approx_total": f"{lower_people}-{upper_people}",
+        "team_checkins": clubs_checked_in,
+        "other_checkins": others_checked_in
+    }
 
     return render_template("event/manage.html.jinja", event=event, data=data, user=getattr(current_user, "data"),
-                           offset=offset)
+                           offset=offset, can_register=can_register, is_running=is_running, metrics=metrics)
 
 
 @events_bp.route("/events/manage/<string:event_id>/driver")

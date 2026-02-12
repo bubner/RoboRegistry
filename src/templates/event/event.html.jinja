@@ -19,16 +19,8 @@
                    class="btn btn-primary">Manage</a>
             {% endif %}
             {% if can_register %}
-                <button id="copyregis" class="btn btn-secondary">
-                    Copy
-                    Registration Link
-                </button>
-                {% if owned %}
-                    <button id="copyci" class="btn btn-secondary">
-                        Copy Check-In
-                        Link
-                    </button>
-                {% endif %}
+                <button id="copyregis" class="btn btn-secondary">Copy Registration Link</button>
+                {% if owned %}<button id="copyci" class="btn btn-secondary">Copy Check-In Link</button>{% endif %}
             {% endif %}
             <hr />
         </div>
@@ -46,8 +38,8 @@
                                     Time until event
                                 {% endif %}
                             </h5>
-                            <p class="card-text" id="relative-event-time"></p>
-                            <p id="event-time"></p>
+                            <p class="card-text" id="relative-event-time">...</p>
+                            <p id="event-time" class="mb-0">...</p>
                         </div>
                     </div>
                     <div class="card mb-5">

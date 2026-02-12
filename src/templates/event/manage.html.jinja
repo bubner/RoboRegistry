@@ -77,13 +77,32 @@
                 </div>
             </div>
         </div>
-        <div class="row mb-3">
-            <div class="col-md-12">
-                <div class="card shadow-sm">
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card sync h-100 mb-4 {% if is_running %}border-success{% elif not can_register %}border-danger{% else %}border-primary{% endif %}">
+                    <div class="card-body d-flex flex-column justify-content-around">
+                        <h5 class="card-title">
+                            {% if is_running %}
+                                Event is running!
+                            {% elif not can_register %}
+                                Event has ended!
+                            {% else %}
+                                Time until event
+                            {% endif %}
+                        </h5>
+                        <p class="card-text large" id="relative-event-time">...</p>
+                        <p id="event-time" class="mb-0">...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h4 class="card-title">Metrics</h4>
-                        This feature is a WIP!
-                        {# <canvas id="metrics"></canvas> #}
+                        Your event has had <big>{{ metrics.registrations }}</big> registration{{ "s" if metrics.registrations != 1 else "" }}, <big>{{ metrics.registrations_clubs }}</big> of which were FIRST® clubs. Your event approximately totals up to <big>{{ metrics.approx_total }}</big> registered people in attendance. <big>{{ metrics.team_checkins }}</big> club{{ "s" if metrics.team_checkins != 1 else "" }} and <big>{{ metrics.other_checkins }}</big> other{{ "s" if metrics.other_checkins != 1 else "" }} have checked-in to your event.
+                    </div>
+                    <div class="card-footer text-muted">
+                        Last updated <span id="page-time">1 second</span> ago.
                     </div>
                 </div>
             </div>
@@ -309,12 +328,12 @@
                                             </label>
                                             <select class="form-select" id="numPeople" name="numPeople" required>
                                                 <option value="" selected disabled>-</option>
-                                                <option value="<5">&lt;5</option>
+                                                <option value="1-5">1-5</option>
                                                 <option value="5-10">5-10</option>
                                                 <option value="10-15">10-15</option>
                                                 <option value="15-20">15-20</option>
                                                 <option value="20-25">20-25</option>
-                                                <option value=">25">25+</option>
+                                                <option value="25-50">25-50</option>
                                             </select>
                                         </div>
                                         <div class="mb-3">
@@ -481,4 +500,6 @@
     <script src="{{ url_for('static', filename='internal_api.js') }}"></script>
     <script src="{{ url_for('static', filename='form_handler.js') }}"></script>
     <script src="{{ url_for('static', filename='eman.js') }}"></script>
+    <script src="{{ url_for('static', filename='event_viewer.js') }}"></script>
+    <script src="{{ url_for('static', filename='page_loaded_timer.js') }}"></script>
 {% endblock scripts %}

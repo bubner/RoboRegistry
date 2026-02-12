@@ -81,8 +81,8 @@ def validate_form(form_data, role):
     if role == "team" and not all(
             form_data.get(field) for field in ("numPeople", "numStudents", "numMentors", "teams")):
         return False
-    # numPeople must be in ["<5", "5-10", "10-15", "15-20", "20-25", ">25"]
-    if role == "team" and form_data.get("numPeople") not in ("<5", "5-10", "10-15", "15-20", "20-25", ">25"):
+    # numPeople must be in ["1-5", "5-10", "10-15", "15-20", "20-25", "25-50"]
+    if role == "team" and form_data.get("numPeople") not in ("1-5", "5-10", "10-15", "15-20", "20-25", "25-50"):
         return False
     # All values in teams must be non-empty
     if form_data.get("teams") and any(not team for team in form_data.get("teams")):
