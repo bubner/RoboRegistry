@@ -292,16 +292,17 @@ function updateRegistered(data) {
             secondbox += `
                 <br>
                 <h5>Declared Teams</h5>
-                <table class="table table-bordered team-table">
-                    <thead>
-                        <tr>
-                            <th>Team Number</th>
-                            <th>Team Name</th>
-                            <th>Number is FIRST registered?</th>
-                            <th>Team is using a custom name?</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Team Number</th>
+                                <th>Team Name</th>
+                                <th>Number is FIRST registered?</th>
+                                <th>Team is using a custom name?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
             `;
             for (const [num, name] of Object.entries(teams)) {
                 // Need to query FIRSTTeamAPI to get verification status
@@ -329,6 +330,7 @@ function updateRegistered(data) {
             secondbox += `
                     </tbody>
                 </table>
+            </div>
             `;
         }
         document.getElementById("viewbox2").innerHTML = secondbox;
