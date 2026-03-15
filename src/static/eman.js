@@ -2,10 +2,10 @@
  * Management page dynamic functionality.
  * @author Lucas Bubner, 2023
  */
-let registeredData = null;
-let checkinData = null;
+let data = null;
 let regisTable = null;
-let checkinTable = null;
+let registeredCheckInTable = null;
+let otherCheckInTable = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     tick();
@@ -66,13 +66,13 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("d-csv").addEventListener("click", () => {
         regisTable.download("csv", `${EVENT_UID}-regis-export.csv`, { bom: true });
     });
-
     document.getElementById("d-xl").addEventListener("click", () => {
         regisTable.download("xlsx", `${EVENT_UID}-regis-export.xlsx`, {
             documentProcessing: (workbook) => {
-                // Make a new sheet for for every registration
+                // LEGACY BEHAVIOUR: Make a new sheet for for every registration
+                // Regular exports can still be done with .csv, so we leave it
                 const sheets = [];
-                for (const [uid, registration] of Object.entries(registeredData)) {
+                for (const [uid, registration] of Object.entries(data)) {
                     if (uid == "anon_checkin") {
                         continue;
                     }
@@ -120,6 +120,18 @@ document.addEventListener("DOMContentLoaded", () => {
             },
         });
     });
+    document.getElementById("r-d-csv").addEventListener("click", () => {
+        registeredCheckInTable.download("csv", `${EVENT_UID}-regis-ci-export.csv`, { bom: true });
+    });
+    document.getElementById("r-d-xl").addEventListener("click", () => {
+        registeredCheckInTable.download("xlsx", `${EVENT_UID}-regis-ci-export.xlsx`);
+    });
+    document.getElementById("ra-d-csv").addEventListener("click", () => {
+        otherCheckInTable.download("csv", `${EVENT_UID}-regis-ci-anon-export.csv`, { bom: true });
+    });
+    document.getElementById("ra-d-xl").addEventListener("click", () => {
+        otherCheckInTable.download("xlsx", `${EVENT_UID}-regis-ci-anon-export.xlsx`);
+    });
 
     // Ping the API every 30 seconds
     setInterval(tick, 30000);
@@ -161,25 +173,30 @@ function tick() {
         }
     });
 
-    api.safeFetch(`/api/registrations/${EVENT_UID}`).then((data) => {
+    api.safeFetch(`/api/data/${EVENT_UID}`).then((newData) => {
         // Little bit of a weird JSON hack, but it works for this application where the data will be in the same order
-        if (JSON.stringify(data) != JSON.stringify(registeredData)) {
-            updateRegistered(data);
-        }
-    });
-
-    api.safeFetch(`/api/checkins/${EVENT_UID}`).then((data) => {
-        if (JSON.stringify(data) != JSON.stringify(checkinData)) {
-            updateCheckins(data);
+        if (JSON.stringify(data) != JSON.stringify(newData)) {
+            data = newData;
+            update();
         }
     });
 }
 
-function updateRegistered(data) {
-    registeredData = data;
-    const tabulatorData = [];
+function update() {
+    const registrationData = [];
+    const registeredCheckInData = [];
+    const otherCheckInData = [];
     for (const [uid, registration] of Object.entries(data)) {
         if (uid == "anon_checkin") {
+            for (const [uuid, ci] of Object.entries(registration)) {
+                otherCheckInData.push({
+                    id: uuid,
+                    name: ci.name,
+                    // Since we don't show an extended box we clean up the data
+                    rep: ci.rep === "noregis" ? "unregistered" : ci.rep,
+                    time: luxon.DateTime.fromSeconds(ci.time)
+                });
+            }
             continue;
         }
         let teamLength = null;
@@ -189,7 +206,7 @@ function updateRegistered(data) {
             // Problem parsing JSON, keep as null
         }
         if (registration.role === "team") {
-            tabulatorData.push({
+            registrationData.push({
                 id: uid,
                 name: registration.repName,
                 time: luxon.DateTime.fromSeconds(registration.registered_time),
@@ -206,7 +223,7 @@ function updateRegistered(data) {
                 isManual: uid.startsWith("-N"),
             });
         } else {
-            tabulatorData.push({
+            registrationData.push({
                 id: uid,
                 name: registration.repName,
                 time: luxon.DateTime.fromSeconds(registration.registered_time),
@@ -217,17 +234,25 @@ function updateRegistered(data) {
                 isManual: uid.startsWith("-N"),
             });
         }
+        registeredCheckInData.push({
+            id: uid,
+            name: registration.repName,
+            contactName: registration.contactName,
+            role: registration.role,
+            checkedIn: registration.checkin_data.checked_in,
+            checkInTime: registration.checkin_data.checked_in ? luxon.DateTime.fromSeconds(registration.checkin_data.time) : "N/A"
+        });
     }
     try {
         regisTable = new Tabulator("#registered-table", {
-            data: tabulatorData,
+            data: registrationData,
             layout: "fitColumns",
             pagination: "local",
             paginationSize: 10,
             paginationSizeSelector: [10, 25, 50, 100],
             initialSort: [{ column: "time" }],
             columns: [
-                { title: "UID", field: "id", visible: false, download: false },
+                { title: "UID", field: "id", visible: false, download: true },
                 { title: "Representative Name", field: "name" },
                 { title: "Registered Time", field: "time", formatter: "datetime", formatterParams: { outputFormat: "FF" } },
                 { title: "Role", field: "role" },
@@ -247,7 +272,7 @@ function updateRegistered(data) {
             placeholder: "No data available",
         });
         // Hide export buttons if there is no data
-        if (tabulatorData.length === 0) {
+        if (registrationData.length === 0) {
             document.getElementById("d-csv").style.display = "none";
             document.getElementById("d-xl").style.display = "none";
             document.getElementById("viewbox").textContent = "No data available.";
@@ -265,13 +290,15 @@ function updateRegistered(data) {
         // Get the data for the selected row
         const data = row.getData();
         let info = data.isManual
-            ? `<h5>Viewing manual registration of '${DOMPurify.sanitize(data.name)}'</h5>
+            ? `<h5>Viewing manual registration data</h5>
+                        <h6>→ ${DOMPurify.sanitize(data.name)}</h6>
                          <p class="text-muted small"><b>UID:</b> ${DOMPurify.sanitize(data.id)} (manual)</p>`
-            : `<h5>Viewing registration of '${DOMPurify.sanitize(data.name)}'</h5>
+            : `<h5>Viewing registration data
+                        <h6>→ ${DOMPurify.sanitize(data.name)}</h6>
                         <p class="text-muted small"><b>UID:</b> ${DOMPurify.sanitize(data.id)}</p>`;
         info += `
             <p><b>Registered Time:</b> ${DOMPurify.sanitize(data.time.toLocaleString(luxon.DateTime.DATETIME_FULL))}</p>
-            <p><b>Role:</b> ${DOMPurify.sanitize(data.role)}</p>
+            <p><b>Role:</b> ${title(DOMPurify.sanitize(data.role).replaceAll("_", " "))}</p>
         `;
         if (data.numPeople) {
             info += `<p><b>Declared People:</b> ${DOMPurify.sanitize(data.numPeople)}</p>`;
@@ -343,27 +370,78 @@ function updateRegistered(data) {
         }
         document.getElementById("viewbox2").innerHTML = secondbox;
     });
-}
 
-function updateCheckins(data) {
-    // use event now2-20230730 for testing
-    console.log(data);
-    checkinData = data;
-    checkinTable = new Tabulator("#checkin-table", {
-        data: checkinData,
-        layout: "fitColumns",
-        pagination: "local",
-        paginationSize: 10,
-        paginationSizeSelector: [10, 25, 50, 100],
-        initialSort: [{ column: "time" }],
-        columns: [
-            { title: "UID", field: "id", visible: false, download: false },
-            { title: "Check-in Time", field: "time", formatter: "datetime", formatterParams: { outputFormat: "FF" } },
-        ],
-        cssClass: "tabulator",
-        selectable: true,
-        placeholder: "No data available"
+    try {
+        registeredCheckInTable = new Tabulator("#registered-checkin-table", {
+            data: registeredCheckInData,
+            layout: "fitColumns",
+            pagination: "local",
+            paginationSize: 10,
+            paginationSizeSelector: [10, 25, 50, 100],
+            initialSort: [{ column: "time" }],
+            columns: [
+                { title: "UID", field: "id", visible: false, download: true },
+                { title: "Representative Name", field: "name" },
+                { title: "Contact Name", field: "contactName" },
+                { title: "Role", field: "role" },
+                { title: "Checked In?", field: "checkedIn", visible: false, download: true },
+                { title: "Check-in Time", field: "checkInTime", formatter: "datetime", formatterParams: { outputFormat: "FF" } },
+            ],
+            cssClass: "tabulator",
+            selectable: true,
+            placeholder: "No data available",
+        });
+        if (registrationData.length === 0) {
+            document.getElementById("r-viewbox").textContent = "No data available.";
+        }
+    } catch (e) {
+        document.getElementById("registered-checkin-table").textContent =
+            "Unable to load Tabulator. Please ensure your browser is not blocking the required scripts.";
+    }
+
+    registeredCheckInTable.on("rowClick", (e, row) => {
+        registeredCheckInTable.deselectRow();
+        row.select();
+        const data = row.getData();
+        document.getElementById("r-viewbox").innerHTML = `
+            <h5>Viewing registered check-in data</h5>
+            <p><b>Representative Name:</b> ${DOMPurify.sanitize(data.name)}</p>
+            <p><b>Contact Name:</b> ${DOMPurify.sanitize(data.contactName)}</p>
+            <p><b>Role:</b> ${title(DOMPurify.sanitize(data.role).replaceAll("_", " "))}</p>
+        `;
+        let secondbox = `
+            <h5>Check-in Information</h5>
+            <p><b>Checked in?</b> ${DOMPurify.sanitize(data.checkedIn) ? "Yes" : "No"}</p>
+        `;
+        if (data.checkedIn) {
+            secondbox += `
+                <p><b>Check-in time:</b> ${DOMPurify.sanitize(data.checkInTime.toLocaleString(luxon.DateTime.DATETIME_FULL))}</p>
+            `;
+        }
+        document.getElementById("r-viewbox2").innerHTML = secondbox;
     });
+    try {
+        otherCheckInTable = new Tabulator("#other-checkin-table", {
+            data: otherCheckInData,
+            layout: "fitColumns",
+            pagination: "local",
+            paginationSize: 10,
+            paginationSizeSelector: [10, 25, 50, 100],
+            initialSort: [{ column: "time" }],
+            columns: [
+                { title: "UID", field: "id", visible: false, download: true },
+                { title: "Time", field: "time", formatter: "datetime", formatterParams: { outputFormat: "FF" } },
+                { title: "Representative Name", field: "name" },
+                { title: "Affiliation", field: "rep" },
+            ],
+            cssClass: "tabulator",
+            selectable: false,
+            placeholder: "No data available",
+        });
+    } catch (e) {
+        document.getElementById("other-checkin-table").textContent =
+            "Unable to load Tabulator. Please ensure your browser is not blocking the required scripts.";
+    }
 }
 
 function _queue_inspection(num, tname, callback) {
@@ -383,4 +461,11 @@ function _queue_inspection(num, tname, callback) {
 function getTimeData(date, time, offset) {
     // Reused from event_viewer because working with date and time is a nightmare
     return new Date(new Date(`${date} ${time}`).getTime() + offset * 60 * 60 * 1000);
+}
+
+function title(str) {
+    return str
+        .split(" ")
+        .map((s) => s[0].toUpperCase() + s.substring(1))
+        .join(" ");
 }

@@ -392,6 +392,10 @@ big {
     width: 100%;
 }
 
+.p-margin > * > p {
+    margin-bottom: 0;
+}
+
 @media (min-width: 576px) {
     .w-sm-75 {
         width: 75%;
