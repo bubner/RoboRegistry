@@ -226,7 +226,7 @@ def settings():
             "affil": getattr(current_user, "data", {}).get("affil", ""),
         }
         return render_template("misc/settings.html.jinja", user=getattr(current_user, "data", None),
-                               settings=current_settings)
+                               settings=current_settings, uid=utils.get_uid())
 
 
 @app.route("/about")

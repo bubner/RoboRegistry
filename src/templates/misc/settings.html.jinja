@@ -18,14 +18,14 @@
                             <div class="card-body">
                                 <h5 class="card-title">Account</h5>
                                 <div class="mb-3">
-                                    <div class="d-flex flex-row justify-content-center align-items-center mb-3">
+                                    <div class="d-flex flex-row justify-content-center align-items-center mb-3 gap-2">
                                         <svg data-jdenticon-value="{{ user.first_name }} {{ user.last_name }}"
                                              width="40"
                                              height="40"
                                              id="dpfp"
                                              class="flex-shrink-0">
                                         </svg>
-                                        <div class="col-md-3 ms-3">
+                                        <div>
                                             <label for="first" class="form-label visually-hidden">First name</label>
                                             <input type="text"
                                                    class="form-control"
@@ -35,7 +35,7 @@
                                                    maxlength="16"
                                                    required />
                                         </div>
-                                        <div class="col-md-3 ms-3">
+                                        <div>
                                             <label for="last" class="form-label visually-hidden">Last name</label>
                                             <input type="text"
                                                    class="form-control"
@@ -46,6 +46,7 @@
                                                    required />
                                         </div>
                                     </div>
+                                    <div class="text-muted text-center">Your user UID: <b>{{ uid }}</b></div>
                                 </div>
                                 <div class="mb-3">
                                     <label for="affil" class="form-label">Affiliation</label>
