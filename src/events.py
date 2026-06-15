@@ -651,3 +651,19 @@ def driver(event_id: str):
     # Establish a secure environment by logging out
     logout_user()
     return render_template("event/driver.html.jinja", event=event)
+
+
+@events_bp.route("/events/manage/<string:event_id>/transfer")
+@login_required
+@validate_user
+@must_be_event_owner
+def transfer(event_id: str):
+    """
+        Transfer page for the event.
+    """
+    event = db.get_event(event_id)
+    if request.method == "POST" and event:
+        new_uid = request.form.get("uid")
+        db.update_event_owner(event_id, new_uid)
+        return redirect("/events/view")
+    return render_template("event/transfer.html.jinja", event=event, user=getattr(current_user, "data"))

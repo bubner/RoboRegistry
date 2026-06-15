@@ -53,6 +53,14 @@ def add_event(uid, event, auth=None):
     db.child("events").child(uid).set(event, auth)
 
 
+def update_event_owner(event_uid, new_owner_uid, auth=None):
+    """
+        Updates an event owner to a new UID.
+    """
+    auth = auth or getattr(current_user, "token", None)
+    db.child("events").child(event_uid).child("creator").set(new_owner_uid, auth)
+
+
 def add_entry(event_id, public_data, private_data, override, auth=None):
     """
         Updates an event in the database to reflect a new registration.
