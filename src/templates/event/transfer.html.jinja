@@ -16,7 +16,7 @@
                   action="{{ url_for('events.transfer', event_id=event.uid) }}"
                   id="transfer-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                <div class="mb-4">
+                <div class="mb-2">
                     <label for="last_name" class="form-label" class="text-left">Transfer to UID</label>
                     <input class="form-control"
                         name="uid"
