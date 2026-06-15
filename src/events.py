@@ -653,7 +653,7 @@ def driver(event_id: str):
     return render_template("event/driver.html.jinja", event=event)
 
 
-@events_bp.route("/events/manage/<string:event_id>/transfer")
+@events_bp.route("/events/manage/<string:event_id>/transfer", methods=["GET", "POST"])
 @login_required
 @validate_user
 @must_be_event_owner

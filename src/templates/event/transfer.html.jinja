@@ -12,7 +12,7 @@
             </p>
             <h5>All data related to this event will be owned by this new account. You will lose access to this event.</h5>
             <form method="post"
-                  class="d-flex m-2 justify-content-center align-items-center"
+                  class="d-flex m-2 justify-content-center align-items-center flex-column"
                   action="{{ url_for('events.transfer', event_id=event.uid) }}"
                   id="transfer-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
@@ -24,12 +24,17 @@
                         type="text"
                         required />
                 </div>
-                <a href="{{ url_for('events.manage', event_id=event.uid) }}"
-                   class="btn btn-secondary">Cancel</a>
-                <button type="submit" class="btn btn-danger">Transfer</button>
+                <div>
+                    <a href="{{ url_for('events.manage', event_id=event.uid) }}"
+                    class="btn btn-secondary">Cancel</a> &nbsp;&nbsp;
+                    <button type="submit" class="btn btn-danger">Transfer</button>
+                </div>
             </form>
             <h6 class="mb-4">
-                Please ensure you have the correct UID for transfer. Failure to do so will result in permanent loss of the event. Export data before proceeding if required.
+                Please ensure you have the correct UID for transfer.
+                <p>
+                    Failure to do so will result in permanent loss of the event. Export data before proceeding if required.
+                </p>
             </h6>
         </div>
     </div>
