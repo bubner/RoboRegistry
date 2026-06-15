@@ -664,6 +664,7 @@ def transfer(event_id: str):
     event = db.get_event(event_id)
     if request.method == "POST" and event:
         new_uid = request.form.get("uid")
+        # Invalid requests are swallowed
         db.update_event_owner(event_id, new_uid)
         return redirect("/events/view")
     return render_template("event/transfer.html.jinja", event=event, user=getattr(current_user, "data"))

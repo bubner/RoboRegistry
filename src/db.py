@@ -5,6 +5,7 @@
 
 import math
 from datetime import datetime
+from re import match
 from time import time
 
 from flask_login import current_user
@@ -55,10 +56,12 @@ def add_event(uid, event, auth=None):
 
 def update_event_owner(event_uid, new_owner_uid, auth=None):
     """
-        Updates an event owner to a new UID.
+        Updates an event owner to a new UID. Swallows invalid updates for new owner ID.
     """
     auth = auth or getattr(current_user, "token", None)
-    db.child("events").child(event_uid).child("creator").set(new_owner_uid, auth)
+    # Firebase UIDs are 28 char and are alphanumeric (A-Z, a-z, 0-9)
+    if new_owner_uid and len(new_owner_uid) >= 28 and match(r"^[A-Za-z0-9]+$", new_owner_uid):
+        db.child("events").child(event_uid).child("creator").set(new_owner_uid, auth)
 
 
 def add_entry(event_id, public_data, private_data, override, auth=None):
