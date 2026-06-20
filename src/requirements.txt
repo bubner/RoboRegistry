@@ -24,7 +24,7 @@ idna==3.15
 importlib_metadata==8.7.1
 itsdangerous==2.2.0
 Jinja2==3.1.6
-jwcrypto==1.5.6
+jwcrypto==1.5.7
 MarkupSafe==3.0.3
 pillow==12.2.0
 pkce==1.0.3
