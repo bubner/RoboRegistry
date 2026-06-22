@@ -4,6 +4,7 @@
 """
 
 from datetime import datetime, timedelta
+from random import randint
 
 import requests
 from flask import Blueprint, abort, flash, redirect, request
@@ -230,7 +231,24 @@ def api_manual_regis(event_id):
     return redirect(f"/events/manage/{event_id}")
 
 
-@api_bp.route("/api/opencinow/<string:event_id>")
+@api_bp.route("/api/randomisecode/<string:event_id>", methods=["POST"])
+@login_required
+@must_be_event_owner
+def api_randomise_code(event_id):
+    """
+        Re-randomises the check-in code for the event.
+    """
+    event = db.get_event(event_id)
+    if not event:
+        return {
+            "error": "NOT_FOUND"
+        }, 404
+    db.update_event(event_id, {"checkin_code": randint(1000, 9999)}, {})
+    flash("Randomisation complete. The old check-in code is now invalid.", "success")
+    return redirect(f"/events/manage/{event_id}")
+
+
+@api_bp.route("/api/opencinow/<string:event_id>", methods=["POST"])
 @login_required
 @must_be_event_owner
 def api_open_checkin(event_id):

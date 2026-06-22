@@ -44,18 +44,16 @@
                         <p class="card-text">Access, export, and view your collected event data.</p>
                     </div>
                     <div class="card-footer text-center">
-                        <div class="d-grid">
-                            <div class="d-flex justify-content-between">
-                                <button type="button"
-                                        class="btn btn-info w-50"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#fullPageModal2">Registrations</button>
-                                &nbsp;
-                                <button type="button"
-                                        class="btn btn-primary w-50"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#fullPageModal4">Check-ins</button>
-                            </div>
+                        <div class="d-flex justify-content-between">
+                            <button type="button"
+                                    class="btn btn-info w-50"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#fullPageModal2">Registrations</button>
+                            &nbsp;
+                            <button type="button"
+                                    class="btn btn-primary w-50"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#fullPageModal4">Check-ins</button>
                         </div>
                     </div>
                 </div>
@@ -141,8 +139,15 @@
                                         aria-haspopup="true"
                                         aria-expanded="false">Danger Zone</button>
                                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                    <form action="{{ url_for('api.api_randomise_code', event_id=event.uid) }}"
+                                          method="post">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                        <button type="submit" class="dropdown-item">Randomise check-in code</button>
+                                    </form>
+                                    <a href="{{ url_for('events.transfer', event_id=event.uid) }}"
+                                       class="dropdown-item text-warning">Transfer event ownership</a>
                                     <a class="dropdown-item text-danger"
-                                       href="{{ url_for('events.delete', event_id=event.uid) }}">Delete Event</a>
+                                       href="{{ url_for('events.delete', event_id=event.uid) }}">Delete event</a>
                                 </div>
                             </div>
                         </div>
@@ -205,328 +210,462 @@
                             data-bs-dismiss="modal"
                             aria-label="Close"></button>
                 </div>
-                <div class="modal-body">This feature is a WIP!</div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade"
-         id="fullPageModal2"
-         tabindex="-1"
-         aria-labelledby="fullPageModalLabel2"
-         aria-hidden="true">
-        <div class="modal-dialog modal-fullscreen">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="fullPageModalLabel2">Registered Event Data</h5>
-                    <button type="button"
-                            class="btn-close"
-                            data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <h5 class="text-center">Click on a registration to view more information.</h5>
-                    <div class="d-flex justify-content-center">
-                        <button id="d-csv" type="button" class="btn btn-outline-primary mx-2">Download as CSV</button>
-                        <button id="d-xl" type="button" class="btn btn-outline-secondary mx-2">Download as Excel spreadsheet</button>
+                <form class="modal-body"
+                      id="modify"
+                      autocomplete="off">
+                    <h5 class="text-center mb-2">Your event</h5>
+                    <div class="text-center">
+                        <div id="edit-red">
+                            <span aria-hidden="true" class="text-danger">*</span>
+                            Editing your event name or date will <b>not</b> modify your <b>event ID ({{ event.uid }})</b>.
+                        </div>
+                        <div id="edit-yellow" class="d-none">
+                            <span aria-hidden="true" class="text-warning">*</span>
+                            Unsaved changes
+                        </div>
+                        <button id="save" class="btn btn-outline-success mt-1 w-100 d-none">Save changes</button>
                     </div>
                     <hr />
-                    <div id="registered-table">
-                        <div class="d-flex justify-content-center align-items-center">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                    <div class="border rounded p-3 mt-2">
+                        <h6>Core details</h6>
+                        <small class="text-muted">
+                            Your event was created on <b>{{ created.strftime("%Y-%m-%d %H:%M:%S") }}</b>, last modified <b>{{ last_modified.strftime("%Y-%m-%d %H:%M:%S") }}</b>.
+                        </small>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        <div class="form-group">
+                            <label for="event_name">
+                                Event Name<span aria-hidden="true" class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="event_name"
+                                   name="event_name"
+                                   value="{{ event.name }}"
+                                   maxlength="32"
+                                   required />
+                        </div>
+                        <div class="form-group mb-2 mt-2">
+                            <label for="event_description">Event Description</label>
+                            <textarea class="form-control"
+                                      id="event_description"
+                                      name="event_description"
+                                      rows="3"
+                                      required>{{ event.description }}</textarea>
+                        </div>
+                        <div class="form-group mt-2">
+                            <label for="event_limit" class="d-flex flex-column">
+                                <span>Maximum number of FIRST® club registrations</span>
+                                <small class="text-muted">Leave blank to uncap, only applies to FIRST® clubs that register</small>
+                            </label>
+                            <input type="number"
+                                   class="form-control"
+                                   id="event_limit"
+                                   name="event_limit"
+                                   min="1"
+                                   max="999"
+                                   value="{{ event.limit if event.limit != -1 else '' }}" />
+                        </div>
+                    </div>
+                    <div class="border rounded p-3 mt-2">
+                        <h6>Time details</h6>
+                        <div class="d-flex flex-wrap w-100">
+                            <div class="form-group mt-2 col-6">
+                                <label for="event_date">
+                                    Event Date<span aria-hidden="true" class="text-danger">*</span>
+                                </label>
+                                <input type="date"
+                                       class="form-control"
+                                       id="event_date"
+                                       name="event_date"
+                                       value="{{ event.date }}"
+                                       required />
+                            </div>
+                            <div class="form-group mt-2 col-6 ps-2">
+                                <label for="event_timezone">Timezone</label>
+                                <select class="form-control"
+                                        id="event_timezone"
+                                        name="event_timezone"
+                                        required>
+                                    {% for tz in timezones %}
+                                        <option value="{{ tz }}" {{ "selected" if tz==event.timezone else '' }}>{{ tz }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group mt-2 col-6">
+                                <label for="event_start_time">Event Start Time</label>
+                                <input type="time"
+                                       class="form-control"
+                                       id="event_start_time"
+                                       name="event_start_time"
+                                       value="{{ event.start_time }}"
+                                       required />
+                            </div>
+                            <div class="form-group mt-2 col-6 ps-2">
+                                <label for="event_end_time">Event End Time</label>
+                                <input type="time"
+                                       class="form-control"
+                                       id="event_end_time"
+                                       name="event_end_time"
+                                       value="{{ event.end_time }}"
+                                       required />
                             </div>
                         </div>
                     </div>
-                    <div class="card mt-3 no-border">
-                        <div class="card-body" id="infobox">
-                            <h3>Selected registration</h3>
-                            <hr />
-                            <div class="card-group">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div id="viewbox">None</div>
-                                    </div>
-                                </div>
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div id="viewbox2" class="w-100"></div>
-                                    </div>
-                                </div>
+                    <div class="border rounded p-3 mt-2">
+                        <h6>Communication details</h6>
+                        <div class="form-group mt-2">
+                            <div class="form-group form-check">
+                                <input type="checkbox"
+                                       class="form-check-input"
+                                       id="display_email"
+                                       name="display_email"
+                                       {% if event.email != "N/A" %}checked{% endif %} />
+                                <label class="form-check-label" for="display_email">Display your email with the event?</label>
+                                <p class="text-muted" id="disablewarn">
+                                    People registering through
+                                    RoboRegistry will not be able to see your email address for contact.
+                                </p>
                             </div>
+                            <label for="email">Display email</label>
+                            <input class="form-control"
+                                   id="email"
+                                   name="event_email"
+                                   placeholder="{{ user.email }}"
+                                   value="{{ event.email if event.email != 'N/A' }}"
+                                   type="email"
+                                   autocomplete="username" />
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade"
-         id="fullPageModal3"
-         tabindex="-1"
-         aria-labelledby="fullPageModalLabel3"
-         aria-hidden="true">
-        <div class="modal-dialog modal-fullscreen">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="fullPageModalLabel3">Manage registration and check-in</h5>
-                    <button type="button"
-                            class="btn-close"
-                            data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row row-cols-1 row-cols-md-2 g-4">
-                        <div class="col">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h4 class="card-title text-center">Register someone manually</h4>
-                                    <div class="card-footer text-center mb-3">
-                                        <small class="text-muted">Enter information here to manually register someone
-                                        not on RoboRegistry!</small>
-                                    </div>
-                                    <form id="regis"
-                                          method="post"
-                                          action="{{ url_for('api.api_manual_regis', event_id=event.uid) }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                                        <div class="mb-3">
-                                            <label for="repName" class="form-label">
-                                                Club or Representing Name<span aria-hidden="true" class="text-danger">*</span>
-                                            </label>
-                                            <input type="text"
-                                                   class="form-control"
-                                                   id="repName"
-                                                   name="repName"
-                                                   placeholder="e.g. FIRST, Murray Bridge High School, General Public"
-                                                   required />
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="role" class="form-label">
-                                                I am registering...<span aria-hidden="true" class="text-danger">*</span>
-                                            </label>
-                                            <select class="form-select" id="role" name="role" required>
-                                                <option value="team" selected>FIRST team(s) (registered or unregistered)</option>
-                                                <option value="event_manager">as an Event manager</option>
-                                                <option value="mentor">as an External volunteer or mentor</option>
-                                                <option value="visitor">as a Visitor</option>
-                                                <option value="other">as Other</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <div class="input-group mb-3">
-                                                <input type="text"
-                                                       id="tnum"
-                                                       class="form-control"
-                                                       placeholder="Enter team number"
-                                                       aria-label="Enter text"
-                                                       aria-describedby="add-button" />
-                                                <button class="btn btn-outline-secondary" type="submit" id="add-button">Add</button>
-                                            </div>
-                                            <div class="mb-3" id="team-list"></div>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="numPeople" class="form-label">
-                                                Estimated number of attendees<span aria-hidden="true" class="text-danger">*</span>
-                                            </label>
-                                            <select class="form-select" id="numPeople" name="numPeople" required>
-                                                <option value="" selected disabled>-</option>
-                                                <option value="1-5">1-5</option>
-                                                <option value="5-10">5-10</option>
-                                                <option value="10-15">10-15</option>
-                                                <option value="15-20">15-20</option>
-                                                <option value="20-25">20-25</option>
-                                                <option value="25-50">25-50</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="numStudents" class="form-label">
-                                                Number of Students Attending<span aria-hidden="true" class="text-danger">*</span>
-                                            </label>
-                                            <input type="number"
-                                                   class="form-control"
-                                                   id="numStudents"
-                                                   name="numStudents"
-                                                   min="0"
-                                                   max="999"
-                                                   required />
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="numMentors" class="form-label">
-                                                Number of Mentors Attending<span aria-hidden="true" class="text-danger">*</span>
-                                            </label>
-                                            <input type="number"
-                                                   class="form-control"
-                                                   id="numMentors"
-                                                   name="numMentors"
-                                                   min="0"
-                                                   max="999"
-                                                   required />
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="numAdults" class="form-label">Number of Other Adults Attending</label>
-                                            <input type="number"
-                                                   class="form-control"
-                                                   id="numAdults"
-                                                   name="numAdults"
-                                                   min="0"
-                                                   max="999" />
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="contactName" class="form-label">Contact Name</label>
-                                            <span aria-hidden="true" class="text-danger">*</span>
-                                            <input type="text"
-                                                   class="form-control"
-                                                   id="contactName"
-                                                   name="contactName"
-                                                   placeholder=""
-                                                   required />
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="contactEmail" class="form-label">Contact Email</label>
-                                            <span aria-hidden="true" class="text-danger">*</span>
-                                            <input type="email"
-                                                   class="form-control"
-                                                   id="contactEmail"
-                                                   name="contactEmail"
-                                                   placeholder=""
-                                                   required />
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="contactPhone" class="form-label">Contact Phone Number</label>
-                                            <input type="tel" class="form-control" id="contactPhone" name="contactPhone" />
-                                        </div>
-                                        <button id="registernow" type="submit" class="btn btn-outline-primary w-100">Register</button>
-                                    </form>
-                                </div>
-                            </div>
+                        <div class="form-group mt-2">
+                            <label for="event_location">Event Location</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="event_location"
+                                   name="event_location"
+                                   required
+                                   value="{{ event.location or '' }}" />
                         </div>
-                        <div class="col">
-                            <div class="card h-100 no-border">
-                                <div class="card">
-                                    <h4 class="card-title text-center p-3 pb-2">Run check-in on this device</h4>
-                                    <div class="card-footer text-center d-flex flex-column">
-                                        <small class="text-muted">Turn your web browser into a check-in booth!</small>
-                                        <small class="text-muted">This will <b>log you out</b> of your account to establish a secure check-in station.</small>
-                                        <a href="{{ url_for('events.driver', event_id=event.uid) }}"
-                                           class="btn btn-outline-success w-100 mt-2">Open manual check-in driver</a>
-                                    </div>
-                                </div>
-                                <div class="card mt-3">
-                                    <h4 class="card-title text-center p-3 pb-2">Open check-in now</h4>
-                                    <div class="card-footer text-center">
-                                        <small class="text-muted">This will adjust your event start time to the current time, opening check-in.</small>
-                                        <small class="text-muted">This change will <b>close</b> registration.</small>
-                                        <a href="{{ url_for('api.api_open_checkin', event_id=event.uid) }}"
-                                           class="btn btn-outline-secondary w-100 mt-2">Open check-in now</a>
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <div class="card mb-3">
-                                        <div class="card-body d-flex flex-column">
-                                            <h4 class="card-title">Time remaining</h4>
-                                            <span id="status"></span>
-                                            <div class="card-text" id="togo"></div>
-                                        </div>
-                                    </div>
-                                    <div class="card mb-3">
-                                        <div class="card-body">
-                                            <h4 class="card-title">Event Registration and Check-in Information</h4>
-                                            <div class="card-text">
-                                                <p>
-                                                    Your event will automatically open check-in when your event start time is reached, then close check-in when your event end time is reached.
-                                                </p>
-                                                <p>
-                                                    Registration will automatically close when your event start time is reached. You may still register people manually regardless of the time.
-                                                </p>
-                                                <p>
-                                                    Manual registrations can not be traced back to a specific user, and will be marked as <em>Manual Registration</em> in the data.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <div id="map" class="rounded"></div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="modal fade"
-         id="fullPageModal4"
-         tabindex="-1"
-         aria-labelledby="fullPageModalLabel4"
-         aria-hidden="true">
-        <div class="modal-dialog modal-fullscreen">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="fullPageModalLabel">Check-in Event Data</h5>
-                    <button type="button"
-                            class="btn-close"
-                            data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <h2 class="mt-3 mb-0">
-                        Registered Check-ins
-                    </h2>
-                    <hr />
-                    <div class="bg-secondary bg-opacity-10 w-100 rounded py-2">
-                        <h6 class="text-center">Registered check-in data</h6>
+        <div class="modal fade"
+             id="fullPageModal2"
+             tabindex="-1"
+             aria-labelledby="fullPageModalLabel2"
+             aria-hidden="true">
+            <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="fullPageModalLabel2">Registered Event Data</h5>
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h5 class="text-center">Click on a registration to view more information.</h5>
                         <div class="d-flex justify-content-center">
-                            <button id="r-d-csv" type="button" class="btn btn-outline-primary mx-2">Download as CSV</button>
-                            <button id="r-d-xl" type="button" class="btn btn-outline-secondary mx-2">Download as Excel spreadsheet</button>
+                            <button id="d-csv" type="button" class="btn btn-outline-primary mx-2">Download as CSV</button>
+                            <button id="d-xl" type="button" class="btn btn-outline-secondary mx-2">Download as Excel spreadsheet</button>
                         </div>
-                    </div>
-                    <h6 class="text-center my-3">Click on a registered check-in to view more information.</h6>
-                    <div class="card mt-3 no-border">
-                        <div id="registered-checkin-table">
+                        <hr />
+                        <div id="registered-table">
                             <div class="d-flex justify-content-center align-items-center">
                                 <div class="spinner-border text-primary" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body" id="r-infobox">
-                            <h3>Selected registered check-in</h3>
-                            <hr />
-                            <div class="card-group">
-                                <div class="card">
-                                    <div class="card-body p-margin">
-                                        <div id="r-viewbox">None</div>
+                        <div class="card mt-3 no-border">
+                            <div class="card-body" id="infobox">
+                                <h3>Selected registration</h3>
+                                <hr />
+                                <div class="card-group">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div id="viewbox">None</div>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div id="viewbox2" class="w-100"></div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="card">
-                                    <div class="card-body p-margin">
-                                        <div id="r-viewbox2" class="w-100"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <h2 class="mt-3 mb-0">
-                        Other Check-ins
-                    </h2>
-                    <hr />
-                    <div class="bg-secondary bg-opacity-10 w-100 rounded py-2 my-3">
-                        <h6 class="text-center">Anonymous check-in data</h6>
-                        <div class="d-flex justify-content-center">
-                            <button id="ra-d-csv" type="button" class="btn btn-outline-primary mx-2">Download as CSV</button>
-                            <button id="ra-d-xl" type="button" class="btn btn-outline-secondary mx-2">Download as Excel spreadsheet</button>
-                        </div>
-                    </div>
-                    <div id="other-checkin-table">
-                        <div class="d-flex justify-content-center align-items-center">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-{% endblock body %}
-{% block scripts %}
-    <script defer nonce="{{ csp_nonce() }}">
+        <div class="modal fade"
+             id="fullPageModal3"
+             tabindex="-1"
+             aria-labelledby="fullPageModalLabel3"
+             aria-hidden="true">
+            <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="fullPageModalLabel3">Manage registration and check-in</h5>
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row row-cols-1 row-cols-md-2 g-4">
+                            <div class="col">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h4 class="card-title text-center">Register someone manually</h4>
+                                        <div class="card-footer text-center mb-3">
+                                            <small class="text-muted">Enter information here to manually register someone
+                                            not on RoboRegistry!</small>
+                                        </div>
+                                        <form id="regis"
+                                              method="post"
+                                              action="{{ url_for('api.api_manual_regis', event_id=event.uid) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                            <div class="mb-3">
+                                                <label for="repName" class="form-label">
+                                                    Club or Representing Name<span aria-hidden="true" class="text-danger">*</span>
+                                                </label>
+                                                <input type="text"
+                                                       class="form-control"
+                                                       id="repName"
+                                                       name="repName"
+                                                       placeholder="e.g. FIRST, Murray Bridge High School, General Public"
+                                                       required />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="role" class="form-label">
+                                                    I am registering...<span aria-hidden="true" class="text-danger">*</span>
+                                                </label>
+                                                <select class="form-select" id="role" name="role" required>
+                                                    <option value="team" selected>FIRST team(s) (registered or unregistered)</option>
+                                                    <option value="event_manager">as an Event manager</option>
+                                                    <option value="mentor">as an External volunteer or mentor</option>
+                                                    <option value="visitor">as a Visitor</option>
+                                                    <option value="other">as Other</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <div class="input-group mb-3">
+                                                    <input type="text"
+                                                           id="tnum"
+                                                           class="form-control"
+                                                           placeholder="Enter team number"
+                                                           aria-label="Enter text"
+                                                           aria-describedby="add-button" />
+                                                    <button class="btn btn-outline-secondary" type="submit" id="add-button">Add</button>
+                                                </div>
+                                                <div class="mb-3" id="team-list"></div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="numPeople" class="form-label">
+                                                    Estimated number of attendees<span aria-hidden="true" class="text-danger">*</span>
+                                                </label>
+                                                <select class="form-select" id="numPeople" name="numPeople" required>
+                                                    <option value="" selected disabled>-</option>
+                                                    <option value="1-5">1-5</option>
+                                                    <option value="5-10">5-10</option>
+                                                    <option value="10-15">10-15</option>
+                                                    <option value="15-20">15-20</option>
+                                                    <option value="20-25">20-25</option>
+                                                    <option value="25-50">25-50</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="numStudents" class="form-label">
+                                                    Number of Students Attending<span aria-hidden="true" class="text-danger">*</span>
+                                                </label>
+                                                <input type="number"
+                                                       class="form-control"
+                                                       id="numStudents"
+                                                       name="numStudents"
+                                                       min="0"
+                                                       max="999"
+                                                       required />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="numMentors" class="form-label">
+                                                    Number of Mentors Attending<span aria-hidden="true" class="text-danger">*</span>
+                                                </label>
+                                                <input type="number"
+                                                       class="form-control"
+                                                       id="numMentors"
+                                                       name="numMentors"
+                                                       min="0"
+                                                       max="999"
+                                                       required />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="numAdults" class="form-label">Number of Other Adults Attending</label>
+                                                <input type="number"
+                                                       class="form-control"
+                                                       id="numAdults"
+                                                       name="numAdults"
+                                                       min="0"
+                                                       max="999" />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="contactName" class="form-label">Contact Name</label>
+                                                <span aria-hidden="true" class="text-danger">*</span>
+                                                <input type="text"
+                                                       class="form-control"
+                                                       id="contactName"
+                                                       name="contactName"
+                                                       placeholder=""
+                                                       required />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="contactEmail" class="form-label">Contact Email</label>
+                                                <span aria-hidden="true" class="text-danger">*</span>
+                                                <input type="email"
+                                                       class="form-control"
+                                                       id="contactEmail"
+                                                       name="contactEmail"
+                                                       placeholder=""
+                                                       required />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="contactPhone" class="form-label">Contact Phone Number</label>
+                                                <input type="tel" class="form-control" id="contactPhone" name="contactPhone" />
+                                            </div>
+                                            <button id="registernow" type="submit" class="btn btn-outline-primary w-100">Register</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="card h-100 no-border">
+                                    <div class="card">
+                                        <h4 class="card-title text-center p-3 pb-2">Run check-in on this device</h4>
+                                        <div class="card-footer text-center d-flex flex-column">
+                                            <small class="text-muted">Turn your web browser into a check-in booth!</small>
+                                            <small class="text-muted">This will <b>log you out</b> of your account to establish a secure check-in station.</small>
+                                            <a href="{{ url_for('events.driver', event_id=event.uid) }}"
+                                               class="btn btn-outline-success w-100 mt-2">Open manual check-in driver</a>
+                                        </div>
+                                    </div>
+                                    <div class="card mt-3">
+                                        <h4 class="card-title text-center p-3 pb-2">Open check-in now</h4>
+                                        <div class="card-footer text-center">
+                                            <small class="text-muted">This will adjust your event start time to the current time, opening check-in.</small>
+                                            <small class="text-muted">This change will <b>close</b> registration.</small>
+                                            <form method="post" action="{{ url_for('api.api_open_checkin', event_id=event.uid) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                                <button type="submit" class="btn btn-outline-secondary w-100 mt-2">Open check-in now</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="card mb-3">
+                                            <div class="card-body d-flex flex-column">
+                                                <h4 class="card-title">Time remaining</h4>
+                                                <span id="status"></span>
+                                                <div class="card-text" id="togo"></div>
+                                            </div>
+                                        </div>
+                                        <div class="card mb-3">
+                                            <div class="card-body">
+                                                <h4 class="card-title">Event Registration and Check-in Information</h4>
+                                                <div class="card-text">
+                                                    <p>
+                                                        Your event will automatically open check-in when your event start time is reached, then close check-in when your event end time is reached.
+                                                    </p>
+                                                    <p>
+                                                        Registration will automatically close when your event start time is reached. You may still register people manually regardless of the time.
+                                                    </p>
+                                                    <p>
+                                                        Manual registrations can not be traced back to a specific user, and will be marked as <em>Manual Registration</em> in the data.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade"
+             id="fullPageModal4"
+             tabindex="-1"
+             aria-labelledby="fullPageModalLabel4"
+             aria-hidden="true">
+            <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="fullPageModalLabel">Check-in Event Data</h5>
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h2 class="mt-3 mb-0">Registered Check-ins</h2>
+                        <hr />
+                        <div class="bg-secondary bg-opacity-10 w-100 rounded py-2">
+                            <h6 class="text-center">Registered check-in data</h6>
+                            <div class="d-flex justify-content-center">
+                                <button id="r-d-csv" type="button" class="btn btn-outline-primary mx-2">Download as CSV</button>
+                                <button id="r-d-xl" type="button" class="btn btn-outline-secondary mx-2">Download as Excel spreadsheet</button>
+                            </div>
+                        </div>
+                        <h6 class="text-center my-3">Click on a registered check-in to view more information.</h6>
+                        <div class="card mt-3 no-border">
+                            <div id="registered-checkin-table">
+                                <div class="d-flex justify-content-center align-items-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body" id="r-infobox">
+                                <h3>Selected registered check-in</h3>
+                                <hr />
+                                <div class="card-group">
+                                    <div class="card">
+                                        <div class="card-body p-margin">
+                                            <div id="r-viewbox">None</div>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-body p-margin">
+                                            <div id="r-viewbox2" class="w-100"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <h2 class="mt-3 mb-0">Other Check-ins</h2>
+                        <hr />
+                        <div class="bg-secondary bg-opacity-10 w-100 rounded py-2 my-3">
+                            <h6 class="text-center">Anonymous check-in data</h6>
+                            <div class="d-flex justify-content-center">
+                                <button id="ra-d-csv" type="button" class="btn btn-outline-primary mx-2">Download as CSV</button>
+                                <button id="ra-d-xl" type="button" class="btn btn-outline-secondary mx-2">Download as Excel spreadsheet</button>
+                            </div>
+                        </div>
+                        <div id="other-checkin-table">
+                            <div class="d-flex justify-content-center align-items-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endblock body %}
+    {% block scripts %}
+        <script defer nonce="{{ csp_nonce() }}">
         const EVENT_UID = "{{ event.uid }}";
         const EVENT_VISIBLE = "{{ event.settings.visible }}" === "True";
         const EVENT_REGIS = "{{ event.settings.regis }}" === "True";
@@ -535,27 +674,37 @@
         const EVENT_START_TIME = "{{ event.start_time }}";
         const EVENT_END_TIME = "{{ event.end_time }}";
         const OFFSET = "{{ offset }}";
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js"
-            integrity="sha512-KqUc2WMPF/gxte9xVjVE4TIt1LMUTidO3BrcItFg0Ro24I7pGNzgcXdnWdezNY+8T0/JEmdC79MuwYn+8UdOqw=="
-            crossorigin="anonymous"
-            referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.1/js/tabulator.min.js"
-            integrity="sha512-/vxlwMJ8+fvTLd1sAiVxC7gBi6YWq0ClV7ZVnuKIiwgQGtVhILH9k1aRvyo/yJigWQT4FWMZMvtX9q0NZVNu2Q=="
-            crossorigin="anonymous"
-            referrerpolicy="no-referrer"></script>
-    <link href="https://unpkg.com/tabulator-tables@5.5.1/dist/css/tabulator.min.css"
-          rel="stylesheet" />
-    <script type="text/javascript"
-            src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.1/css/tabulator_bootstrap5.min.css"
-          rel="stylesheet" />
-    <script src="{{ url_for('static', filename='libs/luxon.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='libs/humanize-duration.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='internal_api.js') }}"></script>
-    <script src="{{ url_for('static', filename='form_handler.js') }}"></script>
-    <script src="{{ url_for('static', filename='eman.js') }}"></script>
-    <script src="{{ url_for('static', filename='event_viewer.js') }}"></script>
-    <script src="{{ url_for('static', filename='page_loaded_timer.js') }}"></script>
-{% endblock scripts %}
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js"
+                integrity="sha512-KqUc2WMPF/gxte9xVjVE4TIt1LMUTidO3BrcItFg0Ro24I7pGNzgcXdnWdezNY+8T0/JEmdC79MuwYn+8UdOqw=="
+                crossorigin="anonymous"
+                referrerpolicy="no-referrer"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.1/js/tabulator.min.js"
+                integrity="sha512-/vxlwMJ8+fvTLd1sAiVxC7gBi6YWq0ClV7ZVnuKIiwgQGtVhILH9k1aRvyo/yJigWQT4FWMZMvtX9q0NZVNu2Q=="
+                crossorigin="anonymous"
+                referrerpolicy="no-referrer"></script>
+        <link href="https://unpkg.com/tabulator-tables@5.5.1/dist/css/tabulator.min.css"
+              rel="stylesheet" />
+        <script type="text/javascript"
+                src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.1/css/tabulator_bootstrap5.min.css"
+              rel="stylesheet" />
+        <script src="{{ url_for('static', filename='libs/luxon.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='libs/humanize-duration.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='internal_api.js') }}"></script>
+        <script src="{{ url_for('static', filename='form_handler.js') }}"></script>
+        <script src="{{ url_for('static', filename='eman.js') }}"></script>
+        <script src="{{ url_for('static', filename='event_viewer.js') }}"></script>
+        <script src="{{ url_for('static', filename='page_loaded_timer.js') }}"></script>
+        <script src="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl-csp.js"></script>
+        <link href="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css"
+            rel="stylesheet" />
+        <script nonce="{{ csp_nonce() }}">
+            const MAPBOX_WORKER = "{{ url_for('static', filename='libs/mapbox-gl-csp-worker_v2.3.1.js') }}";
+            const MAPBOX_API_KEY = "{{ mapbox_api_key }}";
+            // Used for form rejection handling but this is async so we just include the variable so it doesn't crash
+            const OLD_DATA_TIMEZONE = "{{ event.timezone }}";
+        </script>
+        <script src="{{ url_for('static', filename='event_creator.js') }}"></script>
+    {% endblock scripts %}

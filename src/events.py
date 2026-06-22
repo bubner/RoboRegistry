@@ -614,6 +614,8 @@ def manage(event_id: str):
         f"{event['date']} {event['start_time']}", "%Y-%m-%d %H:%M"))
     end_time = tz.localize(datetime.strptime(
         f"{event['date']} {event['end_time']}", "%Y-%m-%d %H:%M"))
+    created = datetime.fromtimestamp(int(event['settings']['created']), tz)
+    last_modified = datetime.fromtimestamp(int(event['settings']['last_modified']), tz)
     
     can_register = start_time > datetime.now(tz)
     is_running = start_time < datetime.now(tz) < end_time
@@ -636,7 +638,8 @@ def manage(event_id: str):
     }
 
     return render_template("event/manage.html.jinja", event=event, data=data, user=getattr(current_user, "data"),
-                           offset=offset, can_register=can_register, is_running=is_running, metrics=metrics)
+                           offset=offset, can_register=can_register, is_running=is_running, metrics=metrics,
+                           created=created, last_modified=last_modified, mapbox_api_key=os.getenv("MAPBOX_API_KEY"), timezones=all_timezones)
 
 
 @events_bp.route("/events/manage/<string:event_id>/driver")
