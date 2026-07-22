@@ -30,7 +30,7 @@ pillow==12.3.0
 pkce==1.0.3
 proto-plus==1.27.1
 protobuf==6.33.5
-pyasn1==0.6.3
+pyasn1==0.6.4
 pyasn1_modules==0.4.2
 pycparser==3.0
 pypng==0.20220715.0
